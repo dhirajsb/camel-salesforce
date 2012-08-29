@@ -196,7 +196,7 @@ public class DefaultRestClient implements RestClient {
 
         // parse fields if set
         String params = "";
-        if (fields != null || fields.length > 0) {
+        if (fields != null && fields.length > 0) {
             StringBuilder fieldsValue = new StringBuilder("?fields=");
             for (int i = 0; i < fields.length; i++) {
                 fieldsValue.append(fields[i]);
