@@ -22,10 +22,8 @@ public class RecentItem extends AbstractDTOBase {
 
     private Attributes attributes;
 
-    @JsonProperty("Id")
     private String Id;
 
-    @JsonProperty("Name")
     private String Name;
 
     public Attributes getAttributes() {
@@ -36,18 +34,22 @@ public class RecentItem extends AbstractDTOBase {
         this.attributes = attributes;
     }
 
+    @JsonProperty("Id")
     public String getId() {
         return Id;
     }
 
+    @JsonProperty("Id")
     public void setId(String id) {
         Id = id;
     }
 
+    @JsonProperty("Name")
     public String getName() {
         return Name;
     }
 
+    @JsonProperty("Name")
     public void setName(String name) {
         Name = name;
     }

@@ -25,7 +25,6 @@ public class LoginError {
 
     private String error;
 
-    @JsonProperty("error_description")
     private String errorDescription;
 
     public String getError() {
@@ -36,10 +35,12 @@ public class LoginError {
         this.error = error;
     }
 
+    @JsonProperty("error_description")
     public String getErrorDescription() {
         return errorDescription;
     }
 
+    @JsonProperty("error_description")
     public void setErrorDescription(String errorDescription) {
         this.errorDescription = errorDescription;
     }

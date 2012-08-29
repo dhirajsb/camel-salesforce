@@ -22,31 +22,32 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public class LoginToken {
 
-    @JsonProperty("access_token")
     private String accessToken;
 
-    @JsonProperty("instance_url")
     private String instanceUrl;
 
     private String id;
 
     private String signature;
 
-    @JsonProperty("issued_at")
     private String issuedAt;
 
+    @JsonProperty("access_token")
     public String getAccessToken() {
         return accessToken;
     }
 
+    @JsonProperty("access_token")
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
 
+    @JsonProperty("instance_url")
     public String getInstanceUrl() {
         return instanceUrl;
     }
 
+    @JsonProperty("instance_url")
     public void setInstanceUrl(String instanceUrl) {
         this.instanceUrl = instanceUrl;
     }
@@ -67,10 +68,12 @@ public class LoginToken {
         this.signature = signature;
     }
 
+    @JsonProperty("issued_at")
     public String getIssuedAt() {
         return issuedAt;
     }
 
+    @JsonProperty("issued_at")
     public void setIssuedAt(String issuedAt) {
         this.issuedAt = issuedAt;
     }
