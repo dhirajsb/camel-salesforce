@@ -22,57 +22,57 @@ import java.util.List;
 
 public class SObjectField extends AbstractDTOBase {
 
-    private int length;
+    private Integer length;
     private String name;
     private String type;
     private String defaultValue;
     private String label;
-    private boolean updateable;
-    private boolean calculated;
-    private boolean caseSensitive;
+    private Boolean updateable;
+    private Boolean calculated;
+    private Boolean caseSensitive;
     private String controllerName;
-    private boolean unique;
-    private boolean nillable;
-    private int precision;
-    private int scale;
-    private int byteLength;
-    private boolean nameField;
-    private boolean sortable;
-    private boolean filterable;
-    private boolean writeRequiresMasterRead;
-    private boolean externalId;
-    private boolean idLookup;
+    private Boolean unique;
+    private Boolean nillable;
+    private Integer precision;
+    private Integer scale;
+    private Integer byteLength;
+    private Boolean nameField;
+    private Boolean sortable;
+    private Boolean filterable;
+    private Boolean writeRequiresMasterRead;
+    private Boolean externalId;
+    private Boolean idLookup;
     private String inlineHelpText;
-    private boolean createable;
+    private Boolean createable;
     private String soapType;
-    private boolean autoNumber;
-    private boolean restrictedPicklist;
-    private boolean namePointing;
-    private boolean custom;
-    private boolean defaultedOnCreate;
-    private boolean deprecatedAndHidden;
-    private boolean htmlFormatted;
+    private Boolean autoNumber;
+    private Boolean restrictedPicklist;
+    private Boolean namePointing;
+    private Boolean custom;
+    private Boolean defaultedOnCreate;
+    private Boolean deprecatedAndHidden;
+    private Boolean htmlFormatted;
     private String defaultValueFormula;
     private String calculatedFormula;
     @XStreamImplicit
     private List<String> picklistValues;
-    private boolean dependentPicklist;
+    private Boolean dependentPicklist;
     @XStreamImplicit
     private List<String> referenceTo;
     private String relationshipName;
     private String relationshipOrder;
-    private boolean cascadeDelete;
-    private boolean restrictedDelete;
+    private Boolean cascadeDelete;
+    private Boolean restrictedDelete;
     private String digits;
-    private boolean groupable;
-    private boolean permissionable;
-    private boolean displayLocationInDecimal;
+    private Boolean groupable;
+    private Boolean permissionable;
+    private Boolean displayLocationInDecimal;
 
-    public int getLength() {
+    public Integer getLength() {
         return length;
     }
 
-    public void setLength(int length) {
+    public void setLength(Integer length) {
         this.length = length;
     }
 
@@ -108,27 +108,27 @@ public class SObjectField extends AbstractDTOBase {
         this.label = label;
     }
 
-    public boolean isUpdateable() {
+    public Boolean isUpdateable() {
         return updateable;
     }
 
-    public void setUpdateable(boolean updateable) {
+    public void setUpdateable(Boolean updateable) {
         this.updateable = updateable;
     }
 
-    public boolean isCalculated() {
+    public Boolean isCalculated() {
         return calculated;
     }
 
-    public void setCalculated(boolean calculated) {
+    public void setCalculated(Boolean calculated) {
         this.calculated = calculated;
     }
 
-    public boolean isCaseSensitive() {
+    public Boolean isCaseSensitive() {
         return caseSensitive;
     }
 
-    public void setCaseSensitive(boolean caseSensitive) {
+    public void setCaseSensitive(Boolean caseSensitive) {
         this.caseSensitive = caseSensitive;
     }
 
@@ -140,91 +140,91 @@ public class SObjectField extends AbstractDTOBase {
         this.controllerName = controllerName;
     }
 
-    public boolean isUnique() {
+    public Boolean isUnique() {
         return unique;
     }
 
-    public void setUnique(boolean unique) {
+    public void setUnique(Boolean unique) {
         this.unique = unique;
     }
 
-    public boolean isNillable() {
+    public Boolean isNillable() {
         return nillable;
     }
 
-    public void setNillable(boolean nillable) {
+    public void setNillable(Boolean nillable) {
         this.nillable = nillable;
     }
 
-    public int getPrecision() {
+    public Integer getPrecision() {
         return precision;
     }
 
-    public void setPrecision(int precision) {
+    public void setPrecision(Integer precision) {
         this.precision = precision;
     }
 
-    public int getScale() {
+    public Integer getScale() {
         return scale;
     }
 
-    public void setScale(int scale) {
+    public void setScale(Integer scale) {
         this.scale = scale;
     }
 
-    public int getByteLength() {
+    public Integer getByteLength() {
         return byteLength;
     }
 
-    public void setByteLength(int byteLength) {
+    public void setByteLength(Integer byteLength) {
         this.byteLength = byteLength;
     }
 
-    public boolean isNameField() {
+    public Boolean isNameField() {
         return nameField;
     }
 
-    public void setNameField(boolean nameField) {
+    public void setNameField(Boolean nameField) {
         this.nameField = nameField;
     }
 
-    public boolean isSortable() {
+    public Boolean isSortable() {
         return sortable;
     }
 
-    public void setSortable(boolean sortable) {
+    public void setSortable(Boolean sortable) {
         this.sortable = sortable;
     }
 
-    public boolean isFilterable() {
+    public Boolean isFilterable() {
         return filterable;
     }
 
-    public void setFilterable(boolean filterable) {
+    public void setFilterable(Boolean filterable) {
         this.filterable = filterable;
     }
 
-    public boolean isWriteRequiresMasterRead() {
+    public Boolean isWriteRequiresMasterRead() {
         return writeRequiresMasterRead;
     }
 
-    public void setWriteRequiresMasterRead(boolean writeRequiresMasterRead) {
+    public void setWriteRequiresMasterRead(Boolean writeRequiresMasterRead) {
         this.writeRequiresMasterRead = writeRequiresMasterRead;
     }
 
-    public boolean isExternalId() {
+    public Boolean isExternalId() {
         return externalId;
     }
 
-    public void setExternalId(boolean externalId) {
+    public void setExternalId(Boolean externalId) {
         this.externalId = externalId;
     }
 
-    public boolean isIdLookup() {
+    public Boolean isIdLookup() {
         return idLookup;
     }
 
-    public void setIdLookup(boolean idLookup) {
+    public void setIdLookup(Boolean idLookup) {
         this.idLookup = idLookup;
     }
 
@@ -236,11 +236,11 @@ public class SObjectField extends AbstractDTOBase {
         this.inlineHelpText = inlineHelpText;
     }
 
-    public boolean isCreateable() {
+    public Boolean isCreateable() {
         return createable;
     }
 
-    public void setCreateable(boolean createable) {
+    public void setCreateable(Boolean createable) {
         this.createable = createable;
     }
 
@@ -252,59 +252,59 @@ public class SObjectField extends AbstractDTOBase {
         this.soapType = soapType;
     }
 
-    public boolean isAutoNumber() {
+    public Boolean isAutoNumber() {
         return autoNumber;
     }
 
-    public void setAutoNumber(boolean autoNumber) {
+    public void setAutoNumber(Boolean autoNumber) {
         this.autoNumber = autoNumber;
     }
 
-    public boolean isRestrictedPicklist() {
+    public Boolean isRestrictedPicklist() {
         return restrictedPicklist;
     }
 
-    public void setRestrictedPicklist(boolean restrictedPicklist) {
+    public void setRestrictedPicklist(Boolean restrictedPicklist) {
         this.restrictedPicklist = restrictedPicklist;
     }
 
-    public boolean isNamePointing() {
+    public Boolean isNamePointing() {
         return namePointing;
     }
 
-    public void setNamePointing(boolean namePointing) {
+    public void setNamePointing(Boolean namePointing) {
         this.namePointing = namePointing;
     }
 
-    public boolean isCustom() {
+    public Boolean isCustom() {
         return custom;
     }
 
-    public void setCustom(boolean custom) {
+    public void setCustom(Boolean custom) {
         this.custom = custom;
     }
 
-    public boolean isDefaultedOnCreate() {
+    public Boolean isDefaultedOnCreate() {
         return defaultedOnCreate;
     }
 
-    public void setDefaultedOnCreate(boolean defaultedOnCreate) {
+    public void setDefaultedOnCreate(Boolean defaultedOnCreate) {
         this.defaultedOnCreate = defaultedOnCreate;
     }
 
-    public boolean isDeprecatedAndHidden() {
+    public Boolean isDeprecatedAndHidden() {
         return deprecatedAndHidden;
     }
 
-    public void setDeprecatedAndHidden(boolean deprecatedAndHidden) {
+    public void setDeprecatedAndHidden(Boolean deprecatedAndHidden) {
         this.deprecatedAndHidden = deprecatedAndHidden;
     }
 
-    public boolean isHtmlFormatted() {
+    public Boolean isHtmlFormatted() {
         return htmlFormatted;
     }
 
-    public void setHtmlFormatted(boolean htmlFormatted) {
+    public void setHtmlFormatted(Boolean htmlFormatted) {
         this.htmlFormatted = htmlFormatted;
     }
 
@@ -332,11 +332,11 @@ public class SObjectField extends AbstractDTOBase {
         this.picklistValues = picklistValues;
     }
 
-    public boolean isDependentPicklist() {
+    public Boolean isDependentPicklist() {
         return dependentPicklist;
     }
 
-    public void setDependentPicklist(boolean dependentPicklist) {
+    public void setDependentPicklist(Boolean dependentPicklist) {
         this.dependentPicklist = dependentPicklist;
     }
 
@@ -364,19 +364,19 @@ public class SObjectField extends AbstractDTOBase {
         this.relationshipOrder = relationshipOrder;
     }
 
-    public boolean isCascadeDelete() {
+    public Boolean isCascadeDelete() {
         return cascadeDelete;
     }
 
-    public void setCascadeDelete(boolean cascadeDelete) {
+    public void setCascadeDelete(Boolean cascadeDelete) {
         this.cascadeDelete = cascadeDelete;
     }
 
-    public boolean isRestrictedDelete() {
+    public Boolean isRestrictedDelete() {
         return restrictedDelete;
     }
 
-    public void setRestrictedDelete(boolean restrictedDelete) {
+    public void setRestrictedDelete(Boolean restrictedDelete) {
         this.restrictedDelete = restrictedDelete;
     }
 
@@ -388,27 +388,27 @@ public class SObjectField extends AbstractDTOBase {
         this.digits = digits;
     }
 
-    public boolean isGroupable() {
+    public Boolean isGroupable() {
         return groupable;
     }
 
-    public void setGroupable(boolean groupable) {
+    public void setGroupable(Boolean groupable) {
         this.groupable = groupable;
     }
 
-    public boolean isPermissionable() {
+    public Boolean isPermissionable() {
         return permissionable;
     }
 
-    public void setPermissionable(boolean permissionable) {
+    public void setPermissionable(Boolean permissionable) {
         this.permissionable = permissionable;
     }
 
-    public boolean isDisplayLocationInDecimal() {
+    public Boolean isDisplayLocationInDecimal() {
         return displayLocationInDecimal;
     }
 
-    public void setDisplayLocationInDecimal(boolean displayLocationInDecimal) {
+    public void setDisplayLocationInDecimal(Boolean displayLocationInDecimal) {
         this.displayLocationInDecimal = displayLocationInDecimal;
     }
 }

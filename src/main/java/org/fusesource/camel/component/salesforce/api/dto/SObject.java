@@ -19,28 +19,28 @@ package org.fusesource.camel.component.salesforce.api.dto;
 public class SObject extends AbstractDTOBase {
     private String name;
     private String label;
-    private boolean updateable;
+    private Boolean updateable;
     private String keyPrefix;
-    private boolean custom;
+    private Boolean custom;
     private SObjectUrls urls;
-    private boolean searchable;
+    private Boolean searchable;
     private String labelPlural;
-    private boolean layoutable;
-    private boolean activateable;
-    private boolean createable;
-    private boolean deprecatedAndHidden;
-    private boolean deletable;
-    private boolean customSetting;
-    private boolean feedEnabled;
+    private Boolean layoutable;
+    private Boolean activateable;
+    private Boolean createable;
+    private Boolean deprecatedAndHidden;
+    private Boolean deletable;
+    private Boolean customSetting;
+    private Boolean feedEnabled;
     private String listviewable;
     private String lookupLayoutable;
-    private boolean mergeable;
-    private boolean queryable;
-    private boolean replicateable;
-    private boolean retrieveable;
+    private Boolean mergeable;
+    private Boolean queryable;
+    private Boolean replicateable;
+    private Boolean retrieveable;
     private String searchLayoutable;
-    private boolean undeletable;
-    private boolean triggerable;
+    private Boolean undeletable;
+    private Boolean triggerable;
 
     public String getName() {
         return name;
@@ -58,11 +58,11 @@ public class SObject extends AbstractDTOBase {
         this.label = label;
     }
 
-    public boolean isUpdateable() {
+    public Boolean isUpdateable() {
         return updateable;
     }
 
-    public void setUpdateable(boolean updateable) {
+    public void setUpdateable(Boolean updateable) {
         this.updateable = updateable;
     }
 
@@ -74,11 +74,11 @@ public class SObject extends AbstractDTOBase {
         this.keyPrefix = keyPrefix;
     }
 
-    public boolean isCustom() {
+    public Boolean isCustom() {
         return custom;
     }
 
-    public void setCustom(boolean custom) {
+    public void setCustom(Boolean custom) {
         this.custom = custom;
     }
 
@@ -90,11 +90,11 @@ public class SObject extends AbstractDTOBase {
         this.urls = urls;
     }
 
-    public boolean isSearchable() {
+    public Boolean isSearchable() {
         return searchable;
     }
 
-    public void setSearchable(boolean searchable) {
+    public void setSearchable(Boolean searchable) {
         this.searchable = searchable;
     }
 
@@ -106,59 +106,59 @@ public class SObject extends AbstractDTOBase {
         this.labelPlural = labelPlural;
     }
 
-    public boolean isLayoutable() {
+    public Boolean isLayoutable() {
         return layoutable;
     }
 
-    public void setLayoutable(boolean layoutable) {
+    public void setLayoutable(Boolean layoutable) {
         this.layoutable = layoutable;
     }
 
-    public boolean isActivateable() {
+    public Boolean isActivateable() {
         return activateable;
     }
 
-    public void setActivateable(boolean activateable) {
+    public void setActivateable(Boolean activateable) {
         this.activateable = activateable;
     }
 
-    public boolean isCreateable() {
+    public Boolean isCreateable() {
         return createable;
     }
 
-    public void setCreateable(boolean createable) {
+    public void setCreateable(Boolean createable) {
         this.createable = createable;
     }
 
-    public boolean isDeprecatedAndHidden() {
+    public Boolean isDeprecatedAndHidden() {
         return deprecatedAndHidden;
     }
 
-    public void setDeprecatedAndHidden(boolean deprecatedAndHidden) {
+    public void setDeprecatedAndHidden(Boolean deprecatedAndHidden) {
         this.deprecatedAndHidden = deprecatedAndHidden;
     }
 
-    public boolean isDeletable() {
+    public Boolean isDeletable() {
         return deletable;
     }
 
-    public void setDeletable(boolean deletable) {
+    public void setDeletable(Boolean deletable) {
         this.deletable = deletable;
     }
 
-    public boolean isCustomSetting() {
+    public Boolean isCustomSetting() {
         return customSetting;
     }
 
-    public void setCustomSetting(boolean customSetting) {
+    public void setCustomSetting(Boolean customSetting) {
         this.customSetting = customSetting;
     }
 
-    public boolean isFeedEnabled() {
+    public Boolean isFeedEnabled() {
         return feedEnabled;
     }
 
-    public void setFeedEnabled(boolean feedEnabled) {
+    public void setFeedEnabled(Boolean feedEnabled) {
         this.feedEnabled = feedEnabled;
     }
 
@@ -178,35 +178,35 @@ public class SObject extends AbstractDTOBase {
         this.lookupLayoutable = lookupLayoutable;
     }
 
-    public boolean isMergeable() {
+    public Boolean isMergeable() {
         return mergeable;
     }
 
-    public void setMergeable(boolean mergeable) {
+    public void setMergeable(Boolean mergeable) {
         this.mergeable = mergeable;
     }
 
-    public boolean isQueryable() {
+    public Boolean isQueryable() {
         return queryable;
     }
 
-    public void setQueryable(boolean queryable) {
+    public void setQueryable(Boolean queryable) {
         this.queryable = queryable;
     }
 
-    public boolean isReplicateable() {
+    public Boolean isReplicateable() {
         return replicateable;
     }
 
-    public void setReplicateable(boolean replicateable) {
+    public void setReplicateable(Boolean replicateable) {
         this.replicateable = replicateable;
     }
 
-    public boolean isRetrieveable() {
+    public Boolean isRetrieveable() {
         return retrieveable;
     }
 
-    public void setRetrieveable(boolean retrieveable) {
+    public void setRetrieveable(Boolean retrieveable) {
         this.retrieveable = retrieveable;
     }
 
@@ -218,19 +218,19 @@ public class SObject extends AbstractDTOBase {
         this.searchLayoutable = searchLayoutable;
     }
 
-    public boolean isUndeletable() {
+    public Boolean isUndeletable() {
         return undeletable;
     }
 
-    public void setUndeletable(boolean undeletable) {
+    public void setUndeletable(Boolean undeletable) {
         this.undeletable = undeletable;
     }
 
-    public boolean isTriggerable() {
+    public Boolean isTriggerable() {
         return triggerable;
     }
 
-    public void setTriggerable(boolean triggerable) {
+    public void setTriggerable(Boolean triggerable) {
         this.triggerable = triggerable;
     }
 

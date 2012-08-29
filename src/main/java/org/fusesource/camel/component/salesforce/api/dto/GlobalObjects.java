@@ -25,7 +25,7 @@ import java.util.List;
 public class GlobalObjects extends AbstractDTOBase {
 
     private String encoding;
-    private int maxBatchSize;
+    private Integer maxBatchSize;
 
     @XStreamImplicit
     private List<SObject> sobjects;
@@ -38,11 +38,11 @@ public class GlobalObjects extends AbstractDTOBase {
         this.encoding = encoding;
     }
 
-    public int getMaxBatchSize() {
+    public Integer getMaxBatchSize() {
         return maxBatchSize;
     }
 
-    public void setMaxBatchSize(int maxBatchSize) {
+    public void setMaxBatchSize(Integer maxBatchSize) {
         this.maxBatchSize = maxBatchSize;
     }
 

@@ -25,9 +25,9 @@ public class Merchandise__c extends AbstractSObjectBase {
 
     private String Description__c;
 
-    private double Price__c;
+    private Double Price__c;
 
-    private double Total_Inventory__c;
+    private Double Total_Inventory__c;
 
     @JsonProperty("Description__c")
     public String getDescription__c() {
@@ -40,22 +40,22 @@ public class Merchandise__c extends AbstractSObjectBase {
     }
 
     @JsonProperty("Price__c")
-    public double getPrice__c() {
+    public Double getPrice__c() {
         return Price__c;
     }
 
     @JsonProperty("Price__c")
-    public void setPrice__c(double price__c) {
+    public void setPrice__c(Double price__c) {
         Price__c = price__c;
     }
 
     @JsonProperty("Total_Inventory__c")
-    public double getTotal_Inventory__c() {
+    public Double getTotal_Inventory__c() {
         return Total_Inventory__c;
     }
 
     @JsonProperty("Total_Inventory__c")
-    public void setTotal_Inventory__c(double total_Inventory__c) {
+    public void setTotal_Inventory__c(Double total_Inventory__c) {
         Total_Inventory__c = total_Inventory__c;
     }
 }

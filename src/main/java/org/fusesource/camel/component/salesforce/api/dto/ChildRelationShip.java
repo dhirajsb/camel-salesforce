@@ -18,10 +18,10 @@ package org.fusesource.camel.component.salesforce.api.dto;
 
 public class ChildRelationShip extends AbstractDTOBase {
     private String field;
-    private boolean deprecatedAndHidden;
+    private Boolean deprecatedAndHidden;
     private String relationshipName;
-    private boolean cascadeDelete;
-    private boolean restrictedDelete;
+    private Boolean cascadeDelete;
+    private Boolean restrictedDelete;
     private String childSObject;
 
     public String getField() {
@@ -32,11 +32,11 @@ public class ChildRelationShip extends AbstractDTOBase {
         this.field = field;
     }
 
-    public boolean isDeprecatedAndHidden() {
+    public Boolean isDeprecatedAndHidden() {
         return deprecatedAndHidden;
     }
 
-    public void setDeprecatedAndHidden(boolean deprecatedAndHidden) {
+    public void setDeprecatedAndHidden(Boolean deprecatedAndHidden) {
         this.deprecatedAndHidden = deprecatedAndHidden;
     }
 
@@ -48,19 +48,19 @@ public class ChildRelationShip extends AbstractDTOBase {
         this.relationshipName = relationshipName;
     }
 
-    public boolean isCascadeDelete() {
+    public Boolean isCascadeDelete() {
         return cascadeDelete;
     }
 
-    public void setCascadeDelete(boolean cascadeDelete) {
+    public void setCascadeDelete(Boolean cascadeDelete) {
         this.cascadeDelete = cascadeDelete;
     }
 
-    public boolean isRestrictedDelete() {
+    public Boolean isRestrictedDelete() {
         return restrictedDelete;
     }
 
-    public void setRestrictedDelete(boolean restrictedDelete) {
+    public void setRestrictedDelete(Boolean restrictedDelete) {
         this.restrictedDelete = restrictedDelete;
     }
 

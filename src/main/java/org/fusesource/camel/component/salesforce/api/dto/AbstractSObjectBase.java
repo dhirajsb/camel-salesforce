@@ -26,7 +26,7 @@ public class AbstractSObjectBase extends AbstractDTOBase {
 
     private String OwnerId;
 
-    private boolean IsDeleted;
+    private Boolean IsDeleted;
 
     private String Name;
 
@@ -71,12 +71,12 @@ public class AbstractSObjectBase extends AbstractDTOBase {
     }
 
     @JsonProperty("IsDeleted")
-    public boolean isIsDeleted() {
+    public Boolean isIsDeleted() {
         return IsDeleted;
     }
 
     @JsonProperty("IsDeleted")
-    public void setIsDeleted(boolean isDeleted) {
+    public void setIsDeleted(Boolean isDeleted) {
         IsDeleted = isDeleted;
     }
 

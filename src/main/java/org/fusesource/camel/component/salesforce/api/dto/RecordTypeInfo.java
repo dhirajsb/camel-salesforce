@@ -18,9 +18,9 @@ package org.fusesource.camel.component.salesforce.api.dto;
 
 public class RecordTypeInfo extends AbstractDTOBase {
     private String name;
-    private boolean available;
+    private Boolean available;
     private String recordTypeId;
-    private boolean defaultRecordTypeMapping;
+    private Boolean defaultRecordTypeMapping;
 
     public String getName() {
         return name;
@@ -30,11 +30,11 @@ public class RecordTypeInfo extends AbstractDTOBase {
         this.name = name;
     }
 
-    public boolean isAvailable() {
+    public Boolean isAvailable() {
         return available;
     }
 
-    public void setAvailable(boolean available) {
+    public void setAvailable(Boolean available) {
         this.available = available;
     }
 
@@ -46,11 +46,11 @@ public class RecordTypeInfo extends AbstractDTOBase {
         this.recordTypeId = recordTypeId;
     }
 
-    public boolean isDefaultRecordTypeMapping() {
+    public Boolean isDefaultRecordTypeMapping() {
         return defaultRecordTypeMapping;
     }
 
-    public void setDefaultRecordTypeMapping(boolean defaultRecordTypeMapping) {
+    public void setDefaultRecordTypeMapping(Boolean defaultRecordTypeMapping) {
         this.defaultRecordTypeMapping = defaultRecordTypeMapping;
     }
 }

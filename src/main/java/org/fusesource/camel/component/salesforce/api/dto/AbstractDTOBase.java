@@ -17,10 +17,13 @@
 package org.fusesource.camel.component.salesforce.api.dto;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.io.IOException;
 import java.io.StringWriter;
 
+// disable null values in json output
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public abstract class AbstractDTOBase {
     private final static ObjectMapper mapper = new ObjectMapper();
 
