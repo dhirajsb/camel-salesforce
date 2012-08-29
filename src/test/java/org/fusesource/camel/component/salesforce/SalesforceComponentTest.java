@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class SalesforceComponentTest extends CamelTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponentTest.class);
-    private static final String TEST_LOGIN_PROPERTIES = "test-login.properties";
+    private static final String TEST_LOGIN_PROPERTIES = "/test-login.properties";
 
     private ObjectMapper objectMapper;
     private static final long TEST_TIMEOUT = 30;
