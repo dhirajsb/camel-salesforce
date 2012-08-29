@@ -36,9 +36,8 @@ public class SalesforceComponentTest extends CamelTestSupport {
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
         List<Version> versions = ex.getIn().getBody(List.class);
-        for (Version version : versions) {
-            LOG.trace(String.format("Version: %s, %s, %s", version.getVersion(), version.getLabel(), version.getUrl()));
-        }
+        assertNotNull(versions);
+        LOG.trace("Versions: {}", versions);
 
         // test for xml response
         mock = getMockEndpoint("mock:testGetVersionsXml");
@@ -49,9 +48,8 @@ public class SalesforceComponentTest extends CamelTestSupport {
         // assert expected result
         ex = mock.getExchanges().get(0);
         Versions versions1 = ex.getIn().getBody(Versions.class);
-        for (Version version : versions1.getVersions()) {
-            LOG.trace(String.format("Version: %s, %s, %s", version.getVersion(), version.getLabel(), version.getUrl()));
-        }
+        assertNotNull(versions1);
+        LOG.trace("Versions: {}", versions1);
     }
 
     @Test
@@ -66,7 +64,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         Exchange ex = mock.getExchanges().get(0);
         RestResources resources = ex.getIn().getBody(RestResources.class);
         assertNotNull(resources);
-        LOG.trace("Resources: " + resources);
+        LOG.trace("Resources: {}", resources);
 
         mock = getMockEndpoint("mock:testGetResourcesXml");
         mock.expectedMinimumMessageCount(1);
@@ -78,7 +76,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         ex = mock.getExchanges().get(0);
         resources = ex.getIn().getBody(RestResources.class);
         assertNotNull(resources);
-        LOG.trace("Resources: " + resources);
+        LOG.trace("Resources: {}", resources);
     }
 
     @Test
@@ -93,7 +91,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         Exchange ex = mock.getExchanges().get(0);
         GlobalObjects globalObjects = ex.getIn().getBody(GlobalObjects.class);
         assertNotNull(globalObjects);
-        LOG.trace("GlobalObjects: " + globalObjects);
+        LOG.trace("GlobalObjects: {}", globalObjects);
 
         mock = getMockEndpoint("mock:testGetGlobalObjectsXml");
         mock.expectedMinimumMessageCount(1);
@@ -105,7 +103,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         ex = mock.getExchanges().get(0);
         globalObjects = ex.getIn().getBody(GlobalObjects.class);
         assertNotNull(globalObjects);
-        LOG.trace("GlobalObjects: " + globalObjects);
+        LOG.trace("GlobalObjects: {}", globalObjects);
     }
 
     @Test
@@ -120,7 +118,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         Exchange ex = mock.getExchanges().get(0);
         SObjectBasicInfo objectBasicInfo = ex.getIn().getBody(SObjectBasicInfo.class);
         assertNotNull(objectBasicInfo);
-        LOG.trace("SObjectBasicInfo: " + objectBasicInfo);
+        LOG.trace("SObjectBasicInfo: {}", objectBasicInfo);
 
         mock = getMockEndpoint("mock:testGetSObjectBasicInfoXml");
         mock.expectedMinimumMessageCount(1);
@@ -132,7 +130,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         ex = mock.getExchanges().get(0);
         objectBasicInfo = ex.getIn().getBody(SObjectBasicInfo.class);
         assertNotNull(objectBasicInfo);
-        LOG.trace("SObjectBasicInfo: " + objectBasicInfo);
+        LOG.trace("SObjectBasicInfo: {}", objectBasicInfo);
     }
 
     @Test
@@ -147,7 +145,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         Exchange ex = mock.getExchanges().get(0);
         SObjectDescription sObjectDescription = ex.getIn().getBody(SObjectDescription.class);
         assertNotNull(sObjectDescription);
-        LOG.trace("SObjectDescription: " + sObjectDescription);
+        LOG.trace("SObjectDescription: {}", sObjectDescription);
 
         mock = getMockEndpoint("mock:testGetSObjectDescriptionXml");
         mock.expectedMinimumMessageCount(1);
@@ -159,7 +157,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         ex = mock.getExchanges().get(0);
         sObjectDescription = ex.getIn().getBody(SObjectDescription.class);
         assertNotNull(sObjectDescription);
-        LOG.trace("SObjectDescription: " + sObjectDescription);
+        LOG.trace("SObjectDescription: {}", sObjectDescription);
     }
 
     @Test
@@ -172,9 +170,10 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
-        AbstractSObjectBase sObjectBase = ex.getIn().getBody(AbstractSObjectBase.class);
-        assertNotNull(sObjectBase);
-        LOG.trace("SObjectById: " + sObjectBase);
+        Merchandise__c merchandise = ex.getIn().getBody(Merchandise__c.class);
+        assertNotNull(merchandise);
+        assertEquals("Total_Inventory__c", 0, merchandise.getTotal_Inventory__c(), 0);
+        LOG.trace("SObjectById: {}", merchandise);
 
         mock = getMockEndpoint("mock:testGetSObjectByIdXml");
         mock.expectedMinimumMessageCount(1);
@@ -184,9 +183,10 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
         // assert expected result
         ex = mock.getExchanges().get(0);
-        sObjectBase = ex.getIn().getBody(AbstractSObjectBase.class);
-        assertNotNull(sObjectBase);
-        LOG.trace("SObjectById: " + sObjectBase);
+        merchandise = ex.getIn().getBody(Merchandise__c.class);
+        assertNotNull(merchandise);
+        assertEquals("Price__c", 0, merchandise.getPrice__c(), 0);
+        LOG.trace("SObjectById: {}", merchandise);
     }
 
     @Override
@@ -259,11 +259,11 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
                 // testGetSObjectById
                 from("direct:testGetSObjectById")
-                    .to("force://getSObjectById?sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://getSObjectById?sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&sObjectFields=Description__c,Price__c")
                     .to("mock:testGetSObjectById");
 
                 from("direct:testGetSObjectByIdXml")
-                    .to("force://getSObjectById?format=xml&sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://getSObjectById?format=xml&sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&sObjectFields=Description__c,Total_Inventory__c")
                     .to("mock:testGetSObjectByIdXml");
             }
         };

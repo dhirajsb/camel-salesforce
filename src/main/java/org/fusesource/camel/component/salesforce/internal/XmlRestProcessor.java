@@ -21,7 +21,6 @@ import com.thoughtworks.xstream.XStreamException;
 import com.thoughtworks.xstream.io.naming.NoNameCoder;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 import org.apache.camel.Exchange;
-import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 import org.slf4j.Logger;
@@ -30,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
+import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
 
 public class XmlRestProcessor extends AbstractRestProcessor {
 
@@ -69,37 +70,46 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
             case GET_SOBJECT_BASIC_INFO:
                 // get parameters and set them in exchange
-                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true)) {
+                if (!setParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
                     return null;
                 }
 
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectBasicInfo.class);
                 // need to add alias for Salesforce XML that uses SObject name as root element
-                exchange.setProperty(RESPONSE_ALIAS, getParameter(exchange, true, SalesforceEndpointConfig.SOBJECT_NAME));
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
                 break;
 
             case GET_SOBJECT_DESCRIPTION:
                 // get parameters and set them in exchange
-                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true)) {
+                if (!setParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
                     return null;
                 }
 
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectDescription.class);
                 // need to add alias for Salesforce XML that uses SObject name as root element
-                exchange.setProperty(RESPONSE_ALIAS, getParameter(exchange, true, SalesforceEndpointConfig.SOBJECT_NAME));
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
                 break;
 
             case GET_SOBJECT_BY_ID:
                 // get parameters and set them in exchange
-                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, false) ||
-                    !setParameter(SalesforceEndpointConfig.SOBJECT_ID, exchange, true)) {
+                if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
+                    !setParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
                     return null;
                 }
 
-                // use custom response class from endpoint config
-                final String className = getParameter(exchange, false, SalesforceEndpointConfig.SOBJECT_CLASS);
+                // get optional field list
+                String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_IN_BODY, IS_OPTIONAL);
+                if (fieldsValue != null) {
+                    String[] fields = fieldsValue.split(",");
+                    exchange.setProperty(SOBJECT_FIELDS, fields);
+                }
+
+                // use custom response class property
+                final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                 if (className == null) {
                     return null;
                 }
@@ -112,6 +122,9 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                     exchange.setException(e);
                     return null;
                 }
+                // need to add alias for Salesforce XML that uses SObject name as root element
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
                 break;
 
             case CREATE_SOBJECT:
@@ -152,7 +165,10 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             }
             Object response = responseClass.newInstance();
             xStream.fromXML(responseEntity, response);
-            exchange.getIn().setBody(response);
+            exchange.getOut().setBody(response);
+            // copy headers and attachments
+            exchange.getOut().getHeaders().putAll(exchange.getIn().getHeaders());
+            exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (XStreamException e) {
             String msg = "Error parsing XML response: " + e.getMessage();
             LOG.error(msg, e);

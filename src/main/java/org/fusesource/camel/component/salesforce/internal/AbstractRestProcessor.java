@@ -35,6 +35,11 @@ public abstract class AbstractRestProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractRestProcessor.class);
 
+    protected static final boolean NOT_OPTIONAL = false;
+    protected static final boolean IS_OPTIONAL = true;
+    protected static final boolean USE_IN_BODY = true;
+    protected static final boolean IGNORE_IN_BODY = false;
+
     private RestClient restClient;
     private RestClientHelper.ApiName apiName;
 
@@ -182,13 +187,15 @@ public abstract class AbstractRestProcessor {
      * @param propName
      * @param exchange
      * @param convertInBody
-     * @return true if the property was found, false otherwise with an exception in the exchange.
+     * @param optional if true, sets an exception on exchange
+     * @return true if the property was found
      */
     protected final boolean setParameter(String propName, Exchange exchange,
-                                      boolean convertInBody) {
+                                      boolean convertInBody,
+                                      boolean optional) {
         // get the field name from exchangeProperty
         // look for a message body, header or endpoint property in that order
-        String propValue = getParameter(exchange, convertInBody, propName);
+        String propValue = getParameter(propName, exchange, convertInBody, optional);
 
         if (propValue != null) {
             // set the property on the exchange
@@ -207,13 +214,13 @@ public abstract class AbstractRestProcessor {
      * @param propName
      * @return value of property, null if not found, with an exception in exchange.
      */
-    protected final String getParameter(Exchange exchange, boolean convertInBody, String propName) {
+    protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) {
         String propValue = convertInBody ? exchange.getIn().getBody(String.class) : null;
         propValue = propValue != null ? propValue : exchange.getIn().getHeader(propName, String.class);
         propValue = propValue != null ? propValue : endpointConfig.get(propName);
 
         // error if property was not set
-        if (propValue == null) {
+        if (propValue == null && !optional) {
             String msg = "Missing property " + propName;
             LOG.error(msg);
             exchange.setException(new RuntimeCamelException(msg));

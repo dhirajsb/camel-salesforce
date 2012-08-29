@@ -19,7 +19,6 @@ package org.fusesource.camel.component.salesforce.internal;
 import org.apache.camel.Exchange;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 import org.slf4j.Logger;
@@ -30,6 +29,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
+import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
 
 public class JsonRestProcessor extends AbstractRestProcessor {
 
@@ -70,7 +71,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
             case GET_SOBJECT_BASIC_INFO:
                 // get parameters and set them in exchange
-                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true)) {
+                if (!setParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
                     return null;
                 }
 
@@ -80,7 +81,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
             case GET_SOBJECT_DESCRIPTION:
                 // get parameters and set them in exchange
-                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true)) {
+                if (!setParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
                     return null;
                 }
 
@@ -90,13 +91,20 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
             case GET_SOBJECT_BY_ID:
                 // get parameters and set them in exchange
-                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, false) ||
-                    !setParameter(SalesforceEndpointConfig.SOBJECT_ID, exchange, true)) {
+                if (!setParameter(SOBJECT_NAME, exchange, false, false) ||
+                    !setParameter(SOBJECT_ID, exchange, true, false)) {
                     return null;
                 }
 
-                // use custom response class from endpoint config
-                final String className = getParameter(exchange, false, SalesforceEndpointConfig.SOBJECT_CLASS);
+                // get optional field list
+                String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_IN_BODY, IS_OPTIONAL);
+                if (fieldsValue != null) {
+                    String[] fields = fieldsValue.split(",");
+                    exchange.setProperty(SOBJECT_FIELDS, fields);
+                }
+
+                // use custom response class property
+                final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                 if (className == null) {
                     return null;
                 }
@@ -142,7 +150,10 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                 TypeReference<?> responseType = exchange.getProperty(RESPONSE_TYPE, TypeReference.class);
                 response = objectMapper.readValue(responseEntity, responseType);
             }
-            exchange.getIn().setBody(response);
+            exchange.getOut().setBody(response);
+            // copy headers and attachments
+            exchange.getOut().getHeaders().putAll(exchange.getIn().getHeaders());
+            exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (IOException e) {
             String msg = "Error parsing JSON response: " + e.getMessage();
             LOG.error(msg, e);
