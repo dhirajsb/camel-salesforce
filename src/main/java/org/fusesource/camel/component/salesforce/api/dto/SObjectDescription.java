@@ -16,16 +16,21 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
+
 import java.util.List;
 
 public class SObjectDescription extends SObject {
 
+    @XStreamImplicit
     private List<SObjectField> fields;
 
     private SObjectDescriptionUrls urls;
 
+    @XStreamImplicit
     private List<ChildRelationShip> childRelationships;
 
+    @XStreamImplicit
     private List<RecordTypeInfo> recordTypeInfos;
 
     public List<SObjectField> getFields() {

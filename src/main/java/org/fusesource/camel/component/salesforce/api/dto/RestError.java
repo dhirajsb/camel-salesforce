@@ -16,11 +16,14 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
+
 import java.util.List;
 
-public class RestError {
+public class RestError extends AbstractDTOBase {
     private String errorCode;
     private String message;
+    @XStreamImplicit
     private List<String> fields;
 
     // default ctor for unmarshalling
@@ -60,21 +63,6 @@ public class RestError {
 
     public void setFields(List<String> fields) {
         this.fields = fields;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder(String.format("{ code: %s, description: \"%s\"", errorCode, message));
-        if ((null != fields) && !fields.isEmpty()) {
-            builder.append(", fields: [");
-            for (String field : fields) {
-                builder.append(field);
-                builder.append(", ");
-            }
-            builder.append("]");
-        }
-        builder.append(" }");
-        return builder.toString();
     }
 
 }

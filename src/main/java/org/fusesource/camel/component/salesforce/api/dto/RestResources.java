@@ -22,7 +22,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * DTO for Salesforce Resources.
  */
 @XStreamAlias("urls")
-public class RestResources {
+public class RestResources extends AbstractDTOBase {
 
     private String sobjects;
     private String identity;
@@ -87,9 +87,5 @@ public class RestResources {
     public void setRecent(String recent) {
         this.recent = recent;
     }
-    
-    public String toString() {
-        return String.format("Resources: { sobjects: {%s}, identity: {%s}, connect: {%s}, search: {%s}, query: {%s}, chatter: {%s}, recent: {%s} }",
-            sobjects, identity, connect, search, query, chatter, recent);
-    }
+
 }

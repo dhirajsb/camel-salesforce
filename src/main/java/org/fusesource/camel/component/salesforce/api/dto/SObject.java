@@ -16,7 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class SObject {
+public class SObject extends AbstractDTOBase {
     private String name;
     private String label;
     private boolean updateable;
@@ -32,10 +32,13 @@ public class SObject {
     private boolean deletable;
     private boolean customSetting;
     private boolean feedEnabled;
+    private String listviewable;
+    private String lookupLayoutable;
     private boolean mergeable;
     private boolean queryable;
     private boolean replicateable;
     private boolean retrieveable;
+    private String searchLayoutable;
     private boolean undeletable;
     private boolean triggerable;
 
@@ -159,6 +162,22 @@ public class SObject {
         this.feedEnabled = feedEnabled;
     }
 
+    public String getListviewable() {
+        return listviewable;
+    }
+
+    public void setListviewable(String listviewable) {
+        this.listviewable = listviewable;
+    }
+
+    public String getLookupLayoutable() {
+        return lookupLayoutable;
+    }
+
+    public void setLookupLayoutable(String lookupLayoutable) {
+        this.lookupLayoutable = lookupLayoutable;
+    }
+
     public boolean isMergeable() {
         return mergeable;
     }
@@ -189,6 +208,14 @@ public class SObject {
 
     public void setRetrieveable(boolean retrieveable) {
         this.retrieveable = retrieveable;
+    }
+
+    public String getSearchLayoutable() {
+        return searchLayoutable;
+    }
+
+    public void setSearchLayoutable(String searchLayoutable) {
+        this.searchLayoutable = searchLayoutable;
     }
 
     public boolean isUndeletable() {

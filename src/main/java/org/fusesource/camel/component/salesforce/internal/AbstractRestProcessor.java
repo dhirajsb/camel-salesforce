@@ -18,6 +18,7 @@ package org.fusesource.camel.component.salesforce.internal;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.RuntimeCamelException;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
@@ -176,17 +177,49 @@ public abstract class AbstractRestProcessor {
         return apiName;
     }
 
-    protected final void setParameter(String exchangeProperty, Exchange exchange,
+    /**
+     * Gets a property with provided name, and sets it on exchange.
+     * @param propName
+     * @param exchange
+     * @param convertInBody
+     * @return true if the property was found, false otherwise with an exception in the exchange.
+     */
+    protected final boolean setParameter(String propName, Exchange exchange,
                                       boolean convertInBody) {
         // get the field name from exchangeProperty
-        final String propName = exchangeProperty.substring(exchangeProperty.lastIndexOf('.'));
-
         // look for a message body, header or endpoint property in that order
-        String propValue = convertInBody ? exchange.getIn().getBody().toString() : null;
+        String propValue = getParameter(exchange, convertInBody, propName);
+
+        if (propValue != null) {
+            // set the property on the exchange
+            exchange.setProperty(propName, propValue);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Gets value for a parameter from exchange body (optional), header, or endpoint config.
+     * Also sets an exception on exchange if the property can't be found.
+     * @param exchange
+     * @param convertInBody
+     * @param propName
+     * @return value of property, null if not found, with an exception in exchange.
+     */
+    protected final String getParameter(Exchange exchange, boolean convertInBody, String propName) {
+        String propValue = convertInBody ? exchange.getIn().getBody(String.class) : null;
         propValue = propValue != null ? propValue : exchange.getIn().getHeader(propName, String.class);
         propValue = propValue != null ? propValue : endpointConfig.get(propName);
 
-        // set the property on the exchange
-        exchange.setProperty(exchangeProperty, propValue);
+        // error if property was not set
+        if (propValue == null) {
+            String msg = "Missing property " + propName;
+            LOG.error(msg);
+            exchange.setException(new RuntimeCamelException(msg));
+        }
+
+        return propValue;
     }
+
 }

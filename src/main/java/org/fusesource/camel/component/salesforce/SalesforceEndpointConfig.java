@@ -11,12 +11,12 @@ import java.util.Map;
 
 public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
-    private static final String EXCHANGE_PROPERTY_PREFIX = SalesforceEndpointConfig.class.getName();
-    public static final String SOBJECT_NAME = EXCHANGE_PROPERTY_PREFIX + ".sObjectName";
-    public static final String SOBJECT_ID = EXCHANGE_PROPERTY_PREFIX + ".sObjectId";
-    public static final String SOBJECT_FIELDS = EXCHANGE_PROPERTY_PREFIX + ".sObjectFields";
-    public static final String SOBJECT_EXT_ID_NAME = EXCHANGE_PROPERTY_PREFIX + ".sObjectIdName";
-    public static final String SOBJECT_EXT_ID_VALUE = EXCHANGE_PROPERTY_PREFIX + ".sObjectIdValue";
+    public static final String SOBJECT_NAME = "sObjectName";
+    public static final String SOBJECT_ID = "sObjectId";
+    public static final String SOBJECT_FIELDS = "sObjectFields";
+    public static final String SOBJECT_EXT_ID_NAME = "sObjectIdName";
+    public static final String SOBJECT_EXT_ID_VALUE = "sObjectIdValue";
+    public static final String SOBJECT_CLASS = "sObjectClass";
 
     private PayloadFormat format;
     private String apiVersion;
@@ -27,6 +27,7 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     private String sObjectFields;
     private String sObjectIdName;
     private String sObjectIdValue;
+    private String sObjectClass;
 
     public SalesforceEndpointConfig(CamelContext camelContext) {
         super(camelContext);
@@ -60,44 +61,52 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         this.apiName = apiName;
     }
 
-    public String getsObjectName() {
+    public String getSObjectName() {
         return sObjectName;
     }
 
-    public void setsObjectName(String sObjectName) {
+    public void setSObjectName(String sObjectName) {
         this.sObjectName = sObjectName;
     }
 
-    public String getsObjectId() {
+    public String getSObjectId() {
         return sObjectId;
     }
 
-    public void setsObjectId(String sObjectId) {
+    public void setSObjectId(String sObjectId) {
         this.sObjectId = sObjectId;
     }
 
-    public String getsObjectFields() {
+    public String getSObjectFields() {
         return sObjectFields;
     }
 
-    public void setsObjectFields(String sObjectFields) {
+    public void setSObjectFields(String sObjectFields) {
         this.sObjectFields = sObjectFields;
     }
 
-    public String getsObjectIdName() {
+    public String getSObjectIdName() {
         return sObjectIdName;
     }
 
-    public void setsObjectIdName(String sObjectIdName) {
+    public void setSObjectIdName(String sObjectIdName) {
         this.sObjectIdName = sObjectIdName;
     }
 
-    public String getsObjectIdValue() {
+    public String getSObjectIdValue() {
         return sObjectIdValue;
     }
 
-    public void setsObjectIdValue(String sObjectIdValue) {
+    public void setSObjectIdValue(String sObjectIdValue) {
         this.sObjectIdValue = sObjectIdValue;
+    }
+
+    public String getSObjectClass() {
+        return sObjectClass;
+    }
+
+    public void setSObjectClass(String sObjectClass) {
+        this.sObjectClass = sObjectClass;
     }
 
     @Override
@@ -118,6 +127,7 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         valueMap.put("sObjectFields", sObjectFields);
         valueMap.put("sObjectIdName", sObjectIdName);
         valueMap.put("sObjectIdValue", sObjectIdValue);
+        valueMap.put("sObjectClass", sObjectClass);
 
         return Collections.unmodifiableMap(valueMap);
     }

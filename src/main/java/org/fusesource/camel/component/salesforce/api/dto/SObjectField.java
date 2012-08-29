@@ -16,9 +16,11 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
+
 import java.util.List;
 
-public class SObjectField {
+public class SObjectField extends AbstractDTOBase {
 
     private int length;
     private String name;
@@ -52,8 +54,10 @@ public class SObjectField {
     private boolean htmlFormatted;
     private String defaultValueFormula;
     private String calculatedFormula;
+    @XStreamImplicit
     private List<String> picklistValues;
     private boolean dependentPicklist;
+    @XStreamImplicit
     private List<String> referenceTo;
     private String relationshipName;
     private String relationshipOrder;

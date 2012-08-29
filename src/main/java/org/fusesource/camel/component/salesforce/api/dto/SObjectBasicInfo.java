@@ -20,11 +20,11 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 import java.util.List;
 
-public class SObjectBasicInfo {
+public class SObjectBasicInfo extends AbstractDTOBase {
 
     private SObject objectDescribe;
 
-    @XStreamImplicit(itemFieldName = "recentItems")
+    @XStreamImplicit
     private List<RecentItem> recentItems;
 
     public SObject getObjectDescribe() {

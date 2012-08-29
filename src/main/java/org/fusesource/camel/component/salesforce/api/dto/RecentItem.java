@@ -16,9 +16,16 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class RecentItem {
+import org.codehaus.jackson.annotate.JsonProperty;
+
+public class RecentItem extends AbstractDTOBase {
+
     private Attributes attributes;
+
+    @JsonProperty("Id")
     private String Id;
+
+    @JsonProperty("Name")
     private String Name;
 
     public Attributes getAttributes() {

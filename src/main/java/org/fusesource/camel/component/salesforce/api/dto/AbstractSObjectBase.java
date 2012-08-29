@@ -16,7 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class AbstractSObjectBase {
+public class AbstractSObjectBase extends AbstractDTOBase {
 
     private Attributes attributes;
     
@@ -118,4 +118,5 @@ public class AbstractSObjectBase {
     public void setLastActivityDate(String lastActivityDate) {
         LastActivityDate = lastActivityDate;
     }
+
 }

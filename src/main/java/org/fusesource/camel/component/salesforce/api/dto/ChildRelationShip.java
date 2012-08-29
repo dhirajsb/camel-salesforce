@@ -16,7 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class ChildRelationShip {
+public class ChildRelationShip extends AbstractDTOBase {
     private String field;
     private boolean deprecatedAndHidden;
     private String relationshipName;

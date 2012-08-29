@@ -16,23 +16,25 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class Attributes extends AbstractDTOBase {
-    private String type;
-    private String url;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
-    public String getType() {
-        return type;
+import java.util.List;
+
+/**
+ * DTO for Salesforce versions
+ */
+@XStreamAlias("Versions")
+public class Versions extends AbstractDTOBase {
+
+    @XStreamImplicit(itemFieldName = "Version")
+    private List<Version> versions;
+
+    public List<Version> getVersions() {
+        return versions;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
+    public void setVersions(List<Version> versions) {
+        this.versions = versions;
     }
 }

@@ -20,7 +20,7 @@ import org.apache.camel.Exchange;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
-import org.fusesource.camel.component.salesforce.api.*;
+import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,10 +50,12 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     @Override
     protected InputStream processRequest(Exchange exchange) {
         // TODO process JSON parameters
+        InputStream request = null;
+
         switch (getApiName()) {
             case GET_VERSIONS:
                 // handle in built response types
-                exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<ForceVersion>>() {});
+                exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<Version>>() {});
                 break;
 
             case GET_RESOURCES:
@@ -68,7 +70,9 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
             case GET_SOBJECT_BASIC_INFO:
                 // get parameters and set them in exchange
-                setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true);
+                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true)) {
+                    return null;
+                }
 
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectBasicInfo.class);
@@ -76,15 +80,54 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
             case GET_SOBJECT_DESCRIPTION:
                 // get parameters and set them in exchange
-                setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true);
+                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, true)) {
+                    return null;
+                }
 
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectDescription.class);
                 break;
+
+            case GET_SOBJECT_BY_ID:
+                // get parameters and set them in exchange
+                if (!setParameter(SalesforceEndpointConfig.SOBJECT_NAME, exchange, false) ||
+                    !setParameter(SalesforceEndpointConfig.SOBJECT_ID, exchange, true)) {
+                    return null;
+                }
+
+                // use custom response class from endpoint config
+                final String className = getParameter(exchange, false, SalesforceEndpointConfig.SOBJECT_CLASS);
+                if (className == null) {
+                    return null;
+                }
+
+                try {
+                    Class sObjectClass = Thread.currentThread().getContextClassLoader().loadClass(className);
+                    exchange.setProperty(RESPONSE_CLASS, sObjectClass);
+                } catch (ClassNotFoundException e) {
+                    LOG.error("Error loading class " + className);
+                    exchange.setException(e);
+                    return null;
+                }
+                break;
+
+            case CREATE_SOBJECT:
+                break;
+            case UPDATE_SOBJECT_BY_ID:
+                break;
+            case DELETE_SOBJECT_BY_ID:
+                break;
+            case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
+                break;
+            case DELETE_SOBJECT_BY_EXTERNAL_ID:
+                break;
+            case EXECUTE_QUERY:
+                break;
+            case EXECUTE_SEARCH:
+                break;
         }
 
-        // default input body is null
-        return null;
+        return request;
     }
 
     @Override

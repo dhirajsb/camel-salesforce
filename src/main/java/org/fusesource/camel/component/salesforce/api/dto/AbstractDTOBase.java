@@ -16,25 +16,22 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import org.codehaus.jackson.map.ObjectMapper;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.StringWriter;
 
-/**
- * DTO for Salesforce versions
- */
-@XStreamAlias("Versions")
-public class ForceVersions {
+public abstract class AbstractDTOBase {
+    private final static ObjectMapper mapper = new ObjectMapper();
 
-    @XStreamImplicit(itemFieldName = "Version")
-    private List<ForceVersion> versions;
-
-    public List<ForceVersion> getVersions() {
-        return versions;
-    }
-
-    public void setVersions(List<ForceVersion> versions) {
-        this.versions = versions;
+    @Override
+    public String toString() {
+        try {
+            StringWriter writer = new StringWriter();
+            mapper.writeValue(writer, this);
+            return writer.toString();
+        } catch (IOException e) {
+            return "Error in toString " + e.getMessage();
+        }
     }
 }

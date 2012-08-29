@@ -16,10 +16,11 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class SObjectUrls {
+public class SObjectUrls extends AbstractDTOBase {
     private String sobject;
     private String describe;
     private String rowTemplate;
+    private String passwordUtilities;
 
     public String getSobject() {
         return sobject;
@@ -43,5 +44,13 @@ public class SObjectUrls {
 
     public void setRowTemplate(String rowTemplate) {
         this.rowTemplate = rowTemplate;
+    }
+
+    public String getPasswordUtilities() {
+        return passwordUtilities;
+    }
+
+    public void setPasswordUtilities(String passwordUtilities) {
+        this.passwordUtilities = passwordUtilities;
     }
 }

@@ -22,12 +22,12 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import java.util.List;
 
 @XStreamAlias("DescribeGlobal")
-public class GlobalObjects {
+public class GlobalObjects extends AbstractDTOBase {
 
     private String encoding;
     private int maxBatchSize;
 
-    @XStreamImplicit(itemFieldName = "sobjects")
+    @XStreamImplicit
     private List<SObject> sobjects;
 
     public String getEncoding() {
@@ -53,4 +53,5 @@ public class GlobalObjects {
     public void setSobjects(List<SObject> sobjects) {
         this.sobjects = sobjects;
     }
+
 }

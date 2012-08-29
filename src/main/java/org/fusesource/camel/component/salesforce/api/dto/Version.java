@@ -16,41 +16,37 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
-public class RecordTypeInfo extends AbstractDTOBase {
-    private String name;
-    private boolean available;
-    private String recordTypeId;
-    private boolean defaultRecordTypeMapping;
+/**
+ * DTO for Salesforce version API
+ */
+public class Version extends AbstractDTOBase {
 
-    public String getName() {
-        return name;
+    private String label;
+    private String url;
+    private String version;
+
+    public String getLabel() {
+        return label;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
-    public boolean isAvailable() {
-        return available;
+    public String getUrl() {
+        return url;
     }
 
-    public void setAvailable(boolean available) {
-        this.available = available;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
-    public String getRecordTypeId() {
-        return recordTypeId;
+    public String getVersion() {
+        return version;
     }
 
-    public void setRecordTypeId(String recordTypeId) {
-        this.recordTypeId = recordTypeId;
+    public void setVersion(String version) {
+        this.version = version;
     }
 
-    public boolean isDefaultRecordTypeMapping() {
-        return defaultRecordTypeMapping;
-    }
-
-    public void setDefaultRecordTypeMapping(boolean defaultRecordTypeMapping) {
-        this.defaultRecordTypeMapping = defaultRecordTypeMapping;
-    }
 }

@@ -14,39 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api.dto;
+package org.fusesource.camel.component.salesforce;
 
-/**
- * DTO for Salesforce version API
- */
-public class ForceVersion {
+import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 
-    private String label;
-    private String url;
-    private String version;
+public class Merchandise__c extends AbstractSObjectBase {
+    private String Description__c;
+    private double Price__c;
+    private double Total_Inventory__c;
 
-    public String getLabel() {
-        return label;
+    public String getDescription__c() {
+        return Description__c;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
+    public void setDescription__c(String description__c) {
+        Description__c = description__c;
     }
 
-    public String getUrl() {
-        return url;
+    public double getPrice__c() {
+        return Price__c;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setPrice__c(double price__c) {
+        Price__c = price__c;
     }
 
-    public String getVersion() {
-        return version;
+    public double getTotal_Inventory__c() {
+        return Total_Inventory__c;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
+    public void setTotal_Inventory__c(double total_Inventory__c) {
+        Total_Inventory__c = total_Inventory__c;
     }
-
 }
