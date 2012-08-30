@@ -23,13 +23,13 @@ import java.util.List;
 
 public class QueryRecordsLine_Item__c extends AbstractQueryRecordsBase {
     @XStreamImplicit
-    private List<Line_Item__c> results;
+    private List<Line_Item__c> records;
 
-    public List<Line_Item__c> getResults() {
-        return results;
+    public List<Line_Item__c> getRecords() {
+        return records;
     }
 
-    public void setResults(List<Line_Item__c> results) {
-        this.results = results;
+    public void setRecords(List<Line_Item__c> records) {
+        this.records = records;
     }
 }
