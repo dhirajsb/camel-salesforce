@@ -20,6 +20,8 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponentTest.class);
     private static final String TEST_LOGIN_PROPERTIES = "/test-login.properties";
+    private static final String TEST_LINE_ITEM_ID = "1";
+    private static final String NEW_LINE_ITEM_ID = "100";
 
     private ObjectMapper objectMapper;
     private static final long TEST_TIMEOUT = 30;
@@ -32,7 +34,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
         // test versions doesn't need a body
         sendBody("direct:testGetVersions", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
@@ -44,7 +46,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock = getMockEndpoint("mock:testGetVersionsXml");
         mock.expectedMinimumMessageCount(1);
         sendBody("direct:testGetVersionsXml", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -59,7 +61,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetResources", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
@@ -71,7 +73,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetResourcesXml", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -86,7 +88,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetGlobalObjects", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
@@ -98,7 +100,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetGlobalObjectsXml", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -113,7 +115,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetSObjectBasicInfo", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
@@ -125,7 +127,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetSObjectBasicInfoXml", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -140,7 +142,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetSObjectDescription", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
@@ -152,7 +154,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetSObjectDescriptionXml", null);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -167,7 +169,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetSObjectById", testId);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
@@ -180,7 +182,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testGetSObjectByIdXml", testId);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -217,14 +219,14 @@ public class SalesforceComponentTest extends CamelTestSupport {
         merchandise__c.setPrice__c(2000.0);
         merchandise__c.setTotal_Inventory__c(50.0);
         sendBody("direct:testCreateSObject" + suffix, merchandise__c);
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         Exchange ex = mock.getExchanges().get(0);
         assertNull(ex.getException());
         CreateSObjectResult result = ex.getIn().getBody(CreateSObjectResult.class);
         assertNotNull(result);
-        assertTrue("Create successful", result.getSuccess());
+        assertTrue("CreateSObject success", result.getSuccess());
         LOG.trace("CreateSObject: " + result);
 
         // test JSON update
@@ -236,8 +238,9 @@ public class SalesforceComponentTest extends CamelTestSupport {
         merchandise__c.setPrice__c(1500.0);
         // change inventory to half
         merchandise__c.setTotal_Inventory__c(25.0);
-        template().sendBodyAndHeader("direct:testUpdateSObjectById" + suffix, merchandise__c, SalesforceEndpointConfig.SOBJECT_ID, result.getId());
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        template().sendBodyAndHeader("direct:testUpdateSObjectById" + suffix,
+            merchandise__c, SalesforceEndpointConfig.SOBJECT_ID, result.getId());
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -251,7 +254,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         mock.expectedMinimumMessageCount(1);
 
         sendBody("direct:testDeleteSObjectById" + suffix, result.getId());
-        mock.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
 
         // assert expected result
         ex = mock.getExchanges().get(0);
@@ -259,6 +262,74 @@ public class SalesforceComponentTest extends CamelTestSupport {
         assertNull(ex.getException());
         assertNull(ex.getOut().getBody());
         LOG.trace("DeleteSObjectById successful");
+    }
+
+    @Test
+    public void testCreateUpdateDeleteByExternalId() throws Exception {
+        // test JSON endpoints
+        doTestCreateUpdateDeleteByExternalId(false);
+
+        // test XML endpoints
+        doTestCreateUpdateDeleteByExternalId(true);
+    }
+
+    private void doTestCreateUpdateDeleteByExternalId(boolean testXml) throws InterruptedException {
+        String suffix = "";
+        if (testXml) {
+            suffix = "Xml";
+            LOG.trace("Testing JSON endpoints");
+        } else {
+            LOG.trace("Testing XML endpoints");
+        }
+
+        MockEndpoint mock = getMockEndpoint("mock:testGetSObjectByExternalId" + suffix);
+        mock.expectedMinimumMessageCount(1);
+
+        // get line item with Name 1
+        sendBody("direct:testGetSObjectByExternalId" + suffix, TEST_LINE_ITEM_ID);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
+
+        // assert expected result
+        Exchange ex = mock.getExchanges().get(0);
+        assertNull(ex.getException());
+        Line_Item__c line_item__c = ex.getIn().getBody(Line_Item__c.class);
+        assertNotNull(line_item__c);
+        LOG.trace("GetSObjectByExternalId: " + line_item__c);
+
+        // test JSON update
+        mock = getMockEndpoint("mock:testCreateOrUpdateSObjectByExternalId" + suffix);
+        mock.expectedMinimumMessageCount(1);
+
+        // change line_item__c to create a new Line Item
+        // otherwise we will get an error from Salesforce
+        line_item__c.clearFields();
+        // set the unit price and sold
+        line_item__c.setUnit_Price__c(1000.0);
+        line_item__c.setUnits_Sold__c(50.0);
+        // update line item with Name 2
+        template().sendBodyAndHeader("direct:testCreateOrUpdateSObjectByExternalId" + suffix,
+            line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
+
+        // assert expected result
+        ex = mock.getExchanges().get(0);
+        CreateSObjectResult result = ex.getIn().getBody(CreateSObjectResult.class);
+        assertNotNull(result);
+        LOG.trace("CreateOrUpdateSObjectByExternalId: {}", result);
+
+        // delete the SObject with Name=2
+        mock = getMockEndpoint("mock:testDeleteSObjectByExternalId" + suffix);
+        mock.expectedMinimumMessageCount(1);
+
+        sendBody("direct:testDeleteSObjectByExternalId" + suffix, NEW_LINE_ITEM_ID);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
+
+        // assert expected result
+        ex = mock.getExchanges().get(0);
+        // empty body and no exception
+        assertNull(ex.getException());
+        assertNull(ex.getOut().getBody());
+        LOG.trace("DeleteSObjectByExternalId successful");
     }
 
     @Override
@@ -365,22 +436,31 @@ public class SalesforceComponentTest extends CamelTestSupport {
                     .to("force://deleteSObjectById?format=xml&sObjectName=Merchandise__c")
                     .to("mock:testDeleteSObjectByIdXml");
 
+                // testGetSObjectByExternalId
+                from("direct:testGetSObjectByExternalId")
+                    .to("force://getSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
+                    .to("mock:testGetSObjectByExternalId");
+
+                from("direct:testGetSObjectByExternalIdXml")
+                    .to("force://getSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
+                    .to("mock:testGetSObjectByExternalIdXml");
+
                 // testCreateOrUpdateSObjectByExternalId
                 from("direct:testCreateOrUpdateSObjectByExternalId")
-                    .to("force://createOrUpdateSObjectByExternalId?sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://createOrUpdateSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
                     .to("mock:testCreateOrUpdateSObjectByExternalId");
 
                 from("direct:testCreateOrUpdateSObjectByExternalIdXml")
-                    .to("force://createOrUpdateSObjectByExternalId?format=xml&sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://createOrUpdateSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
                     .to("mock:testCreateOrUpdateSObjectByExternalIdXml");
 
                 // testDeleteSObjectByExternalId
                 from("direct:testDeleteSObjectByExternalId")
-                    .to("force://deleteSObjectByExternalId?sObjectName=Merchandise__c")
+                    .to("force://deleteSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name")
                     .to("mock:testDeleteSObjectByExternalId");
 
                 from("direct:testDeleteSObjectByExternalIdXml")
-                    .to("force://deleteSObjectByExternalId?format=xml&sObjectName=Merchandise__c")
+                    .to("force://deleteSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
                     .to("mock:testDeleteSObjectByExternalIdXml");
             }
         };
