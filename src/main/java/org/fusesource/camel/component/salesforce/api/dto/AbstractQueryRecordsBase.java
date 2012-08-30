@@ -17,29 +17,29 @@
 package org.fusesource.camel.component.salesforce.api.dto;
 
 /**
- * Abstract base DTO for Salesforce SOQL Query results.
+ * Abstract base DTO for Salesforce SOQL Query records.
  * <p>
  * Derived classes must follow the template below:
  * </p>
  * <pre>
  * {@code
- * public class MyQueryResult extends AbstractQueryResultBase {
+ * public class QueryResultMySObject extends AbstractQueryRecordsBase {
  *     @XStreamImplicit
- *     private List<MySObject> results;
+ *     private List<MySObject> records;
  *
- *     public List<MySObject> getResults() {
- *         return results;
+ *     public List<MySObject> getRecords() {
+ *         return records;
  *     }
  *
- *     public void setResults(List<MySObject> results) {
- *         this.results = results;
+ *     public void setRecords(List<MySObject> records) {
+ *         this.records = records;
  *     }
  *
  * }
  * }
  * </pre>
  */
-public abstract class AbstractQueryResultBase extends AbstractDTOBase {
+public abstract class AbstractQueryRecordsBase extends AbstractDTOBase {
 
     private Boolean done;
     private int totalSize;
