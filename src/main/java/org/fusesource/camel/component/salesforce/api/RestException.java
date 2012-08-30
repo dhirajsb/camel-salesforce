@@ -26,7 +26,6 @@ import java.util.List;
 public class RestException extends CamelException {
 
     private List<RestError> errors;
-
     private int statusCode;
 
     public RestException(List<RestError> errors, int statusCode) {
@@ -72,17 +71,30 @@ public class RestException extends CamelException {
 
     @Override
     public String toString() {
-        return toErrorMessage(this.errors, this.statusCode);
+        if (errors != null) {
+            return toErrorMessage(errors, statusCode);
+        } else {
+            // make sure we include the custom message
+            final StringBuilder builder = new StringBuilder("{ ");
+            builder.append(getMessage());
+            builder.append(", statusCode: ");
+            builder.append(statusCode);
+            builder.append("}");
+
+            return builder.toString();
+        }
     }
 
     private static String toErrorMessage(List<RestError> errors, int statusCode) {
-        StringBuilder builder = new StringBuilder("{ errors: [");
+        StringBuilder builder = new StringBuilder("{ ");
         if (errors != null) {
+            builder.append(" errors: [");
             for (RestError error : errors) {
                 builder.append(error.toString());
             }
+            builder.append("], ");
         }
-        builder.append(" ] statusCode: ");
+        builder.append("statusCode: ");
         builder.append(statusCode);
         builder.append("}");
 
