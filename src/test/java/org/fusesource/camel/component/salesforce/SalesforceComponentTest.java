@@ -172,7 +172,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         Exchange ex = mock.getExchanges().get(0);
         Merchandise__c merchandise = ex.getIn().getBody(Merchandise__c.class);
         assertNotNull(merchandise);
-        assertEquals("Total_Inventory__c", 0, merchandise.getTotal_Inventory__c(), 0);
+        assertNull(merchandise.getTotal_Inventory__c());
         LOG.trace("SObjectById: {}", merchandise);
 
         mock = getMockEndpoint("mock:testGetSObjectByIdXml");
@@ -185,7 +185,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         ex = mock.getExchanges().get(0);
         merchandise = ex.getIn().getBody(Merchandise__c.class);
         assertNotNull(merchandise);
-        assertEquals("Price__c", 0, merchandise.getPrice__c(), 0);
+        assertNull(merchandise.getPrice__c());
         LOG.trace("SObjectById: {}", merchandise);
     }
 
