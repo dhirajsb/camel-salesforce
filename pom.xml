@@ -8,8 +8,8 @@
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
 
-  <name>Camel Salesforce Component</name>
-  <url>http://www.myorganization.org</url>
+  <name>Camel :: Salesforce</name>
+  <url>http://www.fusesource.com</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -108,11 +108,6 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-xstream</artifactId>
-      <version>${camel-version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-netty</artifactId>
       <version>${camel-version}</version>
     </dependency>
     <!-- logging -->
