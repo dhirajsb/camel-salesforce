@@ -28,21 +28,16 @@ import org.apache.http.Consts;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
+import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.SOBJECT_NAME;
 
 public class XmlRestProcessor extends AbstractRestProcessor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(XmlRestProcessor.class);
-
     private final XStream xStream;
-    private static final String RESPONSE_CLASS = XmlRestProcessor.class.getName() + ".responseClass";
     private static final String RESPONSE_ALIAS = XmlRestProcessor.class.getName() + ".responseAlias";
 
     public XmlRestProcessor(RestClient restClient,
@@ -61,220 +56,107 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     }
 
     @Override
-    protected InputStream processRequest(Exchange exchange) {
-        // TODO process XML request parameters
-        InputStream request = null;
+    protected void processRequest(Exchange exchange) throws RestException {
 
-        try {
-            switch (getApiName()) {
-                case GET_VERSIONS:
-                    exchange.setProperty(RESPONSE_CLASS, Versions.class);
-                    break;
+        switch (getApiName()) {
+            case GET_VERSIONS:
+                exchange.setProperty(RESPONSE_CLASS, Versions.class);
+                break;
 
-                case GET_RESOURCES:
-                    exchange.setProperty(RESPONSE_CLASS, RestResources.class);
-                    break;
+            case GET_RESOURCES:
+                exchange.setProperty(RESPONSE_CLASS, RestResources.class);
+                break;
 
-                case GET_GLOBAL_OBJECTS:
-                    // handle in built response types
-                    exchange.setProperty(RESPONSE_CLASS, GlobalObjects.class);
-                    break;
+            case GET_GLOBAL_OBJECTS:
+                // handle in built response types
+                exchange.setProperty(RESPONSE_CLASS, GlobalObjects.class);
+                break;
 
-                case GET_SOBJECT_BASIC_INFO:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
+            case GET_SOBJECT_BASIC_INFO:
+                // handle in built response types
+                exchange.setProperty(RESPONSE_CLASS, SObjectBasicInfo.class);
 
-                    // handle in built response types
-                    exchange.setProperty(RESPONSE_CLASS, SObjectBasicInfo.class);
-                    // need to add alias for Salesforce XML that uses SObject name as root element
-                    exchange.setProperty(RESPONSE_ALIAS,
-                        getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
-                    break;
+                // need to add alias for Salesforce XML that uses SObject name as root element
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
+                break;
 
-                case GET_SOBJECT_DESCRIPTION:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
+            case GET_SOBJECT_DESCRIPTION:
+                // handle in built response types
+                exchange.setProperty(RESPONSE_CLASS, SObjectDescription.class);
 
-                    // handle in built response types
-                    exchange.setProperty(RESPONSE_CLASS, SObjectDescription.class);
-                    // need to add alias for Salesforce XML that uses SObject name as root element
-                    exchange.setProperty(RESPONSE_ALIAS,
-                        getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
-                    break;
+                // need to add alias for Salesforce XML that uses SObject name as root element
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
+                break;
 
-                case GET_SOBJECT_BY_ID:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
+            case GET_SOBJECT_BY_ID:
+                // need to add alias for Salesforce XML that uses SObject name as root element
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
+                break;
 
-                    // get optional field list
-                    String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_IN_BODY, IS_OPTIONAL);
-                    if (fieldsValue != null) {
-                        String[] fields = fieldsValue.split(",");
-                        exchange.setProperty(SOBJECT_FIELDS, fields);
-                    }
+            case CREATE_SOBJECT:
+                // handle known response type
+                exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
+                break;
 
-                    // set mandatory response class
-                    if (!setResponseClass(exchange)) {
-                        return null;
-                    }
+            case GET_SOBJECT_BY_EXTERNAL_ID:
+                // need to add alias for Salesforce XML that uses SObject name as root element
+                exchange.setProperty(RESPONSE_ALIAS,
+                    getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
+                break;
 
-                    // need to add alias for Salesforce XML that uses SObject name as root element
-                    exchange.setProperty(RESPONSE_ALIAS,
-                        getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
-                    break;
+            case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
+                // handle known response type
+                exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
+                break;
 
-                case CREATE_SOBJECT:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
+            case EXECUTE_SEARCH:
+                // handle known response type
+                exchange.setProperty(RESPONSE_CLASS, SearchResults.class);
+                break;
 
-                    // handle known response type
-                    exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
-                    request = getRequest(exchange);
-
-                    break;
-
-                case UPDATE_SOBJECT_BY_ID:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-
-                    request = getRequest(exchange);
-                    break;
-
-                case DELETE_SOBJECT_BY_ID:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-                    break;
-
-                case GET_SOBJECT_BY_EXTERNAL_ID:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-
-                    // set mandatory response class
-                    if (!setResponseClass(exchange)) {
-                        return null;
-                    }
-
-                    // need to add alias for Salesforce XML that uses SObject name as root element
-                    exchange.setProperty(RESPONSE_ALIAS,
-                        getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
-                    break;
-
-                case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_EXT_ID_VALUE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-
-                    // handle known response type
-                    exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
-                    request = getRequest(exchange);
-                    break;
-
-                case DELETE_SOBJECT_BY_EXTERNAL_ID:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
-                        !setParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-                    break;
-
-                case EXECUTE_QUERY:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-                    break;
-
-                case EXECUTE_SEARCH:
-                    // get parameters and set them in exchange
-                    if (!setParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
-                        return null;
-                    }
-                    break;
-
-            }
-        } catch (XStreamException e) {
-            String msg = "Error marshaling request: " + e.getMessage();
-            LOG.error(msg, e);
-            exchange.setException(new RestException(msg, e));
         }
 
-        return request;
     }
 
-    private boolean setResponseClass(Exchange exchange) {
-        // use custom response class property
-        final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-        if (className == null) {
-            return false;
-        }
-
+    protected InputStream getRequestStream(Exchange exchange) throws RestException {
         try {
-            Class sObjectClass = Thread.currentThread().getContextClassLoader().loadClass(className);
-            exchange.setProperty(RESPONSE_CLASS, sObjectClass);
-        } catch (ClassNotFoundException e) {
-            String msg = String.format("Error loading class %s : %s", className, e.getMessage());
-            LOG.error(msg, e);
-            exchange.setException(new RestException(msg, e));
-            return false;
-        }
-        return true;
-    }
-
-    private InputStream getRequest(Exchange exchange) {
-        // get request stream from In message
-        Message in = exchange.getIn();
-        InputStream request = in.getBody(InputStream.class);
-        if (request == null) {
-            AbstractSObjectBase sObject = in.getBody(AbstractSObjectBase.class);
-            if (sObject != null) {
-                // marshall the SObject
-                // first process annotations on the class, for things like alias, etc.
-                xStream.processAnnotations(sObject.getClass());
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                // make sure we write the XML with the right encoding
-                xStream.toXML(sObject, new OutputStreamWriter(out, Consts.UTF_8));
-                request = new ByteArrayInputStream(out.toByteArray());
-            } else {
-                // if all else fails, get body as String
-                final String body = in.getBody(String.class);
-                if (null == body) {
-                    String msg = "Unsupported request message body " +
-                        (in.getBody() == null ? null : in.getBody().getClass());
-                    LOG.error(msg);
-                    exchange.setException(new RestException(msg, null));
+            // get request stream from In message
+            Message in = exchange.getIn();
+            InputStream request = in.getBody(InputStream.class);
+            if (request == null) {
+                AbstractSObjectBase sObject = in.getBody(AbstractSObjectBase.class);
+                if (sObject != null) {
+                    // marshall the SObject
+                    // first process annotations on the class, for things like alias, etc.
+                    xStream.processAnnotations(sObject.getClass());
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    // make sure we write the XML with the right encoding
+                    xStream.toXML(sObject, new OutputStreamWriter(out, Consts.UTF_8));
+                    request = new ByteArrayInputStream(out.toByteArray());
                 } else {
-                    request = new ByteArrayInputStream(body.getBytes(Consts.UTF_8));
+                    // if all else fails, get body as String
+                    final String body = in.getBody(String.class);
+                    if (null == body) {
+                        String msg = "Unsupported request message body " +
+                            (in.getBody() == null ? null : in.getBody().getClass());
+                        throw new RestException(msg, null);
+                    } else {
+                        request = new ByteArrayInputStream(body.getBytes(Consts.UTF_8));
+                    }
                 }
             }
+            return request;
+        } catch (XStreamException e) {
+            String msg = "Error marshaling request: " + e.getMessage();
+            throw new RestException(msg, e);
         }
-        return request;
     }
 
     @Override
-    protected void processResponse(Exchange exchange, InputStream responseEntity) {
+    protected void processResponse(Exchange exchange, InputStream responseEntity) throws RestException {
         try {
             // do we need to un-marshal a response
             if (responseEntity != null) {
@@ -295,12 +177,10 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (XStreamException e) {
             String msg = "Error parsing XML response: " + e.getMessage();
-            LOG.error(msg, e);
-            exchange.setException(new RestException(msg, e));
+            throw new RestException(msg, e);
         } catch (Exception e) {
             String msg = "Error creating XML response: " + e.getMessage();
-            LOG.error(msg, e);
-            exchange.setException(new RestException(msg, e));
+            throw new RestException(msg, e);
         }
     }
 

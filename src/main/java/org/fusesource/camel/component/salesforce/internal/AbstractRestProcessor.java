@@ -18,7 +18,6 @@ package org.fusesource.camel.component.salesforce.internal;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
-import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.slf4j.Logger;
@@ -30,9 +29,13 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
+
 public abstract class AbstractRestProcessor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractRestProcessor.class);
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
+    protected static final String RESPONSE_CLASS = AbstractRestProcessor.class.getName() + ".responseClass";
 
     protected static final boolean NOT_OPTIONAL = false;
     protected static final boolean IS_OPTIONAL = true;
@@ -60,13 +63,17 @@ public abstract class AbstractRestProcessor {
 
     public final boolean process(final Exchange exchange, final AsyncCallback callback) {
 
-        // process parameters
-        final InputStream requestEntity = processRequest(exchange);
-        // sets exception on exchange on error
-        // or an InputStream in exchange property REQUEST_INPUT_STREAM
-        Exception exception = exchange.getException();
-        if (exception != null) {
-            // there was an error processing request parameters
+        // pre-process request message
+        try {
+            processRequest(exchange);
+        } catch (RestException e) {
+            LOG.error(e.getMessage(), e);
+            exchange.setException(e);
+            callback.done(true);
+            return true;
+        } catch (RuntimeException e) {
+            LOG.error(e.getMessage(), e);
+            exchange.setException(new RestException(e.getMessage(), e));
             callback.done(true);
             return true;
         }
@@ -77,11 +84,13 @@ public abstract class AbstractRestProcessor {
             public void run() {
                 InputStream responseEntity = null;
                 try {
+                    // common parameters
+                    String sObjectName = null;
+                    String sObjectId = null;
+                    String sObjectExtIdName = null;
+                    String sObjectExtIdValue = null;
 
                     // call API using REST client
-                    final String sObjectName = exchange.getProperty(SalesforceEndpointConfig.SOBJECT_NAME, String.class);
-                    final String sObjectId = exchange.getProperty(SalesforceEndpointConfig.SOBJECT_ID, String.class);
-
                     switch (getApiName()) {
                         case GET_VERSIONS:
                             responseEntity = restClient.getVersions();
@@ -96,66 +105,135 @@ public abstract class AbstractRestProcessor {
                             break;
 
                         case GET_SOBJECT_BASIC_INFO:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
                             responseEntity = restClient.getSObjectBasicInfo(sObjectName);
+
                             break;
 
                         case GET_SOBJECT_DESCRIPTION:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
                             responseEntity = restClient.getSObjectDescription(sObjectName);
                             break;
 
                         case GET_SOBJECT_BY_ID:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
+                            // use custom response class property
+                            setResponseClass(exchange);
+
+                            // get optional field list
+                            String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_IN_BODY, IS_OPTIONAL);
+                            String[] fields = null;
+                            if (fieldsValue != null) {
+                                fields = fieldsValue.split(",");
+                            }
+
                             responseEntity = restClient.getSObjectById(sObjectName,
                                 sObjectId,
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_FIELDS, String[].class));
+                                fields);
+
                             break;
 
                         case CREATE_SOBJECT:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+
                             responseEntity = restClient.createSObject(sObjectName,
-                                requestEntity);
+                                getRequestStream(exchange));
+
                             break;
 
                         case UPDATE_SOBJECT_BY_ID:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectId = getParameter(SOBJECT_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+
                             restClient.updateSObjectById(sObjectName,
                                 sObjectId,
-                                requestEntity);
+                                getRequestStream(exchange));
                             break;
 
                         case DELETE_SOBJECT_BY_ID:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
                             restClient.deleteSObjectById(sObjectName,
                                 sObjectId);
                             break;
-
+    
                         case GET_SOBJECT_BY_EXTERNAL_ID:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
+                            // use custom response class property
+                            setResponseClass(exchange);
+
                             responseEntity = restClient.getSObjectByExternalId(sObjectName,
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_NAME, String.class),
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, String.class));
+                                sObjectExtIdName,
+                                sObjectExtIdValue);
                             break;
 
                         case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+
                             responseEntity = restClient.createOrUpdateSObjectByExternalId(sObjectName,
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_NAME, String.class),
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, String.class),
-                                requestEntity);
+                                sObjectExtIdName,
+                                sObjectExtIdValue,
+                                getRequestStream(exchange));
                             break;
 
                         case DELETE_SOBJECT_BY_EXTERNAL_ID:
+                            // get parameters and set them in exchange
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
                             restClient.deleteSObjectByExternalId(sObjectName,
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_NAME, String.class),
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, String.class));
+                                sObjectExtIdName,
+                                sObjectExtIdValue);
                             break;
 
                         case EXECUTE_QUERY:
-                            responseEntity = restClient.executeQuery(
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_QUERY, String.class));
+                            // get parameters and set them in exchange
+                            final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
+                            // use custom response class property
+                            setResponseClass(exchange);
+
+                            responseEntity = restClient.executeQuery(sObjectQuery);
+                            break;
+
+                        case GET_QUERY_RECORDS:
+                            // get parameters and set them in exchange
+                            // reuse SOBJECT_QUERY parameter name for nextRecordsUrl
+                            final String nextRecordsUrl = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
+                            // use custom response class property
+                            setResponseClass(exchange);
+
+                            responseEntity = restClient.getQueryRecords(nextRecordsUrl);
                             break;
 
                         case EXECUTE_SEARCH:
-                            responseEntity = restClient.executeQuery(
-                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_SEARCH, String.class));
+                            // get parameters and set them in exchange
+                            final String sObjectSearch  = getParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL);
+
+                            responseEntity = restClient.executeQuery(sObjectSearch);
                             break;
 
                     }
 
+                    // process response entity and create out message
                     processResponse(exchange, responseEntity);
 
                 } catch (RestException e) {
@@ -173,7 +251,8 @@ public abstract class AbstractRestProcessor {
                     if (responseEntity != null) {
                         try {
                             responseEntity.close();
-                        } catch (IOException e) {}
+                        } catch (IOException e) {
+                        }
                     }
                     callback.done(false);
                 }
@@ -186,48 +265,40 @@ public abstract class AbstractRestProcessor {
         return false;
     }
 
-    protected abstract InputStream processRequest(Exchange exchange);
+    // pre-process request message
+    protected abstract void processRequest(Exchange exchange) throws RestException;
 
-    // for Jackson TypeReference
-    protected abstract void processResponse(Exchange exchange, InputStream responseEntity);
+    // get request stream from In message
+    protected abstract InputStream getRequestStream(Exchange exchange) throws RestException;
 
-    protected RestClientHelper.ApiName getApiName() {
-        return apiName;
-    }
+    protected void setResponseClass(Exchange exchange) throws RestException {
+        // use custom response class property
+        final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
-    /**
-     * Gets a property with provided name, and sets it on exchange.
-     * @param propName
-     * @param exchange
-     * @param convertInBody
-     * @param optional if true, sets an exception on exchange
-     * @return true if the property was found
-     */
-    protected final boolean setParameter(String propName, Exchange exchange,
-                                      boolean convertInBody,
-                                      boolean optional) {
-        // get the field name from exchangeProperty
-        // look for a message body, header or endpoint property in that order
-        String propValue = getParameter(propName, exchange, convertInBody, optional);
-
-        if (propValue != null) {
-            // set the property on the exchange
-            exchange.setProperty(propName, propValue);
-            return true;
-        } else {
-            return false;
+        try {
+            Class sObjectClass = Thread.currentThread().getContextClassLoader().loadClass(className);
+            exchange.setProperty(RESPONSE_CLASS, sObjectClass);
+        } catch (ClassNotFoundException e) {
+            String msg = String.format("Error loading class %s : %s", className, e.getMessage());
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
         }
     }
 
+    // process response entity and set out message in exchange
+    protected abstract void processResponse(Exchange exchange, InputStream responseEntity) throws RestException;
+
     /**
      * Gets value for a parameter from exchange body (optional), header, or endpoint config.
-     * Also sets an exception on exchange if the property can't be found.
-     * @param exchange
-     * @param convertInBody
-     * @param propName
-     * @return value of property, null if not found, with an exception in exchange.
+     *
+     * @param exchange exchange to inspect
+     * @param convertInBody converts In body to String value if true
+     * @param propName name of property
+     * @param optional if {@code true} returns null, otherwise throws RestException
+     * @return value of property, or {@code null} for optional parameters if not found.
+     * @throws RestException if the property can't be found.
      */
-    protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) {
+    protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) throws RestException {
         String propValue = convertInBody ? exchange.getIn().getBody(String.class) : null;
         propValue = propValue != null ? propValue : exchange.getIn().getHeader(propName, String.class);
         propValue = propValue != null ? propValue : endpointConfig.get(propName);
@@ -236,10 +307,14 @@ public abstract class AbstractRestProcessor {
         if (propValue == null && !optional) {
             String msg = "Missing property " + propName;
             LOG.error(msg);
-            exchange.setException(new RestException(msg, null));
+            throw new RestException(msg, null);
         }
 
         return propValue;
+    }
+
+    protected RestClientHelper.ApiName getApiName() {
+        return apiName;
     }
 
 }
