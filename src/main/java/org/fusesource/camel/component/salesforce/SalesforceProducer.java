@@ -56,11 +56,12 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         switch (payloadFormat) {
             case JSON:
                 // create a JSON exchange processor
-                processor = new JsonRestProcessor(restClient, endpoint.getEndpointConfiguration().getApiName(),
-                    component.getExecutor(), endpointConfig.toValueMap());
+                processor = new JsonRestProcessor(restClient, endpoint.getApiName(),
+                    component.getExecutor(),
+                    endpointConfig.toValueMap());
                 break;
             case XML:
-                processor = new XmlRestProcessor(restClient, endpoint.getEndpointConfiguration().getApiName(),
+                processor = new XmlRestProcessor(restClient, endpoint.getApiName(),
                     component.getExecutor(),
                     endpointConfig.toValueMap());
                 break;
@@ -77,7 +78,7 @@ public class SalesforceProducer extends DefaultAsyncProducer {
             return true;
         }
 
-        LOG.debug("Processing {}", endpointConfig.getApiName());
+        LOG.debug("Processing {}", ((SalesforceEndpoint)getEndpoint()).getApiName());
         return processor.process(exchange, callback);
     }
 

@@ -63,20 +63,24 @@ public class SalesforceComponent extends DefaultComponent {
     private Executor executor;
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this);
-
-        // parse and set API name from uri
-        final SalesforceEndpointConfig endpointConfig = new SalesforceEndpointConfig(getCamelContext(), uri);
-        // inherit default values from component
-        endpointConfig.setFormat(payloadFormat.toString());
-        endpointConfig.setApiVersion(apiVersion);
+        // get API name from remaining URI
+        RestClientHelper.ApiName apiName = null;
         try {
             LOG.debug("Creating endpoint for ", remaining);
-            endpointConfig.setApiName(RestClientHelper.valueOf(remaining));
+            apiName = RestClientHelper.valueOf(remaining);
         } catch (IllegalArgumentException ex) {
             LOG.error(ex.getMessage(), ex);
             throw new RuntimeCamelException(ex.getMessage(), ex);
         }
+
+        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this, apiName);
+
+        // parse and set API name from uri
+        final SalesforceEndpointConfig endpointConfig = new SalesforceEndpointConfig(getCamelContext(), uri);
+
+        // inherit default values from component
+        endpointConfig.setFormat(payloadFormat.toString());
+        endpointConfig.setApiVersion(apiVersion);
 
         // map endpoint parameters to endpointConfig
         setProperties(endpointConfig, parameters);

@@ -3,7 +3,6 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultEndpointConfiguration;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
-import org.fusesource.camel.component.salesforce.internal.RestClientHelper;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,7 +19,6 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     private PayloadFormat format;
     private String apiVersion;
-    private RestClientHelper.ApiName apiName;// endpoint properties for APIs
 
     private String sObjectName;
     private String sObjectId;
@@ -51,14 +49,6 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
-    }
-
-    public RestClientHelper.ApiName getApiName() {
-        return apiName;
-    }
-
-    public void setApiName(RestClientHelper.ApiName apiName) {
-        this.apiName = apiName;
     }
 
     public String getSObjectName() {
@@ -120,7 +110,6 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         final Map<String, String> valueMap = new HashMap<String, String>();
         valueMap.put("format", format.toString().toLowerCase());
         valueMap.put("apiVersion", apiVersion);
-        valueMap.put("apiName", apiName.toString());
 
         valueMap.put("sObjectName", sObjectName);
         valueMap.put("sObjectId", sObjectId);
