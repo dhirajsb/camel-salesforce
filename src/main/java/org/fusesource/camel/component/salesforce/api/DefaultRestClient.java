@@ -17,11 +17,14 @@
 package org.fusesource.camel.component.salesforce.api;
 
 import com.thoughtworks.xstream.XStream;
+import org.apache.http.Consts;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.*;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -32,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 
 public class DefaultRestClient implements RestClient {
@@ -39,6 +44,9 @@ public class DefaultRestClient implements RestClient {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRestClient.class);
     private static final int SESSION_EXPIRED = 401;
     private static final String SERVICES_DATA = "/services/data/";
+
+    private static final ContentType APPLICATION_JSON_UTF8 = ContentType.create("application/json", Consts.UTF_8);
+    private static final ContentType APPLICATION_XML_UTF8 = ContentType.create("application/xml", Consts.UTF_8);
 
     private HttpClient httpClient;
     private String version;
@@ -66,32 +74,39 @@ public class DefaultRestClient implements RestClient {
         this.instanceUrl = session.getInstanceUrl();
     }
 
-    private InputStream doGet(HttpGet get) throws RestException {
+    private InputStream doHttpRequest(HttpUriRequest request) throws RestException {
         HttpResponse httpResponse = null;
         try {
-            get.setHeader("Accept", "application/" + format);
-            httpResponse = httpClient.execute(get);
+            // set standard headers for all requests
+            final String contentType = ("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8).toString();
+            request.setHeader("Accept", contentType);
+            request.setHeader("Accept-Charset", Consts.UTF_8.toString());
+            // request content type and charset is set by the request entity
+
+            // execute the request
+            httpResponse = httpClient.execute(request);
 
             // check response for session timeout
             final StatusLine statusLine = httpResponse.getStatusLine();
             if (statusLine.getStatusCode() == SESSION_EXPIRED) {
                 // use the session to get a new accessToken and try the request again
-                LOG.warn("Retrying GET on session expiry: {}", statusLine.getReasonPhrase());
+                LOG.warn("Retrying {} on session expiry: {}", request.getMethod(), statusLine.getReasonPhrase());
                 accessToken = session.login(accessToken);
                 instanceUrl = session.getInstanceUrl();
 
-                setAccessToken(get);
-                httpResponse = httpClient.execute(get);
+                setAccessToken(request);
+                httpResponse = httpClient.execute(request);
             }
 
             final int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode < 200 || statusCode >= 300) {
                 throw createRestException(httpResponse);
             } else {
-                return httpResponse.getEntity().getContent();
+                return (httpResponse.getEntity() == null) ?
+                    null : httpResponse.getEntity().getContent();
             }
         } catch (IOException e) {
-            get.abort();
+            request.abort();
             if (httpResponse != null) {
                 EntityUtils.consumeQuietly(httpResponse.getEntity());
             }
@@ -99,7 +114,7 @@ public class DefaultRestClient implements RestClient {
             LOG.error(msg, e);
             throw new RestException(msg, e);
         } catch (RuntimeException e) {
-            get.abort();
+            request.abort();
             if (httpResponse != null) {
                 EntityUtils.consumeQuietly(httpResponse.getEntity());
             }
@@ -147,7 +162,7 @@ public class DefaultRestClient implements RestClient {
         HttpGet get = new HttpGet(servicesDataUrl());
         // does not require authorization token
 
-        return doGet(get);
+        return doHttpRequest(get);
     }
 
     @Override
@@ -161,7 +176,7 @@ public class DefaultRestClient implements RestClient {
         // requires authorization token
         setAccessToken(get);
 
-        return doGet(get);
+        return doHttpRequest(get);
     }
 
     @Override
@@ -170,7 +185,7 @@ public class DefaultRestClient implements RestClient {
         // requires authorization token
         setAccessToken(get);
 
-        return doGet(get);
+        return doHttpRequest(get);
     }
 
     @Override
@@ -179,7 +194,7 @@ public class DefaultRestClient implements RestClient {
         // requires authorization token
         setAccessToken(get);
 
-        return doGet(get);
+        return doHttpRequest(get);
     }
 
     @Override
@@ -188,7 +203,7 @@ public class DefaultRestClient implements RestClient {
         // requires authorization token
         setAccessToken(get);
 
-        return doGet(get);
+        return doHttpRequest(get);
     }
 
     @Override
@@ -210,32 +225,79 @@ public class DefaultRestClient implements RestClient {
         // requires authorization token
         setAccessToken(get);
 
-        return doGet(get);
+        return doHttpRequest(get);
     }
 
     @Override
     public InputStream createSObject(String sObjectName, InputStream sObject) throws RestException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        // post the sObject
+        final HttpPost post = new HttpPost(sobjectsUrl(sObjectName));
+
+        // authorization
+        setAccessToken(post);
+
+        // input stream as entity content
+        post.setEntity(new InputStreamEntity(sObject, -1,
+            "json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8));
+
+        return doHttpRequest(post);
     }
 
     @Override
-    public InputStream updateSObjectById(String sObjectName, String id, InputStream sObject) throws RestException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void updateSObjectById(String sObjectName, String id, InputStream sObject) throws RestException {
+        final HttpPatch patch = new HttpPatch(sobjectsUrl(sObjectName + "/" + id));
+        // requires authorization token
+        setAccessToken(patch);
+
+        // input stream as entity content
+        patch.setEntity(new InputStreamEntity(sObject, -1,
+            "json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8));
+
+        doHttpRequest(patch);
     }
 
     @Override
     public void deleteSObjectById(String sObjectName, String id) throws RestException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        final HttpDelete delete = new HttpDelete(sobjectsUrl(sObjectName + "/" + id));
+
+        // requires authorization token
+        setAccessToken(delete);
+
+        doHttpRequest(delete);
+    }
+
+    @Override
+    public InputStream getSObjectByExternalId(String sObjectName, String fieldName, String fieldValue) throws RestException {
+        final HttpGet get = new HttpGet(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
+
+        // requires authorization token
+        setAccessToken(get);
+
+        return doHttpRequest(get);
     }
 
     @Override
     public InputStream createOrUpdateSObjectByExternalId(String sObjectName, String fieldName, String fieldValue, InputStream sObject) throws RestException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        final HttpPatch patch = new HttpPatch(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
+
+        // requires authorization token
+        setAccessToken(patch);
+
+        // input stream as entity content
+        patch.setEntity(new InputStreamEntity(sObject, -1,
+            "json".equals(format) ? ContentType.APPLICATION_JSON : ContentType.APPLICATION_XML));
+
+        return doHttpRequest(patch);
     }
 
     @Override
     public void deleteSObjectByExternalId(String sObjectName, String fieldName, String fieldValue) throws RestException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        final HttpDelete delete = new HttpDelete(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
+
+        // requires authorization token
+        setAccessToken(delete);
+
+        doHttpRequest(delete);
     }
 
     @Override
@@ -258,6 +320,16 @@ public class DefaultRestClient implements RestClient {
 
     private String sobjectsUrl(String sObjectName) {
         return versionUrl() + "sobjects/" + sObjectName;
+    }
+
+    private String sobjectsExternalIdUrl(String sObjectName, String fieldName, String fieldValue) throws RestException {
+        try {
+            return sobjectsUrl(sObjectName + "/" + fieldName + "/" + URLEncoder.encode(fieldValue, Consts.UTF_8.toString()));
+        } catch (UnsupportedEncodingException e) {
+            String msg = "Unexpected error: " + e.getMessage();
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        }
     }
 
 }

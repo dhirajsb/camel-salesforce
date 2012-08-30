@@ -18,7 +18,6 @@ package org.fusesource.camel.component.salesforce.internal;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
-import org.apache.camel.RuntimeCamelException;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
@@ -116,7 +115,7 @@ public abstract class AbstractRestProcessor {
                             break;
 
                         case UPDATE_SOBJECT_BY_ID:
-                            responseEntity = restClient.updateSObjectById(sObjectName,
+                            restClient.updateSObjectById(sObjectName,
                                 sObjectId,
                                 requestEntity);
                             break;
@@ -124,6 +123,12 @@ public abstract class AbstractRestProcessor {
                         case DELETE_SOBJECT_BY_ID:
                             restClient.deleteSObjectById(sObjectName,
                                 sObjectId);
+                            break;
+
+                        case GET_SOBJECT_BY_EXTERNAL_ID:
+                            responseEntity = restClient.getSObjectByExternalId(sObjectName,
+                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_NAME, String.class),
+                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, String.class));
                             break;
 
                         case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
@@ -155,6 +160,11 @@ public abstract class AbstractRestProcessor {
                         apiName, e.getStatusCode(), e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(e);
+                } catch (RuntimeException e) {
+                    String msg = String.format("Unexpected Error processing %s: \"%s\"",
+                        apiName, e.getMessage());
+                    LOG.error(msg, e);
+                    exchange.setException(new RestException(msg, e));
                 } finally {
                     // consume response entity
                     if (responseEntity != null) {
@@ -223,7 +233,7 @@ public abstract class AbstractRestProcessor {
         if (propValue == null && !optional) {
             String msg = "Missing property " + propName;
             LOG.error(msg);
-            exchange.setException(new RuntimeCamelException(msg));
+            exchange.setException(new RestException(msg, null));
         }
 
         return propValue;

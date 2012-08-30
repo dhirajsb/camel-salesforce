@@ -21,6 +21,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -40,6 +41,7 @@ public class SalesforceSession {
     private static final String OAUTH2_TOKEN_URL = "https://login.salesforce.com/services/oauth2/token";
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceSession.class);
+    private static final ContentType FORM_CONTENT_TYPE = ContentType.create("application/x-www-form-urlencoded", Consts.UTF_8);
 
     private HttpClient httpClient;
 
@@ -82,7 +84,7 @@ public class SalesforceSession {
 
             // login to Salesforce and get session id
             HttpPost post = new HttpPost(OAUTH2_TOKEN_URL);
-            post.setHeader("Content-Type", "application/x-www-form-urlencoded");
+            post.setHeader("Content-Type", FORM_CONTENT_TYPE.toString());
 
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 

@@ -100,7 +100,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream updateSObjectById(String sObjectName, String id, InputStream sObject) throws RestException;
+    void updateSObjectById(String sObjectName, String id, InputStream sObject) throws RestException;
 
     /**
      * Deletes a record for the specified object ID.
@@ -111,6 +111,17 @@ public interface RestClient {
      * @throws RestException
      */
     void deleteSObjectById(String sObjectName, String id) throws RestException;
+
+    /**
+     * Retrieves a record for the specified external ID.
+     *
+     * @param sObjectName
+     * @param fieldName
+     * @param fieldValue
+     * @return
+     * @throws RestException
+     */
+    InputStream getSObjectByExternalId(String sObjectName, String fieldName, String fieldValue) throws RestException;
 
     /**
      * Creates or updates a record based on the value of a specified external ID field.
