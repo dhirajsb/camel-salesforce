@@ -16,6 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 import java.util.List;
@@ -23,9 +24,10 @@ import java.util.List;
 /**
  * DTO for Salesforce SOSL Search results.
  */
-public class SearchResults extends AbstractDTOBase {
+@XStreamAlias("SearchResults")
+public final class SearchResults extends AbstractDTOBase {
 
-    @XStreamImplicit
+    @XStreamImplicit(itemFieldName = "SearchResult")
     private List<SearchResult> results;
 
     public List<SearchResult> getResults() {

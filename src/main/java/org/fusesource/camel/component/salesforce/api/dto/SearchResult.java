@@ -16,12 +16,14 @@
  */
 package org.fusesource.camel.component.salesforce.api.dto;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * DTO for Salesforce SOSL Search result record.
  */
-public class SearchResult extends AbstractDTOBase {
+@XStreamAlias("SearchResult")
+public final class SearchResult extends AbstractDTOBase {
 
     private Attributes attributes;
     private String Id;
