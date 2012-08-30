@@ -87,7 +87,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
             case EXECUTE_SEARCH:
                 // handle known response type
-                exchange.setProperty(RESPONSE_CLASS, new TypeReference<List<SearchResult>>() {});
+                exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<SearchResult>>() {});
                 break;
 
         }

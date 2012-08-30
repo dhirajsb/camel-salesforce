@@ -228,7 +228,7 @@ public abstract class AbstractRestProcessor {
                             // get parameters and set them in exchange
                             final String sObjectSearch  = getParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            responseEntity = restClient.executeQuery(sObjectSearch);
+                            responseEntity = restClient.executeSearch(sObjectSearch);
                             break;
 
                     }

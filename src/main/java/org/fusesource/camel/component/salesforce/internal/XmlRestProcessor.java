@@ -112,6 +112,13 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                 exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
                 break;
 
+            case EXECUTE_QUERY:
+            case GET_QUERY_RECORDS:
+                // need to add alias for Salesforce XML that uses SObject name as root element
+                exchange.setProperty(RESPONSE_ALIAS,
+                    "QueryResult");
+                break;
+
             case EXECUTE_SEARCH:
                 // handle known response type
                 exchange.setProperty(RESPONSE_CLASS, SearchResults.class);
