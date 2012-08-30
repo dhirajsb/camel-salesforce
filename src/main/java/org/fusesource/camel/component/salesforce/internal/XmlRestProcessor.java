@@ -201,10 +201,19 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                     break;
 
                 case EXECUTE_QUERY:
+                    // get parameters and set them in exchange
+                    if (!setParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
+                        return null;
+                    }
                     break;
 
                 case EXECUTE_SEARCH:
+                    // get parameters and set them in exchange
+                    if (!setParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
+                        return null;
+                    }
                     break;
+
             }
         } catch (XStreamException e) {
             String msg = "Error marshaling request: " + e.getMessage();

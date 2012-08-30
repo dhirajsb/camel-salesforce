@@ -52,6 +52,7 @@ public class RestClientHelper {
         apiMap.put("createOrUpdateSObjectByExternalId", ApiName.CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID);
         apiMap.put("deleteSObjectByExternalId", ApiName.DELETE_SOBJECT_BY_EXTERNAL_ID);
         apiMap.put("executeQuery", ApiName.EXECUTE_QUERY);
+        apiMap.put("getQueryRecords", ApiName.GET_QUERY_RECORDS);
         apiMap.put("executeSearch", ApiName.EXECUTE_SEARCH);
 
     }
@@ -71,6 +72,7 @@ public class RestClientHelper {
         CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID,
         DELETE_SOBJECT_BY_EXTERNAL_ID,
         EXECUTE_QUERY,
+        GET_QUERY_RECORDS,
         EXECUTE_SEARCH
 
     }

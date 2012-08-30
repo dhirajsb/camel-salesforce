@@ -302,12 +302,50 @@ public class DefaultRestClient implements RestClient {
 
     @Override
     public InputStream executeQuery(String soqlQuery) throws RestException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        try {
+
+            String encodedQuery = URLEncoder.encode(soqlQuery, Consts.UTF_8.toString());
+            final HttpGet get = new HttpGet(versionUrl() + "query/?q=" + encodedQuery);
+
+            // requires authorization token
+            setAccessToken(get);
+
+            return doHttpRequest(get);
+
+        } catch (UnsupportedEncodingException e) {
+            String msg = "Unexpected error: " + e.getMessage();
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        }
+    }
+
+    @Override
+    public InputStream getQueryRecords(String nextRecordsUrl) throws RestException {
+        final HttpGet get = new HttpGet(instanceUrl + nextRecordsUrl);
+
+        // requires authorization token
+        setAccessToken(get);
+
+        return doHttpRequest(get);
     }
 
     @Override
     public InputStream executeSearch(String soslQuery) throws RestException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        try {
+
+            String encodedQuery = URLEncoder.encode(soslQuery, Consts.UTF_8.toString());
+            final HttpGet get = new HttpGet(versionUrl() + "search/?q=" + encodedQuery);
+
+            // requires authorization token
+            setAccessToken(get);
+
+            return doHttpRequest(get);
+
+        } catch (UnsupportedEncodingException e) {
+            String msg = "Unexpected error: " + e.getMessage();
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        }
     }
 
     private String servicesDataUrl() {

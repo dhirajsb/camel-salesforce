@@ -45,9 +45,8 @@ public class AbstractSObjectBase extends AbstractDTOBase {
     /**
      * Utility method to clear all {@link AbstractSObjectBase} fields.
      * <p>Used when reusing a DTO for a new record.</p>
-     * <p>May be overriden in derived types to clear derived type fields</p>
      */
-    public void clearFields() {
+    public final void clearBaseFields() {
         attributes = null;
         Id = null;
         OwnerId = null;

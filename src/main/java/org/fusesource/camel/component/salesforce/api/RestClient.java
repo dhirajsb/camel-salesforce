@@ -168,6 +168,15 @@ public interface RestClient {
     InputStream executeQuery(String soqlQuery) throws RestException;
 
     /**
+     * Get SOQL query results using nextRecordsUrl.
+     *
+     * @param nextRecordsUrl
+     * @return
+     * @throws RestException
+     */
+    InputStream getQueryRecords(String nextRecordsUrl) throws RestException;
+
+    /**
      * Executes the specified SOSL search.
      *
      * @param soslQuery

@@ -302,7 +302,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
         // change line_item__c to create a new Line Item
         // otherwise we will get an error from Salesforce
-        line_item__c.clearFields();
+        line_item__c.clearBaseFields();
         // set the unit price and sold
         line_item__c.setUnit_Price__c(1000.0);
         line_item__c.setUnits_Sold__c(50.0);

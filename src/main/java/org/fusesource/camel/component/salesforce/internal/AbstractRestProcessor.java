@@ -145,12 +145,15 @@ public abstract class AbstractRestProcessor {
                             break;
 
                         case EXECUTE_QUERY:
-                            // TODO
+                            responseEntity = restClient.executeQuery(
+                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_QUERY, String.class));
                             break;
 
                         case EXECUTE_SEARCH:
-                            // TODO
+                            responseEntity = restClient.executeQuery(
+                                exchange.getProperty(SalesforceEndpointConfig.SOBJECT_SEARCH, String.class));
                             break;
+
                     }
 
                     processResponse(exchange, responseEntity);

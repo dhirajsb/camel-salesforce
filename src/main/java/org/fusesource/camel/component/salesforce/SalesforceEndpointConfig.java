@@ -10,12 +10,16 @@ import java.util.Map;
 
 public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
+    public static final String FORMAT = "format";
+    public static final String API_VERSION = "apiVersion";
     public static final String SOBJECT_NAME = "sObjectName";
     public static final String SOBJECT_ID = "sObjectId";
     public static final String SOBJECT_FIELDS = "sObjectFields";
     public static final String SOBJECT_EXT_ID_NAME = "sObjectIdName";
     public static final String SOBJECT_EXT_ID_VALUE = "sObjectIdValue";
     public static final String SOBJECT_CLASS = "sObjectClass";
+    public static final String SOBJECT_QUERY = "sObjectQuery";
+    public static final String SOBJECT_SEARCH = "sObjectSearch";
 
     private PayloadFormat format;
     private String apiVersion;
@@ -26,6 +30,8 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     private String sObjectIdName;
     private String sObjectIdValue;
     private String sObjectClass;
+    private String sObjectQuery;
+    private String sObjectSearch;
 
     public SalesforceEndpointConfig(CamelContext camelContext) {
         super(camelContext);
@@ -99,6 +105,22 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         this.sObjectClass = sObjectClass;
     }
 
+    public String getSObjectQuery() {
+        return sObjectQuery;
+    }
+
+    public void setSObjectQuery(String sObjectQuery) {
+        this.sObjectQuery = sObjectQuery;
+    }
+
+    public String getSObjectSearch() {
+        return sObjectSearch;
+    }
+
+    public void setSObjectSearch(String sObjectSearch) {
+        this.sObjectSearch = sObjectSearch;
+    }
+
     @Override
     public String toUriString(UriFormat format) {
         // ignore format, what is this used for anyway???
@@ -108,15 +130,17 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     public Map<String, String> toValueMap() {
 
         final Map<String, String> valueMap = new HashMap<String, String>();
-        valueMap.put("format", format.toString().toLowerCase());
-        valueMap.put("apiVersion", apiVersion);
+        valueMap.put(FORMAT, format.toString().toLowerCase());
+        valueMap.put(API_VERSION, apiVersion);
 
-        valueMap.put("sObjectName", sObjectName);
-        valueMap.put("sObjectId", sObjectId);
-        valueMap.put("sObjectFields", sObjectFields);
-        valueMap.put("sObjectIdName", sObjectIdName);
-        valueMap.put("sObjectIdValue", sObjectIdValue);
-        valueMap.put("sObjectClass", sObjectClass);
+        valueMap.put(SOBJECT_NAME, sObjectName);
+        valueMap.put(SOBJECT_ID, sObjectId);
+        valueMap.put(SOBJECT_FIELDS, sObjectFields);
+        valueMap.put(SOBJECT_EXT_ID_NAME, sObjectIdName);
+        valueMap.put(SOBJECT_EXT_ID_VALUE, sObjectIdValue);
+        valueMap.put(SOBJECT_CLASS, sObjectClass);
+        valueMap.put(SOBJECT_QUERY, sObjectQuery);
+        valueMap.put(SOBJECT_SEARCH, sObjectSearch);
 
         return Collections.unmodifiableMap(valueMap);
     }
