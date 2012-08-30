@@ -107,7 +107,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                     }
 
                     // use custom response class property
-                    if (setResponseClass(exchange)) {
+                    if (!setResponseClass(exchange)) {
                         return null;
                     }
                     break;
@@ -137,6 +137,20 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                     // get parameters and set them in exchange
                     if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
                         !setParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
+                        return null;
+                    }
+                    break;
+
+                case GET_SOBJECT_BY_EXTERNAL_ID:
+                    // get parameters and set them in exchange
+                    if (!setParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
+                        !setParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL) ||
+                        !setParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL)) {
+                        return null;
+                    }
+
+                    // use custom response class property
+                    if (!setResponseClass(exchange)) {
                         return null;
                     }
                     break;
@@ -181,7 +195,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
         Class sObjectClass;
         final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
         if (className == null) {
-            return true;
+            return false;
         }
 
         try {
@@ -190,10 +204,10 @@ public class JsonRestProcessor extends AbstractRestProcessor {
             String msg = String.format("Error loading class %s : %s", className, e.getMessage());
             LOG.error(msg, e);
             exchange.setException(new RestException(msg, e));
-            return true;
+            return false;
         }
         exchange.setProperty(RESPONSE_CLASS, sObjectClass);
-        return false;
+        return true;
     }
 
     // get request stream from In message
