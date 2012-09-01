@@ -26,8 +26,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
-import org.fusesource.camel.component.salesforce.internal.LoginError;
-import org.fusesource.camel.component.salesforce.internal.LoginToken;
+import org.fusesource.camel.component.salesforce.internal.dto.LoginError;
+import org.fusesource.camel.component.salesforce.internal.dto.LoginToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

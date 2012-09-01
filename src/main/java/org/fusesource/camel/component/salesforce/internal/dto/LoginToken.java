@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.internal;
+package org.fusesource.camel.component.salesforce.internal.dto;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
+ * DTO for Salesforce login
  */
 public class LoginToken {
 

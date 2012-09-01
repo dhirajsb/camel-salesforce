@@ -29,7 +29,7 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
-import org.fusesource.camel.component.salesforce.internal.RestErrors;
+import org.fusesource.camel.component.salesforce.internal.dto.RestErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
