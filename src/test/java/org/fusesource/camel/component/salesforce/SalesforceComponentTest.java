@@ -22,6 +22,8 @@ public class SalesforceComponentTest extends CamelTestSupport {
     private static final String TEST_LOGIN_PROPERTIES = "/test-login.properties";
     private static final String TEST_LINE_ITEM_ID = "1";
     private static final String NEW_LINE_ITEM_ID = "100";
+    private static final String API_VERSION = "25.0";
+    private static final String DEFAULT_FORMAT = "json";
 
     private ObjectMapper objectMapper;
     private static final long TEST_TIMEOUT = 30;
@@ -339,9 +341,9 @@ public class SalesforceComponentTest extends CamelTestSupport {
         setLoginProperties(component);
 
         // default component level payload format
-        component.setFormat("json");
+        component.setFormat(DEFAULT_FORMAT);
         // default api version
-        component.setApiVersion("25.0");
+        component.setApiVersion(API_VERSION);
 
         // add it to context
         context().addComponent("force", component);
