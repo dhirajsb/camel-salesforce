@@ -3,4 +3,4 @@ target
 *.iml
 *.iws
 # Salesforce login properties
-test-login.properties
+*test-login.properties*
