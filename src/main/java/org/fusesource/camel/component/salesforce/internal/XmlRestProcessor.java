@@ -25,6 +25,7 @@ import com.thoughtworks.xstream.io.xml.XppDriver;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.http.Consts;
+import org.fusesource.camel.component.salesforce.api.JodaTimeConverter;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
@@ -37,7 +38,28 @@ import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig
 
 public class XmlRestProcessor extends AbstractRestProcessor {
 
-    private final XStream xStream;
+    // although XStream is generally thread safe, because of the way we use aliases
+    // for GET_SOBJECT_BASIC_INFO and GET_SOBJECT_DESCRIPTION, we need to use a ThreadLocal
+    // not very efficient when both JSON and XML are used together with a single Thread pool
+    // but this will do for now
+    private static ThreadLocal<XStream> xStream =
+        new ThreadLocal<XStream>() {
+            @Override
+            protected XStream initialValue() {
+                // use NoNameCoder to avoid escaping __ in custom field names
+                // and CompactWriter to avoid pretty printing
+                XStream result = new XStream(new XppDriver(new NoNameCoder()) {
+                    @Override
+                    public HierarchicalStreamWriter createWriter(Writer out) {
+                        return new CompactWriter(out, getNameCoder());
+                    }
+
+                });
+                result.registerConverter(new JodaTimeConverter());
+                return result;
+            }
+        };
+
     private static final String RESPONSE_ALIAS = XmlRestProcessor.class.getName() + ".responseAlias";
 
     public XmlRestProcessor(RestClient restClient,
@@ -45,14 +67,6 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                             Map<String, String> endpointConfig) {
         super(restClient, apiName, executor, endpointConfig);
 
-        // use NoNameCoder to avoid escaping __ in custom field names
-        // and CompactWriter to avoid pretty printing
-        xStream = new XStream(new XppDriver(new NoNameCoder()) {
-            @Override
-            public HierarchicalStreamWriter createWriter(Writer out) {
-                return new CompactWriter(out, getNameCoder());
-            }
-        });
     }
 
     @Override
@@ -138,10 +152,10 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                 if (sObject != null) {
                     // marshall the SObject
                     // first process annotations on the class, for things like alias, etc.
-                    xStream.processAnnotations(sObject.getClass());
+                    xStream.get().processAnnotations(sObject.getClass());
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     // make sure we write the XML with the right encoding
-                    xStream.toXML(sObject, new OutputStreamWriter(out, Consts.UTF_8));
+                    xStream.get().toXML(sObject, new OutputStreamWriter(out, Consts.UTF_8));
                     request = new ByteArrayInputStream(out.toByteArray());
                 } else {
                     // if all else fails, get body as String
@@ -169,14 +183,14 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             if (responseEntity != null) {
                 final Class<?> responseClass = exchange.getProperty(RESPONSE_CLASS, Class.class);
                 // its ok to call this multiple times, as xstream ignores duplicate calls
-                xStream.processAnnotations(responseClass);
+                xStream.get().processAnnotations(responseClass);
                 // TODO this is not really thread safe, fix it later
                 final String responseAlias = exchange.getProperty(RESPONSE_ALIAS, String.class);
                 if (responseAlias != null) {
-                    xStream.alias(responseAlias, responseClass);
+                    xStream.get().alias(responseAlias, responseClass);
                 }
                 Object response = responseClass.newInstance();
-                xStream.fromXML(responseEntity, response);
+                xStream.get().fromXML(responseEntity, response);
                 exchange.getOut().setBody(response);
             }
             // copy headers and attachments

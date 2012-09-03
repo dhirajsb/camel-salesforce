@@ -17,6 +17,7 @@
 package org.fusesource.camel.component.salesforce.api.dto;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.joda.time.DateTime;
 
 public class AbstractSObjectBase extends AbstractDTOBase {
 
@@ -30,15 +31,15 @@ public class AbstractSObjectBase extends AbstractDTOBase {
 
     private String Name;
 
-    private String CreatedDate;
+    private DateTime CreatedDate;
 
     private String CreatedById;
 
-    private String LastModifiedDate;
+    private DateTime LastModifiedDate;
 
     private String LastModifiedById;
 
-    private String SystemModstamp;
+    private DateTime SystemModstamp;
 
     private String LastActivityDate;
 
@@ -109,12 +110,12 @@ public class AbstractSObjectBase extends AbstractDTOBase {
     }
 
     @JsonProperty("CreatedDate")
-    public String getCreatedDate() {
+    public DateTime getCreatedDate() {
         return CreatedDate;
     }
 
     @JsonProperty("CreatedDate")
-    public void setCreatedDate(String createdDate) {
+    public void setCreatedDate(DateTime createdDate) {
         CreatedDate = createdDate;
     }
 
@@ -129,12 +130,12 @@ public class AbstractSObjectBase extends AbstractDTOBase {
     }
 
     @JsonProperty("LastModifiedDate")
-    public String getLastModifiedDate() {
+    public DateTime getLastModifiedDate() {
         return LastModifiedDate;
     }
 
     @JsonProperty("LastModifiedDate")
-    public void setLastModifiedDate(String lastModifiedDate) {
+    public void setLastModifiedDate(DateTime lastModifiedDate) {
         LastModifiedDate = lastModifiedDate;
     }
 
@@ -149,12 +150,12 @@ public class AbstractSObjectBase extends AbstractDTOBase {
     }
 
     @JsonProperty("SystemModstamp")
-    public String getSystemModstamp() {
+    public DateTime getSystemModstamp() {
         return SystemModstamp;
     }
 
     @JsonProperty("SystemModstamp")
-    public void setSystemModstamp(String systemModstamp) {
+    public void setSystemModstamp(DateTime systemModstamp) {
         SystemModstamp = systemModstamp;
     }
 

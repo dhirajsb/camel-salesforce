@@ -58,6 +58,7 @@ public abstract class AbstractRestProcessor {
 
         this.executor = executor;
         if (null == this.executor) {
+            // every rest processor creates its own by default
             this.executor = Executors.newCachedThreadPool();
         }
     }

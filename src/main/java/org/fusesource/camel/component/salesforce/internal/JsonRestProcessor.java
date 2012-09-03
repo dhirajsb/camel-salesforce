@@ -20,6 +20,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.http.Consts;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.type.TypeReference;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
@@ -35,6 +36,7 @@ import java.util.concurrent.Executor;
 
 public class JsonRestProcessor extends AbstractRestProcessor {
 
+    // it is ok to use a single thread safe ObjectMapper
     private final ObjectMapper objectMapper;
     private static final String RESPONSE_TYPE = JsonRestProcessor.class.getName() + ".responseType";
 
@@ -44,6 +46,8 @@ public class JsonRestProcessor extends AbstractRestProcessor {
         super(restClient, apiName, executor, endpointConfig);
 
         this.objectMapper = new ObjectMapper();
+        // enable date time support including Joda DateTime
+        this.objectMapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     @Override

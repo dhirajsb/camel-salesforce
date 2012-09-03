@@ -18,6 +18,7 @@
     <jackson-version>1.9.5</jackson-version>
     <xstream-version>1.4.2_1</xstream-version>
     <httpclient-osgi-version>4.2.1</httpclient-osgi-version>
+    <joda-time.version>2.1</joda-time.version>
   </properties>
 
   <repositories>
@@ -112,6 +113,11 @@
       <groupId>org.apache.servicemix.bundles</groupId>
       <artifactId>org.apache.servicemix.bundles.xstream</artifactId>
       <version>${xstream-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>${joda-time.version}</version>
     </dependency>
     <!-- logging -->
     <dependency>
