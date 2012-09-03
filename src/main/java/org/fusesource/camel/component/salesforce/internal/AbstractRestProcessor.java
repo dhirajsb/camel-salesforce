@@ -18,6 +18,7 @@ package org.fusesource.camel.component.salesforce.internal;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.util.ObjectHelper;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.slf4j.Logger;
@@ -275,14 +276,13 @@ public abstract class AbstractRestProcessor {
         // use custom response class property
         final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
-        try {
-            Class sObjectClass = Thread.currentThread().getContextClassLoader().loadClass(className);
-            exchange.setProperty(RESPONSE_CLASS, sObjectClass);
-        } catch (ClassNotFoundException e) {
-            String msg = String.format("Error loading class %s : %s", className, e.getMessage());
-            LOG.error(msg, e);
-            throw new RestException(msg, e);
+        Class sObjectClass = ObjectHelper.loadClass(className, getClass().getClassLoader());
+        if (null == sObjectClass) {
+            String msg = String.format("Error loading class %s : %s", className);
+            LOG.error(msg);
+            throw new RestException(msg, null);
         }
+        exchange.setProperty(RESPONSE_CLASS, sObjectClass);
     }
 
     // process response entity and set out message in exchange
