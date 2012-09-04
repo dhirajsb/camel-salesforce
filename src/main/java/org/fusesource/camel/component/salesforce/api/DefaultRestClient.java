@@ -352,15 +352,25 @@ public class DefaultRestClient implements RestClient {
         return instanceUrl + SERVICES_DATA;
     }
 
-    private String versionUrl() {
+    private String versionUrl() throws RestException {
+        if (version == null) {
+            throw new RestException("NULL API version", new NullPointerException("version"));
+        }
         return servicesDataUrl() + "v" + version + "/";
     }
 
-    private String sobjectsUrl(String sObjectName) {
+    private String sobjectsUrl(String sObjectName) throws RestException {
+        if (sObjectName == null) {
+            throw new RestException("Null SObject name", new NullPointerException("sObjectName"));
+        }
         return versionUrl() + "sobjects/" + sObjectName;
     }
 
     private String sobjectsExternalIdUrl(String sObjectName, String fieldName, String fieldValue) throws RestException {
+        if (fieldName == null || fieldValue == null) {
+            throw new RestException("External field name and value cannot be NULL",
+                new NullPointerException("fieldName,fieldValue"));
+        }
         try {
             return sobjectsUrl(sObjectName + "/" + fieldName + "/" + URLEncoder.encode(fieldValue, Consts.UTF_8.toString()));
         } catch (UnsupportedEncodingException e) {
