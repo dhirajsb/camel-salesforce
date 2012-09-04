@@ -255,7 +255,7 @@ public class SalesforceComponentTest extends CamelTestSupport {
         // set the unit price and sold
         line_item__c.setUnit_Price__c(1000.0);
         line_item__c.setUnits_Sold__c(50.0);
-        // update line item with Name 2
+        // update line item with Name NEW_LINE_ITEM_ID
         template().sendBodyAndHeader("direct:testCreateOrUpdateSObjectByExternalId" + suffix,
             line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID);
         MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
@@ -264,7 +264,29 @@ public class SalesforceComponentTest extends CamelTestSupport {
         ex = mock.getExchanges().get(0);
         CreateSObjectResult result = ex.getIn().getBody(CreateSObjectResult.class);
         assertNotNull(result);
-        LOG.trace("CreateOrUpdateSObjectByExternalId: {}", result);
+        assertTrue(result.getSuccess());
+        LOG.trace("CreateSObjectByExternalId: {}", result);
+
+        // change line_item__c to update existing Line Item
+        // otherwise we will get an error from Salesforce
+        line_item__c.clearBaseFields();
+        // clear read only parent type fields
+        line_item__c.setInvoice_Statement__c(null);
+        line_item__c.setMerchandise__c(null);
+        // change the units sold
+        line_item__c.setUnits_Sold__c(25.0);
+
+        // update line item with Name NEW_LINE_ITEM_ID
+        template().sendBodyAndHeader("direct:testCreateOrUpdateSObjectByExternalId" + suffix,
+            line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID);
+        MockEndpoint.assertIsSatisfied(TEST_TIMEOUT, TimeUnit.SECONDS, mock);
+
+        // assert expected result
+        ex = mock.getExchanges().get(0);
+        result = ex.getIn().getBody(CreateSObjectResult.class);
+        assertNotNull(result);
+        assertTrue(result.getSuccess());
+        LOG.trace("UpdateSObjectByExternalId: {}", result);
 
         // delete the SObject with Name=2
         mock = getMockEndpoint("mock:testDeleteSObjectByExternalId" + suffix);
