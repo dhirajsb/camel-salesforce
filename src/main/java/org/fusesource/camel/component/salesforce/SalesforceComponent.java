@@ -42,6 +42,8 @@ import java.util.concurrent.Executor;
 public class SalesforceComponent extends DefaultComponent {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponent.class);
+
+    private static final String DEFAULT_VERSION = "25.0";
     private static final int DEFAULT_MAX_PER_ROUTE = 20;
     private static final int MAX_TOTAL = 100;
     private static final int CONNECTION_TIMEOUT = 15000;
@@ -53,7 +55,7 @@ public class SalesforceComponent extends DefaultComponent {
     private String password;
 
     private PayloadFormat payloadFormat = PayloadFormat.JSON;
-    private String apiVersion;
+    private String apiVersion = DEFAULT_VERSION;
 
     private HttpClient httpClient;
     private SalesforceSession session;
