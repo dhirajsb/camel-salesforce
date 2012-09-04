@@ -100,6 +100,9 @@ public class DefaultRestClient implements RestClient {
 
             final int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode < 200 || statusCode >= 300) {
+                LOG.error(String.format("Error {%s:%s} executing {%s:%s}",
+                    statusCode, statusLine.getReasonPhrase(),
+                    request.getMethod(),request.getURI()));
                 throw createRestException(httpResponse);
             } else {
                 return (httpResponse.getEntity() == null) ?
