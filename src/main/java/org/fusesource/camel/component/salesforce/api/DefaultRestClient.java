@@ -305,6 +305,8 @@ public class DefaultRestClient implements RestClient {
         try {
 
             String encodedQuery = URLEncoder.encode(soqlQuery, Consts.UTF_8.toString());
+            // URLEncoder likes to use '+' for spaces
+            encodedQuery = encodedQuery.replace("+", "%20");
             final HttpGet get = new HttpGet(versionUrl() + "query/?q=" + encodedQuery);
 
             // requires authorization token
@@ -334,6 +336,8 @@ public class DefaultRestClient implements RestClient {
         try {
 
             String encodedQuery = URLEncoder.encode(soslQuery, Consts.UTF_8.toString());
+            // URLEncoder likes to use '+' for spaces
+            encodedQuery = encodedQuery.replace("+", "%20");
             final HttpGet get = new HttpGet(versionUrl() + "search/?q=" + encodedQuery);
 
             // requires authorization token
@@ -372,7 +376,10 @@ public class DefaultRestClient implements RestClient {
                 new NullPointerException("fieldName,fieldValue"));
         }
         try {
-            return sobjectsUrl(sObjectName + "/" + fieldName + "/" + URLEncoder.encode(fieldValue, Consts.UTF_8.toString()));
+            String encodedValue = URLEncoder.encode(fieldValue, Consts.UTF_8.toString());
+            // URLEncoder likes to use '+' for spaces
+            encodedValue = encodedValue.replace("+", "%20");
+            return sobjectsUrl(sObjectName + "/" + fieldName + "/" + encodedValue);
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
             LOG.error(msg, e);
