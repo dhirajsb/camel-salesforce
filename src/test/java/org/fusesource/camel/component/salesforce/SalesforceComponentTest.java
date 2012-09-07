@@ -370,6 +370,10 @@ public class SalesforceComponentTest extends CamelTestSupport {
         component.setFormat(DEFAULT_FORMAT);
         // default api version
         component.setApiVersion(API_VERSION);
+        // set DTO package
+        component.setPackages(new String[] {
+            Merchandise__c.class.getPackage().getName()
+        });
 
         // add it to context
         context().addComponent("force", component);
@@ -426,29 +430,29 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
                 // testGetSObjectById
                 from("direct:testGetSObjectById")
-                    .to("force://getSObjectById?sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&sObjectFields=Description__c,Price__c")
+                    .to("force://getSObjectById?sObjectName=Merchandise__c&sObjectFields=Description__c,Price__c")
                     .to("mock:testGetSObjectById");
 
                 from("direct:testGetSObjectByIdXml")
-                    .to("force://getSObjectById?format=xml&sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&sObjectFields=Description__c,Total_Inventory__c")
+                    .to("force://getSObjectById?format=xml&sObjectName=Merchandise__c&sObjectFields=Description__c,Total_Inventory__c")
                     .to("mock:testGetSObjectByIdXml");
 
                 // testCreateSObject
                 from("direct:testCreateSObject")
-                    .to("force://createSObject?sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://createSObject?sObjectName=Merchandise__c")
                     .to("mock:testCreateSObject");
 
                 from("direct:testCreateSObjectXml")
-                    .to("force://createSObject?format=xml&sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://createSObject?format=xml&sObjectName=Merchandise__c")
                     .to("mock:testCreateSObjectXml");
 
                 // testUpdateSObjectById
                 from("direct:testUpdateSObjectById")
-                    .to("force://updateSObjectById?sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://updateSObjectById?sObjectName=Merchandise__c")
                     .to("mock:testUpdateSObjectById");
 
                 from("direct:testUpdateSObjectByIdXml")
-                    .to("force://updateSObjectById?format=xml&sObjectName=Merchandise__c&sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c")
+                    .to("force://updateSObjectById?format=xml&sObjectName=Merchandise__c")
                     .to("mock:testUpdateSObjectByIdXml");
 
                 // testDeleteSObjectById
@@ -462,20 +466,20 @@ public class SalesforceComponentTest extends CamelTestSupport {
 
                 // testGetSObjectByExternalId
                 from("direct:testGetSObjectByExternalId")
-                    .to("force://getSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
+                    .to("force://getSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name")
                     .to("mock:testGetSObjectByExternalId");
 
                 from("direct:testGetSObjectByExternalIdXml")
-                    .to("force://getSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
+                    .to("force://getSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
                     .to("mock:testGetSObjectByExternalIdXml");
 
                 // testCreateOrUpdateSObjectByExternalId
                 from("direct:testCreateOrUpdateSObjectByExternalId")
-                    .to("force://createOrUpdateSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
+                    .to("force://createOrUpdateSObjectByExternalId?sObjectName=Line_Item__c&sObjectIdName=Name")
                     .to("mock:testCreateOrUpdateSObjectByExternalId");
 
                 from("direct:testCreateOrUpdateSObjectByExternalIdXml")
-                    .to("force://createOrUpdateSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name&sObjectClass=org.fusesource.camel.component.salesforce.Line_Item__c")
+                    .to("force://createOrUpdateSObjectByExternalId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
                     .to("mock:testCreateOrUpdateSObjectByExternalIdXml");
 
                 // testDeleteSObjectByExternalId
