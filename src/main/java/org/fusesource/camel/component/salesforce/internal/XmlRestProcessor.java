@@ -64,8 +64,8 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
     public XmlRestProcessor(RestClient restClient,
                             RestClientHelper.ApiName apiName, Executor executor,
-                            Map<String, String> endpointConfig) {
-        super(restClient, apiName, executor, endpointConfig);
+                            Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
+        super(restClient, apiName, executor, endpointConfig, classMap);
 
     }
 

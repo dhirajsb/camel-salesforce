@@ -42,7 +42,8 @@ public class SalesforceEndpoint extends DefaultEndpoint {
 
     public Producer createProducer() throws Exception {
         SalesforceProducer producer = new SalesforceProducer(this,
-            getEndpointConfiguration());
+            getEndpointConfiguration(),
+            ((SalesforceComponent)getComponent()).getClassMap());
         if (isSynchronous()) {
             return new SynchronousDelegateProducer(producer);
         } else {

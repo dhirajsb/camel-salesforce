@@ -28,12 +28,13 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.SalesforceSession;
+import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 import org.fusesource.camel.component.salesforce.internal.RestClientHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 /**
@@ -61,8 +62,11 @@ public class SalesforceComponent extends DefaultComponent {
     private SalesforceSession session;
     private boolean loggedIn;
 
+    private String[] packages;
+
     // executor for Salesforce calls
     private Executor executor;
+    private Map<String, Class<?>> classMap;
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         // get API name from remaining URI
@@ -86,6 +90,9 @@ public class SalesforceComponent extends DefaultComponent {
 
         // map endpoint parameters to endpointConfig
         setProperties(endpointConfig, parameters);
+
+        // map remaining parameters to endpoint (specifically, synchronous)
+        setProperties(endpoint, parameters);
 
         // set endpointConfig on endpoint
         endpoint.setEndpointConfiguration(endpointConfig);
@@ -119,6 +126,28 @@ public class SalesforceComponent extends DefaultComponent {
             LOG.error(e.getMessage(), e);
             throw new CamelException(e.getMessage(), e);
         }
+
+        if (packages != null && packages.length > 0) {
+            // parse the packages to create SObject name to class map
+            classMap = parsePackages();
+        } else {
+            // use an empty map to avoid NPEs later
+            LOG.warn("Missing property packages, getSObject* operations will NOT work");
+            classMap = Collections.unmodifiableMap(new HashMap<String, Class<?>>());
+        }
+    }
+
+    private Map<String, Class<?>> parsePackages() {
+        Map<String, Class<?>> result = new HashMap<String, Class<?>>();
+        Set<Class<?>> classes = getCamelContext().getPackageScanClassResolver().findImplementations(AbstractSObjectBase.class, packages);
+        for (Class<?> aClass : classes) {
+            // findImplementations also returns AbstractSObjectBase for some reason!!!
+            if (AbstractSObjectBase.class != aClass) {
+                result.put(aClass.getSimpleName(), aClass);
+            }
+        }
+
+        return Collections.unmodifiableMap(result);
     }
 
     @Override
@@ -212,4 +241,15 @@ public class SalesforceComponent extends DefaultComponent {
         this.executor = executor;
     }
 
+    public String[] getPackages() {
+        return packages;
+    }
+
+    public void setPackages(String[] packages) {
+        this.packages = packages;
+    }
+
+    public Map<String, Class<?>> getClassMap() {
+        return classMap;
+    }
 }

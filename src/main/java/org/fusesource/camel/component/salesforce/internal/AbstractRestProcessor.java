@@ -48,13 +48,15 @@ public abstract class AbstractRestProcessor {
 
     private Executor executor;
     private Map<String, String> endpointConfig;
+    private Map<String, Class<?>> classMap;
 
     public AbstractRestProcessor(RestClient restClient,
                                  RestClientHelper.ApiName apiName, Executor executor,
-                                 Map<String, String> endpointConfig) {
+                                 Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
         this.restClient = restClient;
         this.apiName = apiName;
         this.endpointConfig = endpointConfig;
+        this.classMap = classMap;
 
         this.executor = executor;
         if (null == this.executor) {
@@ -124,8 +126,8 @@ public abstract class AbstractRestProcessor {
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            // use custom response class property
-                            setResponseClass(exchange);
+                            // use sObject name to load class
+                            setResponseClass(exchange, sObjectName);
 
                             // get optional field list
                             String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_IN_BODY, IS_OPTIONAL);
@@ -174,8 +176,8 @@ public abstract class AbstractRestProcessor {
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            // use custom response class property
-                            setResponseClass(exchange);
+                            // use sObject name to load class
+                            setResponseClass(exchange, sObjectName);
 
                             responseEntity = restClient.getSObjectByExternalId(sObjectName,
                                 sObjectExtIdName,
@@ -209,8 +211,8 @@ public abstract class AbstractRestProcessor {
                             // get parameters and set them in exchange
                             final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            // use custom response class property
-                            setResponseClass(exchange);
+                            // use sObject name to load class
+                            setResponseClass(exchange, null);
 
                             responseEntity = restClient.executeQuery(sObjectQuery);
                             break;
@@ -221,7 +223,7 @@ public abstract class AbstractRestProcessor {
                             final String nextRecordsUrl = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
                             // use custom response class property
-                            setResponseClass(exchange);
+                            setResponseClass(exchange, null);
 
                             responseEntity = restClient.getQueryRecords(nextRecordsUrl);
                             break;
@@ -273,15 +275,29 @@ public abstract class AbstractRestProcessor {
     // get request stream from In message
     protected abstract InputStream getRequestStream(Exchange exchange) throws RestException;
 
-    protected void setResponseClass(Exchange exchange) throws RestException {
-        // use custom response class property
-        final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+    protected void setResponseClass(Exchange exchange, String sObjectName) throws RestException {
+        Class<?> sObjectClass = null;
 
-        Class sObjectClass = ObjectHelper.loadClass(className, getClass().getClassLoader());
-        if (null == sObjectClass) {
-            String msg = String.format("Error loading class %s : %s", className);
-            LOG.error(msg);
-            throw new RestException(msg, null);
+        if (sObjectName != null) {
+            // lookup class from class map
+            sObjectClass = classMap.get(sObjectName);
+            if (null == sObjectClass) {
+                String msg = String.format("No class found for SObject %s", sObjectName);
+                LOG.error(msg);
+                throw new RestException(msg, null);
+            }
+
+        } else {
+
+            // use custom response class property
+            final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+
+            sObjectClass = ObjectHelper.loadClass(className, getClass().getClassLoader());
+            if (null == sObjectClass) {
+                String msg = String.format("Error loading class %s", className);
+                LOG.error(msg);
+                throw new RestException(msg, null);
+            }
         }
         exchange.setProperty(RESPONSE_CLASS, sObjectClass);
     }

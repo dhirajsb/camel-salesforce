@@ -28,6 +28,7 @@ import org.fusesource.camel.component.salesforce.internal.XmlRestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
@@ -42,7 +43,7 @@ public class SalesforceProducer extends DefaultAsyncProducer {
     private final SalesforceEndpointConfig endpointConfig;
 
     public SalesforceProducer(SalesforceEndpoint endpoint,
-                              SalesforceEndpointConfig endpointConfig) {
+                              SalesforceEndpointConfig endpointConfig, Map<String, Class<?>> classMap) {
         super(endpoint);
 
         this.endpointConfig = endpointConfig;
@@ -58,12 +59,14 @@ public class SalesforceProducer extends DefaultAsyncProducer {
                 // create a JSON exchange processor
                 processor = new JsonRestProcessor(restClient, endpoint.getApiName(),
                     component.getExecutor(),
-                    endpointConfig.toValueMap());
+                    endpointConfig.toValueMap(),
+                    classMap);
                 break;
             case XML:
                 processor = new XmlRestProcessor(restClient, endpoint.getApiName(),
                     component.getExecutor(),
-                    endpointConfig.toValueMap());
+                    endpointConfig.toValueMap(),
+                    classMap);
                 break;
         }
     }

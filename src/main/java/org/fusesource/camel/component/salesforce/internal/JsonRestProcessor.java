@@ -42,8 +42,8 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
     public JsonRestProcessor(RestClient restClient,
                              RestClientHelper.ApiName apiName, Executor executor,
-                             Map<String, String> endpointConfig) {
-        super(restClient, apiName, executor, endpointConfig);
+                             Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
+        super(restClient, apiName, executor, endpointConfig, classMap);
 
         this.objectMapper = new ObjectMapper();
         // enable date time support including Joda DateTime
