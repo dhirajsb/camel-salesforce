@@ -17,10 +17,7 @@
 package org.fusesource.camel.component.salesforce.api;
 
 import com.thoughtworks.xstream.XStream;
-import org.apache.http.Consts;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
@@ -95,6 +92,14 @@ public class DefaultRestClient implements RestClient {
                 instanceUrl = session.getInstanceUrl();
 
                 setAccessToken(request);
+
+                // reset input entity for retry
+                if (request instanceof HttpEntityEnclosingRequestBase) {
+                    // TODO this may not always work, need a better way to handle this
+                    HttpEntityEnclosingRequestBase requestBase = (HttpEntityEnclosingRequestBase) request;
+                    HttpEntity entity = requestBase.getEntity();
+                    entity.getContent().reset();
+                }
                 httpResponse = httpClient.execute(request);
             }
 
