@@ -18,21 +18,21 @@ package org.fusesource.camel.component.salesforce.internal;
 
 public enum ApiName {
 
-    GET_VERSIONS("getVersions"),
-    GET_RESOURCES("getResources"),
-    GET_GLOBAL_OBJECTS("getGlobalObjects"),
-    GET_SOBJECT_BASIC_INFO("getSObjectBasicInfo"),
-    GET_SOBJECT_DESCRIPTION("getSObjectDescription"),
-    GET_SOBJECT_BY_ID("getSObjectById"),
-    CREATE_SOBJECT("createSObject"),
-    UPDATE_SOBJECT_BY_ID("updateSObjectById"),
-    DELETE_SOBJECT_BY_ID("deleteSObjectById"),
-    GET_SOBJECT_BY_EXTERNAL_ID("getSObjectByExternalId"),
-    CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID("createOrUpdateSObjectByExternalId"),
-    DELETE_SOBJECT_BY_EXTERNAL_ID("deleteSObjectByExternalId"),
-    EXECUTE_QUERY("executeQuery"),
-    GET_QUERY_RECORDS("getQueryRecords"),
-    EXECUTE_SEARCH("executeSearch");
+    VERSIONS("versions"),
+    RESOURCES("resources"),
+    GLOBAL_OBJECTS("globalObjects"),
+    BASIC_INFO("basicInfo"),
+    DESCRIPTION("description"),
+    RETRIEVE("retrieve"),
+    CREATE("create"),
+    UPDATE("update"),
+    DELETE("delete"),
+    RETRIEVE_WITH_ID("retrieveWithId"),
+    UPSERT("upsert"),
+    DELETE_WITH_ID("deleteWithId"),
+    QUERY("query"),
+    QUERY_MORE("queryMore"),
+    SEARCH("search");
 
     private final String value;
 

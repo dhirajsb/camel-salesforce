@@ -105,7 +105,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getVersions() throws RestException {
+    public InputStream versions() throws RestException {
         HttpGet get = new HttpGet(servicesDataUrl());
         // does not require authorization token
 
@@ -113,7 +113,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getResources() throws RestException {
+    public InputStream resources() throws RestException {
         HttpGet get = new HttpGet(versionUrl());
         // requires authorization token
         setAccessToken(get);
@@ -122,7 +122,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getGlobalObjects() throws RestException {
+    public InputStream globalObjects() throws RestException {
         HttpGet get = new HttpGet(sobjectsUrl(""));
         // requires authorization token
         setAccessToken(get);
@@ -131,7 +131,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getSObjectBasicInfo(String sObjectName) throws RestException {
+    public InputStream basicInfo(String sObjectName) throws RestException {
         HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/"));
         // requires authorization token
         setAccessToken(get);
@@ -140,7 +140,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getSObjectDescription(String sObjectName) throws RestException {
+    public InputStream description(String sObjectName) throws RestException {
         HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/describe/"));
         // requires authorization token
         setAccessToken(get);
@@ -149,7 +149,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getSObjectById(String sObjectName, String id, String[] fields) throws RestException {
+    public InputStream retrieve(String sObjectName, String id, String[] fields) throws RestException {
 
         // parse fields if set
         String params = "";
@@ -171,7 +171,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream createSObject(String sObjectName, InputStream sObject) throws RestException {
+    public InputStream create(String sObjectName, InputStream sObject) throws RestException {
         // post the sObject
         final HttpPost post = new HttpPost(sobjectsUrl(sObjectName));
 
@@ -186,7 +186,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public void updateSObjectById(String sObjectName, String id, InputStream sObject) throws RestException {
+    public void update(String sObjectName, String id, InputStream sObject) throws RestException {
         final HttpPatch patch = new HttpPatch(sobjectsUrl(sObjectName + "/" + id));
         // requires authorization token
         setAccessToken(patch);
@@ -199,7 +199,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public void deleteSObjectById(String sObjectName, String id) throws RestException {
+    public void delete(String sObjectName, String id) throws RestException {
         final HttpDelete delete = new HttpDelete(sobjectsUrl(sObjectName + "/" + id));
 
         // requires authorization token
@@ -209,7 +209,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getSObjectByExternalId(String sObjectName, String fieldName, String fieldValue) throws RestException {
+    public InputStream retrieveWithId(String sObjectName, String fieldName, String fieldValue) throws RestException {
         final HttpGet get = new HttpGet(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
@@ -219,7 +219,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream createOrUpdateSObjectByExternalId(String sObjectName, String fieldName, String fieldValue, InputStream sObject) throws RestException {
+    public InputStream upsert(String sObjectName, String fieldName, String fieldValue, InputStream sObject) throws RestException {
         final HttpPatch patch = new HttpPatch(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
@@ -233,7 +233,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public void deleteSObjectByExternalId(String sObjectName, String fieldName, String fieldValue) throws RestException {
+    public void deleteWithId(String sObjectName, String fieldName, String fieldValue) throws RestException {
         final HttpDelete delete = new HttpDelete(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
@@ -243,7 +243,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream executeQuery(String soqlQuery) throws RestException {
+    public InputStream query(String soqlQuery) throws RestException {
         try {
 
             String encodedQuery = URLEncoder.encode(soqlQuery, Consts.UTF_8.toString());
@@ -264,7 +264,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getQueryRecords(String nextRecordsUrl) throws RestException {
+    public InputStream queryMore(String nextRecordsUrl) throws RestException {
         final HttpGet get = new HttpGet(instanceUrl + nextRecordsUrl);
 
         // requires authorization token
@@ -274,7 +274,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream executeSearch(String soslQuery) throws RestException {
+    public InputStream search(String soslQuery) throws RestException {
         try {
 
             String encodedQuery = URLEncoder.encode(soslQuery, Consts.UTF_8.toString());

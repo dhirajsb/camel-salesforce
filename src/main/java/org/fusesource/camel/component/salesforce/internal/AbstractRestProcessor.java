@@ -96,32 +96,32 @@ public abstract class AbstractRestProcessor {
 
                     // call API using REST client
                     switch (getApiName()) {
-                        case GET_VERSIONS:
-                            responseEntity = restClient.getVersions();
+                        case VERSIONS:
+                            responseEntity = restClient.versions();
                             break;
 
-                        case GET_RESOURCES:
-                            responseEntity = restClient.getResources();
+                        case RESOURCES:
+                            responseEntity = restClient.resources();
                             break;
 
-                        case GET_GLOBAL_OBJECTS:
-                            responseEntity = restClient.getGlobalObjects();
+                        case GLOBAL_OBJECTS:
+                            responseEntity = restClient.globalObjects();
                             break;
 
-                        case GET_SOBJECT_BASIC_INFO:
+                        case BASIC_INFO:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
-                            responseEntity = restClient.getSObjectBasicInfo(sObjectName);
+                            responseEntity = restClient.basicInfo(sObjectName);
 
                             break;
 
-                        case GET_SOBJECT_DESCRIPTION:
+                        case DESCRIPTION:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
-                            responseEntity = restClient.getSObjectDescription(sObjectName);
+                            responseEntity = restClient.description(sObjectName);
                             break;
 
-                        case GET_SOBJECT_BY_ID:
+                        case RETRIEVE:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
@@ -136,41 +136,41 @@ public abstract class AbstractRestProcessor {
                                 fields = fieldsValue.split(",");
                             }
 
-                            responseEntity = restClient.getSObjectById(sObjectName,
+                            responseEntity = restClient.retrieve(sObjectName,
                                 sObjectId,
                                 fields);
 
                             break;
 
-                        case CREATE_SOBJECT:
+                        case CREATE:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
-                            responseEntity = restClient.createSObject(sObjectName,
+                            responseEntity = restClient.create(sObjectName,
                                 getRequestStream(exchange));
 
                             break;
 
-                        case UPDATE_SOBJECT_BY_ID:
+                        case UPDATE:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
-                            restClient.updateSObjectById(sObjectName,
+                            restClient.update(sObjectName,
                                 sObjectId,
                                 getRequestStream(exchange));
                             break;
 
-                        case DELETE_SOBJECT_BY_ID:
+                        case DELETE:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            restClient.deleteSObjectById(sObjectName,
+                            restClient.delete(sObjectName,
                                 sObjectId);
                             break;
     
-                        case GET_SOBJECT_BY_EXTERNAL_ID:
+                        case RETRIEVE_WITH_ID:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
@@ -179,45 +179,45 @@ public abstract class AbstractRestProcessor {
                             // use sObject name to load class
                             setResponseClass(exchange, sObjectName);
 
-                            responseEntity = restClient.getSObjectByExternalId(sObjectName,
+                            responseEntity = restClient.retrieveWithId(sObjectName,
                                 sObjectExtIdName,
                                 sObjectExtIdValue);
                             break;
 
-                        case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
+                        case UPSERT:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
-                            responseEntity = restClient.createOrUpdateSObjectByExternalId(sObjectName,
+                            responseEntity = restClient.upsert(sObjectName,
                                 sObjectExtIdName,
                                 sObjectExtIdValue,
                                 getRequestStream(exchange));
                             break;
 
-                        case DELETE_SOBJECT_BY_EXTERNAL_ID:
+                        case DELETE_WITH_ID:
                             // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            restClient.deleteSObjectByExternalId(sObjectName,
+                            restClient.deleteWithId(sObjectName,
                                 sObjectExtIdName,
                                 sObjectExtIdValue);
                             break;
 
-                        case EXECUTE_QUERY:
+                        case QUERY:
                             // get parameters and set them in exchange
                             final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
                             // use sObject name to load class
                             setResponseClass(exchange, null);
 
-                            responseEntity = restClient.executeQuery(sObjectQuery);
+                            responseEntity = restClient.query(sObjectQuery);
                             break;
 
-                        case GET_QUERY_RECORDS:
+                        case QUERY_MORE:
                             // get parameters and set them in exchange
                             // reuse SOBJECT_QUERY parameter name for nextRecordsUrl
                             final String nextRecordsUrl = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
@@ -225,14 +225,14 @@ public abstract class AbstractRestProcessor {
                             // use custom response class property
                             setResponseClass(exchange, null);
 
-                            responseEntity = restClient.getQueryRecords(nextRecordsUrl);
+                            responseEntity = restClient.queryMore(nextRecordsUrl);
                             break;
 
-                        case EXECUTE_SEARCH:
+                        case SEARCH:
                             // get parameters and set them in exchange
                             final String sObjectSearch  = getParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
-                            responseEntity = restClient.executeSearch(sObjectSearch);
+                            responseEntity = restClient.search(sObjectSearch);
                             break;
 
                     }

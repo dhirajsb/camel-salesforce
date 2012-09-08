@@ -54,42 +54,42 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     protected void processRequest(Exchange exchange) {
 
         switch (getApiName()) {
-            case GET_VERSIONS:
+            case VERSIONS:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<Version>>() {});
                 break;
 
-            case GET_RESOURCES:
+            case RESOURCES:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, RestResources.class);
                 break;
 
-            case GET_GLOBAL_OBJECTS:
+            case GLOBAL_OBJECTS:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, GlobalObjects.class);
                 break;
 
-            case GET_SOBJECT_BASIC_INFO:
+            case BASIC_INFO:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectBasicInfo.class);
                 break;
 
-            case GET_SOBJECT_DESCRIPTION:
+            case DESCRIPTION:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectDescription.class);
                 break;
 
-            case CREATE_SOBJECT:
+            case CREATE:
                 // handle known response type
                 exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
                 break;
 
-            case CREATE_OR_UPDATE_SOBJECT_BY_EXTERNAL_ID:
+            case UPSERT:
                 // handle known response type
                 exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
                 break;
 
-            case EXECUTE_SEARCH:
+            case SEARCH:
                 // handle known response type
                 exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<SearchResult>>() {});
                 break;
