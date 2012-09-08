@@ -21,14 +21,13 @@ import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultAsyncProducer;
 import org.fusesource.camel.component.salesforce.api.DefaultRestClient;
 import org.fusesource.camel.component.salesforce.api.RestClient;
-import org.fusesource.camel.component.salesforce.internal.AbstractRestProcessor;
 import org.fusesource.camel.component.salesforce.internal.JsonRestProcessor;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
+import org.fusesource.camel.component.salesforce.internal.SalesforceProcessor;
 import org.fusesource.camel.component.salesforce.internal.XmlRestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
@@ -37,16 +36,15 @@ import java.util.concurrent.RejectedExecutionException;
 public class SalesforceProducer extends DefaultAsyncProducer {
     private static final transient Logger LOG = LoggerFactory.getLogger(SalesforceProducer.class);
 
-    private AbstractRestProcessor processor;
+    private SalesforceProcessor processor;
 
     private RestClient restClient;
     private final SalesforceEndpointConfig endpointConfig;
 
-    public SalesforceProducer(SalesforceEndpoint endpoint,
-                              SalesforceEndpointConfig endpointConfig, Map<String, Class<?>> classMap) {
+    public SalesforceProducer(SalesforceEndpoint endpoint) {
         super(endpoint);
 
-        this.endpointConfig = endpointConfig;
+        this.endpointConfig = endpoint.getEndpointConfiguration();
 
         final SalesforceComponent component = (SalesforceComponent) endpoint.getComponent();
         final PayloadFormat payloadFormat = endpointConfig.getPayloadFormat();
@@ -60,13 +58,13 @@ public class SalesforceProducer extends DefaultAsyncProducer {
                 processor = new JsonRestProcessor(restClient, endpoint.getApiName(),
                     component.getExecutor(),
                     endpointConfig.toValueMap(),
-                    classMap);
+                    component.getClassMap());
                 break;
             case XML:
                 processor = new XmlRestProcessor(restClient, endpoint.getApiName(),
                     component.getExecutor(),
                     endpointConfig.toValueMap(),
-                    classMap);
+                    component.getClassMap());
                 break;
         }
     }

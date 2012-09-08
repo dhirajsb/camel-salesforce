@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 
 import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
 
-public abstract class AbstractRestProcessor {
+public abstract class AbstractRestProcessor implements SalesforceProcessor {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
@@ -65,6 +65,7 @@ public abstract class AbstractRestProcessor {
         }
     }
 
+    @Override
     public final boolean process(final Exchange exchange, final AsyncCallback callback) {
 
         // pre-process request message

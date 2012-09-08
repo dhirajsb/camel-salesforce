@@ -41,9 +41,7 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     }
 
     public Producer createProducer() throws Exception {
-        SalesforceProducer producer = new SalesforceProducer(this,
-            getEndpointConfiguration(),
-            ((SalesforceComponent)getComponent()).getClassMap());
+        SalesforceProducer producer = new SalesforceProducer(this);
         if (isSynchronous()) {
             return new SynchronousDelegateProducer(producer);
         } else {
@@ -56,6 +54,11 @@ public class SalesforceEndpoint extends DefaultEndpoint {
         throw new UnsupportedOperationException();
 
 //        return new SalesforceConsumer(this, processor);
+    }
+
+    @Override
+    public SalesforceComponent getComponent() {
+        return (SalesforceComponent) super.getComponent();
     }
 
     public boolean isSingleton() {
