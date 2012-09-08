@@ -29,12 +29,15 @@ import org.apache.http.params.HttpParams;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.SalesforceSession;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
+import org.fusesource.camel.component.salesforce.internal.ApiName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
-import org.fusesource.camel.component.salesforce.internal.RestClientHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -70,10 +73,10 @@ public class SalesforceComponent extends DefaultComponent {
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         // get API name from remaining URI
-        RestClientHelper.ApiName apiName = null;
+        ApiName apiName = null;
         try {
             LOG.debug("Creating endpoint for ", remaining);
-            apiName = RestClientHelper.valueOf(remaining);
+            apiName = ApiName.fromValue(remaining);
         } catch (IllegalArgumentException ex) {
             LOG.error(ex.getMessage(), ex);
             throw new RuntimeCamelException(ex.getMessage(), ex);

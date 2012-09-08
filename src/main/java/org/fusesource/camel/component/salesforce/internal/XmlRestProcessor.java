@@ -63,7 +63,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     private static final String RESPONSE_ALIAS = XmlRestProcessor.class.getName() + ".responseAlias";
 
     public XmlRestProcessor(RestClient restClient,
-                            RestClientHelper.ApiName apiName, Executor executor,
+                            ApiName apiName, Executor executor,
                             Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
         super(restClient, apiName, executor, endpointConfig, classMap);
 
@@ -184,7 +184,6 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                 final Class<?> responseClass = exchange.getProperty(RESPONSE_CLASS, Class.class);
                 // its ok to call this multiple times, as xstream ignores duplicate calls
                 xStream.get().processAnnotations(responseClass);
-                // TODO this is not really thread safe, fix it later
                 final String responseAlias = exchange.getProperty(RESPONSE_ALIAS, String.class);
                 if (responseAlias != null) {
                     xStream.get().alias(responseAlias, responseClass);

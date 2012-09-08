@@ -41,7 +41,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     private static final String RESPONSE_TYPE = JsonRestProcessor.class.getName() + ".responseType";
 
     public JsonRestProcessor(RestClient restClient,
-                             RestClientHelper.ApiName apiName, Executor executor,
+                             ApiName apiName, Executor executor,
                              Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
         super(restClient, apiName, executor, endpointConfig, classMap);
 

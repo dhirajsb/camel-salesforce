@@ -21,7 +21,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.SynchronousDelegateProducer;
-import org.fusesource.camel.component.salesforce.internal.RestClientHelper;
+import org.fusesource.camel.component.salesforce.internal.ApiName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +32,9 @@ public class SalesforceEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceEndpoint.class);
 
-    private final RestClientHelper.ApiName apiName;// endpoint properties for APIs
+    private final ApiName apiName;// endpoint properties for APIs
 
-    public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent, RestClientHelper.ApiName apiName) {
+    public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent, ApiName apiName) {
         super(uri, salesforceComponent);
 
         this.apiName = apiName;
@@ -67,7 +67,7 @@ public class SalesforceEndpoint extends DefaultEndpoint {
         return (SalesforceEndpointConfig) super.getEndpointConfiguration();
     }
 
-    public RestClientHelper.ApiName getApiName() {
+    public ApiName getApiName() {
         return apiName;
     }
 

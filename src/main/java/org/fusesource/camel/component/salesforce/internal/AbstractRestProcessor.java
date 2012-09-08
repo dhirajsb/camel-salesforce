@@ -44,14 +44,14 @@ public abstract class AbstractRestProcessor {
     protected static final boolean IGNORE_IN_BODY = false;
 
     private RestClient restClient;
-    private RestClientHelper.ApiName apiName;
+    private ApiName apiName;
 
     private Executor executor;
     private Map<String, String> endpointConfig;
     private Map<String, Class<?>> classMap;
 
     public AbstractRestProcessor(RestClient restClient,
-                                 RestClientHelper.ApiName apiName, Executor executor,
+                                 ApiName apiName, Executor executor,
                                  Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
         this.restClient = restClient;
         this.apiName = apiName;
@@ -330,7 +330,7 @@ public abstract class AbstractRestProcessor {
         return propValue;
     }
 
-    protected RestClientHelper.ApiName getApiName() {
+    protected ApiName getApiName() {
         return apiName;
     }
 

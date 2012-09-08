@@ -17,7 +17,10 @@
 package org.fusesource.camel.component.salesforce.api;
 
 import com.thoughtworks.xstream.XStream;
-import org.apache.http.*;
+import org.apache.http.Consts;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
@@ -36,30 +39,21 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
-public class DefaultRestClient implements RestClient {
+public class DefaultRestClient extends AbstractClientBase implements RestClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRestClient.class);
-    private static final int SESSION_EXPIRED = 401;
     private static final String SERVICES_DATA = "/services/data/";
-
-    private static final ContentType APPLICATION_JSON_UTF8 = ContentType.create("application/json", Consts.UTF_8);
-    private static final ContentType APPLICATION_XML_UTF8 = ContentType.create("application/xml", Consts.UTF_8);
-
-    private HttpClient httpClient;
-    private String version;
-    private String format;
-    private SalesforceSession session;
+    private static final String TOKEN_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
     private ObjectMapper objectMapper;
-    private String accessToken;
-    private String instanceUrl;
     private XStream xStream;
+    protected String format;
 
     public DefaultRestClient(HttpClient httpClient, String version, String format, SalesforceSession session) {
-        this.httpClient = httpClient;
-        this.version = version;
+        super(version, session, httpClient);
+
         this.format = format;
-        this.session = session;
 
         // initialize error parsers for JSON and XML
         this.objectMapper = new ObjectMapper();
@@ -67,76 +61,21 @@ public class DefaultRestClient implements RestClient {
         xStream.processAnnotations(RestErrors.class);
 
         // local cache
-        this.accessToken = session.getAccessToken();
-        this.instanceUrl = session.getInstanceUrl();
     }
 
-    private InputStream doHttpRequest(HttpUriRequest request) throws RestException {
-        HttpResponse httpResponse = null;
-        try {
-            // set standard headers for all requests
-            final String contentType = ("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8).toString();
-            request.setHeader("Accept", contentType);
-            request.setHeader("Accept-Charset", Consts.UTF_8.toString());
-            // request content type and charset is set by the request entity
+    @Override
+    protected InputStream doHttpRequest(HttpUriRequest request) throws RestException {
+        // set standard headers for all requests
+        final String contentType = ("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8).toString();
+        request.setHeader("Accept", contentType);
+        request.setHeader("Accept-Charset", Consts.UTF_8.toString());
+        // request content type and charset is set by the request entity
 
-            // execute the request
-            httpResponse = httpClient.execute(request);
-
-            // check response for session timeout
-            final StatusLine statusLine = httpResponse.getStatusLine();
-            if (statusLine.getStatusCode() == SESSION_EXPIRED) {
-                // use the session to get a new accessToken and try the request again
-                LOG.warn("Retrying {} on session expiry: {}", request.getMethod(), statusLine.getReasonPhrase());
-                accessToken = session.login(accessToken);
-                instanceUrl = session.getInstanceUrl();
-
-                setAccessToken(request);
-
-                // reset input entity for retry
-                if (request instanceof HttpEntityEnclosingRequestBase) {
-                    // TODO this may not always work, need a better way to handle this
-                    HttpEntityEnclosingRequestBase requestBase = (HttpEntityEnclosingRequestBase) request;
-                    HttpEntity entity = requestBase.getEntity();
-                    entity.getContent().reset();
-                }
-                httpResponse = httpClient.execute(request);
-            }
-
-            final int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if (statusCode < 200 || statusCode >= 300) {
-                LOG.error(String.format("Error {%s:%s} executing {%s:%s}",
-                    statusCode, statusLine.getReasonPhrase(),
-                    request.getMethod(),request.getURI()));
-                throw createRestException(httpResponse);
-            } else {
-                return (httpResponse.getEntity() == null) ?
-                    null : httpResponse.getEntity().getContent();
-            }
-        } catch (IOException e) {
-            request.abort();
-            if (httpResponse != null) {
-                EntityUtils.consumeQuietly(httpResponse.getEntity());
-            }
-            String msg = "Unexpected Error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new RestException(msg, e);
-        } catch (RuntimeException e) {
-            request.abort();
-            if (httpResponse != null) {
-                EntityUtils.consumeQuietly(httpResponse.getEntity());
-            }
-            String msg = "Unexpected Error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new RestException(msg, e);
-        }
+        return super.doHttpRequest(request);    //To change body of overridden methods use File | Settings | File Templates.
     }
 
-    private void setAccessToken(HttpRequest httpRequest) {
-        httpRequest.setHeader("Authorization", "Bearer " + accessToken);
-    }
-
-    private RestException createRestException(HttpResponse response) {
+    @Override
+    protected RestException createRestException(HttpUriRequest request, HttpResponse response) {
         StatusLine statusLine = response.getStatusLine();
 
         // try parsing response according to format
@@ -171,11 +110,6 @@ public class DefaultRestClient implements RestClient {
         // does not require authorization token
 
         return doHttpRequest(get);
-    }
-
-    @Override
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     @Override
@@ -395,4 +329,7 @@ public class DefaultRestClient implements RestClient {
         }
     }
 
+    protected void setAccessToken(HttpRequest httpRequest) {
+        httpRequest.setHeader(TOKEN_HEADER, TOKEN_PREFIX + accessToken);
+    }
 }
