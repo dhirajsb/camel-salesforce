@@ -36,17 +36,17 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     private ObjectMapper objectMapper;
 
     @Test
-    public void testVersions() throws Exception {
-        doTestVersions("");
-        doTestVersions("Xml");
+    public void testGetVersions() throws Exception {
+        doTestGetVersions("");
+        doTestGetVersions("Xml");
     }
 
-    private void doTestVersions(String suffix) throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:testVersions" + suffix);
+    private void doTestGetVersions(String suffix) throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:testGetVersions" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        // test versions doesn't need a body
-        sendBody("direct:testVersions" + suffix, null);
+        // test getVersions doesn't need a body
+        sendBody("direct:testGetVersions" + suffix, null);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -63,16 +63,16 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     @Test
-    public void testResources() throws Exception {
-        doTestResources("");
-        doTestResources("Xml");
+    public void testGetResources() throws Exception {
+        doTestGetResources("");
+        doTestGetResources("Xml");
     }
 
-    private void doTestResources(String suffix) throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:testResources" + suffix);
+    private void doTestGetResources(String suffix) throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:testGetResources" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testResources" + suffix, null);
+        sendBody("direct:testGetResources" + suffix, null);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -83,16 +83,16 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     @Test
-    public void testGlobalObjects() throws Exception {
-        doTestGlobalObjects("");
-        doTestGlobalObjects("Xml");
+    public void testGetGlobalObjects() throws Exception {
+        doTestGetGlobalObjects("");
+        doTestGetGlobalObjects("Xml");
     }
 
-    private void doTestGlobalObjects(String suffix) throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:testGlobalObjects" + suffix);
+    private void doTestGetGlobalObjects(String suffix) throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:testGetGlobalObjects" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testGlobalObjects" + suffix, null);
+        sendBody("direct:testGetGlobalObjects" + suffix, null);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -103,16 +103,16 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     @Test
-    public void testBasicInfo() throws Exception {
-        doTestBasicInfo("");
-        doTestBasicInfo("Xml");
+    public void testGetBasicInfo() throws Exception {
+        doTestGetBasicInfo("");
+        doTestGetBasicInfo("Xml");
     }
 
-    private void doTestBasicInfo(String suffix) throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:testBasicInfo" + suffix);
+    private void doTestGetBasicInfo(String suffix) throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:testGetBasicInfo" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testBasicInfo" + suffix, null);
+        sendBody("direct:testGetBasicInfo" + suffix, null);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -123,16 +123,16 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     @Test
-    public void testDescription() throws Exception {
-        doTestDescription("");
-        doTestDescription("Xml");
+    public void testGetDescription() throws Exception {
+        doTestGetDescription("");
+        doTestGetDescription("Xml");
     }
 
-    private void doTestDescription(String suffix) throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:testDescription" + suffix);
+    private void doTestGetDescription(String suffix) throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:testGetDescription" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testDescription" + suffix, null);
+        sendBody("direct:testGetDescription" + suffix, null);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -143,16 +143,16 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     @Test
-    public void testRetrieve() throws Exception {
-        doTestRetrieve("");
-        doTestRetrieve("Xml");
+    public void testGetSObject() throws Exception {
+        doTestGetSObject("");
+        doTestGetSObject("Xml");
     }
 
-    private void doTestRetrieve(String suffix) throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:testRetrieve" + suffix);
+    private void doTestGetSObject(String suffix) throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:testGetSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testRetrieve" + suffix, testId);
+        sendBody("direct:testGetSObject" + suffix, testId);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -176,7 +176,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     private void doTestCreateUpdateDelete(String suffix) throws InterruptedException {
-        MockEndpoint mock = getMockEndpoint("mock:testCreate" + suffix);
+        MockEndpoint mock = getMockEndpoint("mock:testCreateSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
         Merchandise__c merchandise__c = new Merchandise__c();
@@ -184,7 +184,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         merchandise__c.setDescription__c("Microlite plane");
         merchandise__c.setPrice__c(2000.0);
         merchandise__c.setTotal_Inventory__c(50.0);
-        sendBody("direct:testCreate" + suffix, merchandise__c);
+        sendBody("direct:testCreateSObject" + suffix, merchandise__c);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -196,7 +196,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         LOG.trace("Create: " + result);
 
         // test JSON update
-        mock = getMockEndpoint("mock:testUpdate" + suffix);
+        mock = getMockEndpoint("mock:testUpdateSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
         merchandise__c = new Merchandise__c();
@@ -204,7 +204,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         merchandise__c.setPrice__c(1500.0);
         // change inventory to half
         merchandise__c.setTotal_Inventory__c(25.0);
-        template().sendBodyAndHeader("direct:testUpdate" + suffix,
+        template().sendBodyAndHeader("direct:testUpdateSObject" + suffix,
             merchandise__c, SalesforceEndpointConfig.SOBJECT_ID, result.getId());
         mock.assertIsSatisfied();
 
@@ -216,10 +216,10 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         LOG.trace("Update successful");
 
         // delete the newly created SObject
-        mock = getMockEndpoint("mock:testDelete" + suffix);
+        mock = getMockEndpoint("mock:testDeleteSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testDelete" + suffix, result.getId());
+        sendBody("direct:testDeleteSObject" + suffix, result.getId());
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -237,11 +237,11 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     private void doTestCreateUpdateDeleteWithId(String suffix) throws InterruptedException {
-        MockEndpoint mock = getMockEndpoint("mock:testRetrieveWithId" + suffix);
+        MockEndpoint mock = getMockEndpoint("mock:testGetSObjectWithId" + suffix);
         mock.expectedMinimumMessageCount(1);
 
         // get line item with Name 1
-        sendBody("direct:testRetrieveWithId" + suffix, TEST_LINE_ITEM_ID);
+        sendBody("direct:testGetSObjectWithId" + suffix, TEST_LINE_ITEM_ID);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -249,10 +249,10 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         assertNull(ex.getException());
         Line_Item__c line_item__c = ex.getIn().getBody(Line_Item__c.class);
         assertNotNull(line_item__c);
-        LOG.trace("RetrieveWithId: {}", line_item__c);
+        LOG.trace("GetWithId: {}", line_item__c);
 
         // test JSON update
-        mock = getMockEndpoint("mock:testUpsert" + suffix);
+        mock = getMockEndpoint("mock:testUpsertSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
         // change line_item__c to create a new Line Item
@@ -262,7 +262,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         line_item__c.setUnit_Price__c(1000.0);
         line_item__c.setUnits_Sold__c(50.0);
         // update line item with Name NEW_LINE_ITEM_ID
-        template().sendBodyAndHeader("direct:testUpsert" + suffix,
+        template().sendBodyAndHeader("direct:testUpsertSObject" + suffix,
             line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID);
         mock.assertIsSatisfied();
 
@@ -283,7 +283,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         line_item__c.setUnits_Sold__c(25.0);
 
         // update line item with Name NEW_LINE_ITEM_ID
-        template().sendBodyAndHeader("direct:testUpsert" + suffix,
+        template().sendBodyAndHeader("direct:testUpsertSObject" + suffix,
             line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID);
         mock.assertIsSatisfied();
 
@@ -295,10 +295,10 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         LOG.trace("UpdateWithId: {}", result);
 
         // delete the SObject with Name=2
-        mock = getMockEndpoint("mock:testDeleteWithId" + suffix);
+        mock = getMockEndpoint("mock:testDeleteSObjectWithId" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        sendBody("direct:testDeleteWithId" + suffix, NEW_LINE_ITEM_ID);
+        sendBody("direct:testDeleteSObjectWithId" + suffix, NEW_LINE_ITEM_ID);
         mock.assertIsSatisfied();
 
         // assert expected result
@@ -369,113 +369,113 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
             public void configure() {
 
                 // testGetVersion
-                from("direct:testVersions")
-                    .to("force://versions")
-                    .to("mock:testVersions");
+                from("direct:testGetVersions")
+                    .to("force://getVersions")
+                    .to("mock:testGetVersions");
 
                 // allow overriding format per endpoint
-                from("direct:testVersionsXml")
-                    .to("force://versions?format=xml")
-                    .to("mock:testVersionsXml");
+                from("direct:testGetVersionsXml")
+                    .to("force://getVersions?format=xml")
+                    .to("mock:testGetVersionsXml");
 
-                // testResources
-                from("direct:testResources")
-                    .to("force://resources")
-                    .to("mock:testResources");
+                // testGetResources
+                from("direct:testGetResources")
+                    .to("force://getResources")
+                    .to("mock:testGetResources");
 
-                from("direct:testResourcesXml")
-                    .to("force://resources?format=xml")
-                    .to("mock:testResourcesXml");
+                from("direct:testGetResourcesXml")
+                    .to("force://getResources?format=xml")
+                    .to("mock:testGetResourcesXml");
 
-                // testGlobalObjects
-                from("direct:testGlobalObjects")
-                    .to("force://globalObjects")
-                    .to("mock:testGlobalObjects");
+                // testGetGlobalObjects
+                from("direct:testGetGlobalObjects")
+                    .to("force://getGlobalObjects")
+                    .to("mock:testGetGlobalObjects");
 
-                from("direct:testGlobalObjectsXml")
-                    .to("force://globalObjects?format=xml")
-                    .to("mock:testGlobalObjectsXml");
+                from("direct:testGetGlobalObjectsXml")
+                    .to("force://getGlobalObjects?format=xml")
+                    .to("mock:testGetGlobalObjectsXml");
 
-                // testBasicInfo
-                from("direct:testBasicInfo")
-                    .to("force://basicInfo?sObjectName=Merchandise__c")
-                    .to("mock:testBasicInfo");
+                // testGetBasicInfo
+                from("direct:testGetBasicInfo")
+                    .to("force://getBasicInfo?sObjectName=Merchandise__c")
+                    .to("mock:testGetBasicInfo");
 
-                from("direct:testBasicInfoXml")
-                    .to("force://basicInfo?format=xml&sObjectName=Merchandise__c")
-                    .to("mock:testBasicInfoXml");
+                from("direct:testGetBasicInfoXml")
+                    .to("force://getBasicInfo?format=xml&sObjectName=Merchandise__c")
+                    .to("mock:testGetBasicInfoXml");
 
-                // testDescription
-                from("direct:testDescription")
-                    .to("force://description?sObjectName=Merchandise__c")
-                    .to("mock:testDescription");
+                // testGetDescription
+                from("direct:testGetDescription")
+                    .to("force://getDescription?sObjectName=Merchandise__c")
+                    .to("mock:testGetDescription");
 
-                from("direct:testDescriptionXml")
-                    .to("force://description?format=xml&sObjectName=Merchandise__c")
-                    .to("mock:testDescriptionXml");
+                from("direct:testGetDescriptionXml")
+                    .to("force://getDescription?format=xml&sObjectName=Merchandise__c")
+                    .to("mock:testGetDescriptionXml");
 
-                // testRetrieve
-                from("direct:testRetrieve")
-                    .to("force://retrieve?sObjectName=Merchandise__c&sObjectFields=Description__c,Price__c")
-                    .to("mock:testRetrieve");
+                // testGetSObject
+                from("direct:testGetSObject")
+                    .to("force://getSObject?sObjectName=Merchandise__c&sObjectFields=Description__c,Price__c")
+                    .to("mock:testGetSObject");
 
-                from("direct:testRetrieveXml")
-                    .to("force://retrieve?format=xml&sObjectName=Merchandise__c&sObjectFields=Description__c,Total_Inventory__c")
-                    .to("mock:testRetrieveXml");
+                from("direct:testGetSObjectXml")
+                    .to("force://getSObject?format=xml&sObjectName=Merchandise__c&sObjectFields=Description__c,Total_Inventory__c")
+                    .to("mock:testGetSObjectXml");
 
                 // testCreateSObject
-                from("direct:testCreate")
-                    .to("force://create?sObjectName=Merchandise__c")
-                    .to("mock:testCreate");
+                from("direct:testCreateSObject")
+                    .to("force://createSObject?sObjectName=Merchandise__c")
+                    .to("mock:testCreateSObject");
 
-                from("direct:testCreateXml")
-                    .to("force://create?format=xml&sObjectName=Merchandise__c")
-                    .to("mock:testCreateXml");
+                from("direct:testCreateSObjectXml")
+                    .to("force://createSObject?format=xml&sObjectName=Merchandise__c")
+                    .to("mock:testCreateSObjectXml");
 
-                // testUpdate
-                from("direct:testUpdate")
-                    .to("force://update?sObjectName=Merchandise__c")
-                    .to("mock:testUpdate");
+                // testUpdateSObject
+                from("direct:testUpdateSObject")
+                    .to("force://updateSObject?sObjectName=Merchandise__c")
+                    .to("mock:testUpdateSObject");
 
-                from("direct:testUpdateXml")
-                    .to("force://update?format=xml&sObjectName=Merchandise__c")
-                    .to("mock:testUpdateXml");
+                from("direct:testUpdateSObjectXml")
+                    .to("force://updateSObject?format=xml&sObjectName=Merchandise__c")
+                    .to("mock:testUpdateSObjectXml");
 
-                // testDelete
-                from("direct:testDelete")
-                    .to("force://delete?sObjectName=Merchandise__c")
-                    .to("mock:testDelete");
+                // testDeleteSObject
+                from("direct:testDeleteSObject")
+                    .to("force://deleteSObject?sObjectName=Merchandise__c")
+                    .to("mock:testDeleteSObject");
 
-                from("direct:testDeleteXml")
-                    .to("force://delete?format=xml&sObjectName=Merchandise__c")
-                    .to("mock:testDeleteXml");
+                from("direct:testDeleteSObjectXml")
+                    .to("force://deleteSObject?format=xml&sObjectName=Merchandise__c")
+                    .to("mock:testDeleteSObjectXml");
 
-                // testRetrieveWithId
-                from("direct:testRetrieveWithId")
-                    .to("force://retrieveWithId?sObjectName=Line_Item__c&sObjectIdName=Name")
-                    .to("mock:testRetrieveWithId");
+                // testGetSObjectWithId
+                from("direct:testGetSObjectWithId")
+                    .to("force://getSObjectWithId?sObjectName=Line_Item__c&sObjectIdName=Name")
+                    .to("mock:testGetSObjectWithId");
 
-                from("direct:testRetrieveWithIdXml")
-                    .to("force://retrieveWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
-                    .to("mock:testRetrieveWithIdXml");
+                from("direct:testGetSObjectWithIdXml")
+                    .to("force://getSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
+                    .to("mock:testGetSObjectWithIdXml");
 
-                // testUpsert
-                from("direct:testUpsert")
-                    .to("force://upsert?sObjectName=Line_Item__c&sObjectIdName=Name")
-                    .to("mock:testUpsert");
+                // testUpsertSObject
+                from("direct:testUpsertSObject")
+                    .to("force://upsertSObject?sObjectName=Line_Item__c&sObjectIdName=Name")
+                    .to("mock:testUpsertSObject");
 
-                from("direct:testUpsertXml")
-                    .to("force://upsert?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
-                    .to("mock:testUpsertXml");
+                from("direct:testUpsertSObjectXml")
+                    .to("force://upsertSObject?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
+                    .to("mock:testUpsertSObjectXml");
 
-                // testDeleteWithId
-                from("direct:testDeleteWithId")
-                    .to("force://deleteWithId?sObjectName=Line_Item__c&sObjectIdName=Name")
-                    .to("mock:testDeleteWithId");
+                // testDeleteSObjectWithId
+                from("direct:testDeleteSObjectWithId")
+                    .to("force://deleteSObjectWithId?sObjectName=Line_Item__c&sObjectIdName=Name")
+                    .to("mock:testDeleteSObjectWithId");
 
-                from("direct:testDeleteWithIdXml")
-                    .to("force://deleteWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
-                    .to("mock:testDeleteWithIdXml");
+                from("direct:testDeleteSObjectWithIdXml")
+                    .to("force://deleteSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name")
+                    .to("mock:testDeleteSObjectWithIdXml");
 
                 // testQuery
                 from("direct:testQuery")

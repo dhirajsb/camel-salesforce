@@ -39,7 +39,7 @@ import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig
 public class XmlRestProcessor extends AbstractRestProcessor {
 
     // although XStream is generally thread safe, because of the way we use aliases
-    // for BASIC_INFO and DESCRIPTION, we need to use a ThreadLocal
+    // for GET_BASIC_INFO and GET_DESCRIPTION, we need to use a ThreadLocal
     // not very efficient when both JSON and XML are used together with a single Thread pool
     // but this will do for now
     private static ThreadLocal<XStream> xStream =
@@ -73,20 +73,20 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     protected void processRequest(Exchange exchange) throws RestException {
 
         switch (getApiName()) {
-            case VERSIONS:
+            case GET_VERSIONS:
                 exchange.setProperty(RESPONSE_CLASS, Versions.class);
                 break;
 
-            case RESOURCES:
+            case GET_RESOURCES:
                 exchange.setProperty(RESPONSE_CLASS, RestResources.class);
                 break;
 
-            case GLOBAL_OBJECTS:
+            case GET_GLOBAL_OBJECTS:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, GlobalObjects.class);
                 break;
 
-            case BASIC_INFO:
+            case GET_BASIC_INFO:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectBasicInfo.class);
 
@@ -95,7 +95,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                     getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
                 break;
 
-            case DESCRIPTION:
+            case GET_DESCRIPTION:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_CLASS, SObjectDescription.class);
 
@@ -104,24 +104,24 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                     getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
                 break;
 
-            case RETRIEVE:
+            case GET_SOBJECT:
                 // need to add alias for Salesforce XML that uses SObject name as root element
                 exchange.setProperty(RESPONSE_ALIAS,
                     getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
                 break;
 
-            case CREATE:
+            case CREATE_SOBJECT:
                 // handle known response type
                 exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
                 break;
 
-            case RETRIEVE_WITH_ID:
+            case GET_SOBJECT_WITH_ID:
                 // need to add alias for Salesforce XML that uses SObject name as root element
                 exchange.setProperty(RESPONSE_ALIAS,
                     getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
                 break;
 
-            case UPSERT:
+            case UPSERT_SOBJECT:
                 // handle known response type
                 exchange.setProperty(RESPONSE_CLASS, CreateSObjectResult.class);
                 break;

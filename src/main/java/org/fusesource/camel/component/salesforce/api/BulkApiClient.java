@@ -48,13 +48,14 @@ public interface BulkApiClient {
 
     List<BatchInfo> getAllBatches(String jobId) throws RestException;
 
-    InputStream getBatchRequest(String jobId, String batchId) throws RestException;
+    InputStream getRequest(String jobId, String batchId) throws RestException;
 
     List<Result> getResults(String jobId, String batchId) throws RestException;
 
-    BatchInfo createQueryBatch(String jobId, String soqlQuery, ContentType jobContentType) throws RestException;
+    BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws RestException;
 
-    List<String> getQueryResults(String jobId, String batchId) throws RestException;
+    List<String> queryResultList(String jobId, String batchId) throws RestException;
 
-    InputStream getQueryResult(String jobId, String batchId, String resultId) throws RestException;
+    InputStream queryResult(String jobId, String batchId, String resultId) throws RestException;
+
 }

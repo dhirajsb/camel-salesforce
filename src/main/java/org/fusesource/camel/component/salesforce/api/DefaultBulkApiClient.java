@@ -156,7 +156,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public InputStream getBatchRequest(String jobId, String batchId) throws RestException {
+    public InputStream getRequest(String jobId, String batchId) throws RestException {
 
         final HttpGet get = new HttpGet(batchUrl(jobId, batchId));
 
@@ -178,7 +178,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public BatchInfo createQueryBatch(String jobId, String soqlQuery, ContentType jobContentType) throws RestException {
+    public BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws RestException {
 
         final HttpPost post = new HttpPost(batchUrl(jobId, null));
         byte[] queryBytes = soqlQuery.getBytes(Consts.UTF_8);
@@ -194,7 +194,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public List<String> getQueryResults(String jobId, String batchId) throws RestException {
+    public List<String> queryResultList(String jobId, String batchId) throws RestException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, null));
 
         // make the call and parse the result
@@ -205,7 +205,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public InputStream getQueryResult(String jobId, String batchId, String resultId) throws RestException {
+    public InputStream queryResult(String jobId, String batchId, String resultId) throws RestException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, resultId));
 
         // make the call and parse the result

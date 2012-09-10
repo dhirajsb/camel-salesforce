@@ -18,21 +18,36 @@ package org.fusesource.camel.component.salesforce.internal;
 
 public enum ApiName {
 
-    VERSIONS("versions"),
-    RESOURCES("resources"),
-    GLOBAL_OBJECTS("globalObjects"),
-    BASIC_INFO("basicInfo"),
-    DESCRIPTION("description"),
-    RETRIEVE("retrieve"),
-    CREATE("create"),
-    UPDATE("update"),
-    DELETE("delete"),
-    RETRIEVE_WITH_ID("retrieveWithId"),
-    UPSERT("upsert"),
-    DELETE_WITH_ID("deleteWithId"),
+    // rest APIs
+    GET_VERSIONS("getVersions"),
+    GET_RESOURCES("getResources"),
+    GET_GLOBAL_OBJECTS("getGlobalObjects"),
+    GET_BASIC_INFO("getBasicInfo"),
+    GET_DESCRIPTION("getDescription"),
+    GET_SOBJECT("getSObject"),
+    CREATE_SOBJECT("createSObject"),
+    UPDATE_SOBJECT("updateSObject"),
+    DELETE_SOBJECT("deleteSObject"),
+    GET_SOBJECT_WITH_ID("getSObjectWithId"),
+    UPSERT_SOBJECT("upsertSObject"),
+    DELETE_SOBJECT_WITH_ID("deleteSObjectWithId"),
     QUERY("query"),
     QUERY_MORE("queryMore"),
-    SEARCH("search");
+    SEARCH("search"),
+
+    // bulk APIs
+    CREATE_JOB("createJob"),
+    GET_JOB("getJob"),
+    CLOSE_JOB("closeJob"),
+    ABORT_JOB("abortJob"),
+    CREATE_BATCH("createBatch"),
+    GET_BATCH("getBatch"),
+    GET_ALL_BATCHES("getAllBatches"),
+    GET_REQUEST("getRequest"),
+    GET_RESULTS("getResults"),
+    CREATE_BATCH_QUERY("createBatchQuery"),
+    QUERY_RESULT_LIST("queryResultList"),
+    QUERY_RESULT("queryResult");
 
     private final String value;
 

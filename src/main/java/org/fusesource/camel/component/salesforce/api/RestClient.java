@@ -27,7 +27,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream versions() throws RestException;
+    InputStream getVersions() throws RestException;
 
     /**
      * Set the API version to use for the rest of the APIs. Since this is possible not thread safe,
@@ -43,7 +43,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream resources() throws RestException;
+    InputStream getResources() throws RestException;
 
     /**
      * Lists the available objects and their metadata for your organization's data.
@@ -51,7 +51,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream globalObjects() throws RestException;
+    InputStream getGlobalObjects() throws RestException;
 
     /**
      * Describes the individual metadata for the specified object.
@@ -60,7 +60,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream basicInfo(String sObjectName) throws RestException;
+    InputStream getBasicInfo(String sObjectName) throws RestException;
 
     /**
      * Completely describes the individual metadata at all levels for the specified object.
@@ -69,7 +69,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream description(String sObjectName) throws RestException;
+    InputStream getDescription(String sObjectName) throws RestException;
 
     /**
      * Retrieves a record for the specified object ID.
@@ -79,7 +79,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream retrieve(String sObjectName, String id, String[] fields) throws RestException;
+    InputStream getSObject(String sObjectName, String id, String[] fields) throws RestException;
 
     /**
      * Creates a record for the specified object.
@@ -89,7 +89,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    InputStream create(String sObjectName, InputStream sObject) throws RestException;
+    InputStream createSObject(String sObjectName, InputStream sObject) throws RestException;
 
     /**
      * Updates a record for the specified object ID.
@@ -100,7 +100,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    void update(String sObjectName, String id, InputStream sObject) throws RestException;
+    void updateSObject(String sObjectName, String id, InputStream sObject) throws RestException;
 
     /**
      * Deletes a record for the specified object ID.
@@ -110,7 +110,7 @@ public interface RestClient {
      * @return response entity
      * @throws RestException
      */
-    void delete(String sObjectName, String id) throws RestException;
+    void deleteSObject(String sObjectName, String id) throws RestException;
 
     /**
      * Retrieves a record for the specified external ID.
@@ -121,7 +121,7 @@ public interface RestClient {
      * @return
      * @throws RestException
      */
-    InputStream retrieveWithId(String sObjectName, String fieldName, String fieldValue) throws RestException;
+    InputStream getSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws RestException;
 
     /**
      * Creates or updates a record based on the value of a specified external ID field.
@@ -133,8 +133,8 @@ public interface RestClient {
      * @return
      * @throws RestException
      */
-    InputStream upsert(String sObjectName,
-                       String fieldName, String fieldValue, InputStream sObject) throws RestException;
+    InputStream upsertSObject(String sObjectName,
+                              String fieldName, String fieldValue, InputStream sObject) throws RestException;
 
     /**
      * Deletes a record based on the value of a specified external ID field.
@@ -144,8 +144,8 @@ public interface RestClient {
      * @param fieldValue
      * @throws RestException
      */
-    void deleteWithId(String sObjectName,
-                      String fieldName, String fieldValue) throws RestException;
+    void deleteSObjectWithId(String sObjectName,
+                             String fieldName, String fieldValue) throws RestException;
 
 /*
     TODO
