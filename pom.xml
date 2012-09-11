@@ -14,11 +14,16 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <camel-version>2.9.0.fuse-70-084</camel-version>
-    <jackson-version>1.9.5</jackson-version>
-    <xstream-version>1.4.2_1</xstream-version>
-    <httpclient-osgi-version>4.2.1</httpclient-osgi-version>
+    <camel.version>2.9.0.fuse-70-084</camel.version>
+    <jackson.version>1.9.5</jackson.version>
+    <xstream.version>1.4.2_1</xstream.version>
+    <httpclient-osgi.version>4.2.1</httpclient-osgi.version>
     <joda-time.version>2.1</joda-time.version>
+    <xpp3.version>1.1.4c_6</xpp3.version>
+    <karaf.version>2.2.5.fuse-70-084</karaf.version>
+    <java.specification.version>1.6</java.specification.version>
+    <maven-plugin.version>2.9</maven-plugin.version>
+    <excluded.tests>**/*IntegrationTest.class</excluded.tests>
   </properties>
 
   <repositories>
@@ -97,22 +102,22 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-core</artifactId>
-      <version>${camel-version}</version>
+      <version>${camel.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient-osgi</artifactId>
-      <version>${httpclient-osgi-version}</version>
+      <version>${httpclient-osgi.version}</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
-      <version>${jackson-version}</version>
+      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.servicemix.bundles</groupId>
       <artifactId>org.apache.servicemix.bundles.xstream</artifactId>
-      <version>${xstream-version}</version>
+      <version>${xstream.version}</version>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
@@ -142,7 +147,7 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-test</artifactId>
-      <version>${camel-version}</version>
+      <version>${camel.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -150,16 +155,34 @@
   <build>
     <defaultGoal>install</defaultGoal>
 
+    <!-- add features directory -->
+    <resources>
+      <resource>
+        <directory>src/main/features</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+
     <plugins>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.4</version>
+        <version>2.5.1</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
-          <generatedSourcesDirectory>${project.build.directory}/generated-sources/xjc</generatedSourcesDirectory>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-plugin.version}</version>
+        <configuration>
+          <excludes>
+            <exclude>${excluded.tests}</exclude>
+          </excludes>
         </configuration>
       </plugin>
 
@@ -168,31 +191,24 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.7</version>
         <executions>
+          <!-- attach features.xml as features artifact -->
           <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals><goal>add-source</goal></goals>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals><goal>attach-artifact</goal></goals>
             <configuration>
-              <sources>
-                <source>${project.build.directory}/generated-sources/xjc</source>
-              </sources>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.outputDirectory}/features.xml</file>
+                  <type>xml</type>
+                  <classifier>features</classifier>
+                </artifact>
+              </artifacts>
             </configuration>
           </execution>
         </executions>
       </plugin>
 
-      <!-- compile Salesforce BulkAPI schema -->
-      <plugin>
-        <groupId>org.jvnet.jaxb2.maven2</groupId>
-        <artifactId>maven-jaxb2-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <!-- to generate the MANIFEST-FILE of the bundle -->
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -201,7 +217,12 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>camel-salesforce</Bundle-SymbolicName>
+            <Bundle-Vendor>FuseSource Community</Bundle-Vendor>
+            <Bundle-Name>${project.artifactId}</Bundle-Name>
+            <Bundle-DocURL>http://fusesource.com</Bundle-DocURL>
+            <Bundle-Description>Camel SALESFORCE support</Bundle-Description>
+            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-License>http://www.apache.org/licenses/LICENSE-2.0.txt</Bundle-License>
             <Export-Package>
               org.fusesource.camel.component.salesforce;version=${project.version},
               org.fusesource.camel.component.salesforce.api.*;version=${project.version}
@@ -211,9 +232,38 @@
           </instructions>
         </configuration>
       </plugin>
-
+      <!-- to validate features.xml -->
+<!-- TODO enable validation of features.xml
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>features-maven-plugin</artifactId>
+        <version>${karaf.version}</version>
+        <executions>
+          <execution>
+            <id>validate</id>
+            <phase>process-resources</phase>
+            <goals><goal>validate</goal></goals>
+            <configuration>
+              <file>${project.build.outputDirectory}/features.xml</file>
+              <karafConfig>${project.build.outputDirectory}/config.properties</karafConfig>
+              <jreVersion>jre-1.6</jreVersion>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+-->
     </plugins>
 
   </build>
+
+  <profiles>
+    <profile>
+      <id>itests</id>
+      <properties>
+        <!-- dummy value to avoid NPE -->
+        <excluded.tests>none</excluded.tests>
+      </properties>
+    </profile>
+  </profiles>
 
 </project>

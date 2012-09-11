@@ -27,13 +27,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class SalesforceComponentTest extends AbstractSalesforceTestBase {
+public class SalesforceComponentIntegrationTest extends AbstractSalesforceTestBase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponentTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponentIntegrationTest.class);
     private static final String TEST_LINE_ITEM_ID = "1";
     private static final String NEW_LINE_ITEM_ID = "100";
 
     private ObjectMapper objectMapper;
+    private static String testId;
 
     @Test
     public void testGetVersions() throws Exception {
@@ -41,6 +42,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         doTestGetVersions("Xml");
     }
 
+    @SuppressWarnings("unchecked")
     private void doTestGetVersions(String suffix) throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:testGetVersions" + suffix);
         mock.expectedMinimumMessageCount(1);
@@ -120,6 +122,10 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         SObjectBasicInfo objectBasicInfo = ex.getIn().getBody(SObjectBasicInfo.class);
         assertNotNull(objectBasicInfo);
         LOG.trace("SObjectBasicInfo: {}", objectBasicInfo);
+
+        // set test Id for testGetSObject
+        assertFalse("RecentItems is empty", objectBasicInfo.getRecentItems().isEmpty());
+        testId = objectBasicInfo.getRecentItems().get(0).getId();
     }
 
     @Test
@@ -149,6 +155,11 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
     }
 
     private void doTestGetSObject(String suffix) throws Exception {
+        if (testId == null) {
+            // execute getBasicInfo to get test id from recent items
+            doTestGetBasicInfo("");
+        }
+
         MockEndpoint mock = getMockEndpoint("mock:testGetSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
@@ -337,6 +348,7 @@ public class SalesforceComponentTest extends AbstractSalesforceTestBase {
         doTestSearch("Xml");
     }
 
+    @SuppressWarnings("unchecked")
     private void doTestSearch(String suffix) throws InterruptedException {
         MockEndpoint mock = getMockEndpoint("mock:testSearch" + suffix);
         mock.expectedMinimumMessageCount(1);

@@ -35,7 +35,6 @@ public class JodaTimeConverter implements Converter {
     private final DateTimeFormatter formatter = ISODateTimeFormat.dateTime();
 
     @Override
-    @SuppressWarnings("unchecked")
     public void marshal(Object o, HierarchicalStreamWriter writer, MarshallingContext context) {
         DateTime dateTime = (DateTime) o;
         writer.setValue(formatter.print(dateTime));
@@ -44,9 +43,9 @@ public class JodaTimeConverter implements Converter {
     @Override
     public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
         String dateTimeStr = reader.getValue();
-        Class requiredType = context.getRequiredType();
+        Class<?> requiredType = context.getRequiredType();
         try {
-            Constructor constructor = requiredType.getConstructor(Object.class, DateTimeZone.class);
+            Constructor<?> constructor = requiredType.getConstructor(Object.class, DateTimeZone.class);
             // normalize date time to UTC
             return constructor.newInstance(dateTimeStr, DateTimeZone.UTC);
         } catch (Exception e) {

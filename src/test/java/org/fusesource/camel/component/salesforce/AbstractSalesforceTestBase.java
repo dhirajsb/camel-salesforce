@@ -27,7 +27,6 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
     private static final String TEST_LOGIN_PROPERTIES = "/test-login.properties";
     private static final String API_VERSION = "25.0";
     private static final String DEFAULT_FORMAT = "json";
-    protected static String testId;
 
     @Override
     public boolean isCreateCamelContextPerClass() {
@@ -69,7 +68,7 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
         InputStream stream = getClass().getResourceAsStream(TEST_LOGIN_PROPERTIES);
         if (null == stream) {
             throw new IllegalAccessException("Create a properties file named " +
-                TEST_LOGIN_PROPERTIES + " with clientId, clientSecret, userName, password and a testId" +
+                TEST_LOGIN_PROPERTIES + " with clientId, clientSecret, userName, and password" +
                 " for a Salesforce account with the Merchandise object from Salesforce Guides.");
         }
         properties.load(stream);
@@ -78,13 +77,9 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
         component.setUserName(properties.getProperty("userName"));
         component.setPassword(properties.getProperty("password"));
 
-        testId = properties.getProperty("testId");
-
         assertNotNull("Null clientId", component.getClientId());
         assertNotNull("Null clientSecret", component.getClientSecret());
         assertNotNull("Null userName", component.getUserName());
         assertNotNull("Null password", component.getPassword());
-
-        assertNotNull("Null testId", testId);
     }
 }
