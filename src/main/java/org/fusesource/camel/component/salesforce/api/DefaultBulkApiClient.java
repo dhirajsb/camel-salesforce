@@ -16,8 +16,6 @@
  */
 package org.fusesource.camel.component.salesforce.api;
 
-import com.force._2009._06.asyncapi.dataload.*;
-import com.force._2009._06.asyncapi.dataload.Error;
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -25,6 +23,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.InputStreamEntity;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.Error;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

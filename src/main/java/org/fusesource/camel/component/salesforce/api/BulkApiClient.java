@@ -16,7 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.api;
 
-import com.force._2009._06.asyncapi.dataload.*;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 
 import java.io.InputStream;
 import java.util.List;
