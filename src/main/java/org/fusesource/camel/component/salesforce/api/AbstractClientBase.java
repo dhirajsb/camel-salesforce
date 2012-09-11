@@ -42,11 +42,13 @@ public abstract class AbstractClientBase {
     protected String instanceUrl;
 
     public AbstractClientBase(String version, SalesforceSession session, HttpClient httpClient) {
-        this.accessToken = session.getAccessToken();
         this.version = version;
-        this.instanceUrl = session.getInstanceUrl();
         this.session = session;
         this.httpClient = httpClient;
+
+        // local cache
+        this.accessToken = session.getAccessToken();
+        this.instanceUrl = session.getInstanceUrl();
     }
 
     protected InputStream doHttpRequest(HttpUriRequest request) throws RestException {

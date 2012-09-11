@@ -59,8 +59,6 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         this.objectMapper = new ObjectMapper();
         this.xStream = new XStream();
         xStream.processAnnotations(RestErrors.class);
-
-        // local cache
     }
 
     @Override

@@ -25,14 +25,12 @@ import com.thoughtworks.xstream.io.xml.XppDriver;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.http.Consts;
+import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.JodaTimeConverter;
-import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 
 import java.io.*;
-import java.util.Map;
-import java.util.concurrent.Executor;
 
 import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.SOBJECT_NAME;
 
@@ -62,10 +60,8 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
     private static final String RESPONSE_ALIAS = XmlRestProcessor.class.getName() + ".responseAlias";
 
-    public XmlRestProcessor(RestClient restClient,
-                            ApiName apiName, Executor executor,
-                            Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
-        super(restClient, apiName, executor, endpointConfig, classMap);
+    public XmlRestProcessor(SalesforceEndpoint endpoint) {
+        super(endpoint);
 
     }
 

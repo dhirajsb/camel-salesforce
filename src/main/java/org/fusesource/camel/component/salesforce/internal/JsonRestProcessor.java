@@ -22,7 +22,7 @@ import org.apache.http.Consts;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.type.TypeReference;
-import org.fusesource.camel.component.salesforce.api.RestClient;
+import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 
@@ -31,8 +31,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executor;
 
 public class JsonRestProcessor extends AbstractRestProcessor {
 
@@ -40,10 +38,8 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     private final ObjectMapper objectMapper;
     private static final String RESPONSE_TYPE = JsonRestProcessor.class.getName() + ".responseType";
 
-    public JsonRestProcessor(RestClient restClient,
-                             ApiName apiName, Executor executor,
-                             Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
-        super(restClient, apiName, executor, endpointConfig, classMap);
+    public JsonRestProcessor(SalesforceEndpoint endpoint) {
+        super(endpoint);
 
         this.objectMapper = new ObjectMapper();
         // enable date time support including Joda DateTime

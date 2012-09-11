@@ -19,50 +19,33 @@ package org.fusesource.camel.component.salesforce.internal;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.util.ObjectHelper;
+import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
+import org.fusesource.camel.component.salesforce.api.DefaultRestClient;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
 
-public abstract class AbstractRestProcessor implements SalesforceProcessor {
-
-    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor {
 
     protected static final String RESPONSE_CLASS = AbstractRestProcessor.class.getName() + ".responseClass";
 
-    protected static final boolean NOT_OPTIONAL = false;
-    protected static final boolean IS_OPTIONAL = true;
-    protected static final boolean USE_IN_BODY = true;
-    protected static final boolean IGNORE_IN_BODY = false;
-
     private RestClient restClient;
-    private ApiName apiName;
-
-    private Executor executor;
-    private Map<String, String> endpointConfig;
     private Map<String, Class<?>> classMap;
 
-    public AbstractRestProcessor(RestClient restClient,
-                                 ApiName apiName, Executor executor,
-                                 Map<String, String> endpointConfig, Map<String, Class<?>> classMap) {
-        this.restClient = restClient;
-        this.apiName = apiName;
-        this.endpointConfig = endpointConfig;
-        this.classMap = classMap;
+    public AbstractRestProcessor(SalesforceEndpoint endpoint) {
+        super(endpoint);
 
-        this.executor = executor;
-        if (null == this.executor) {
-            // every rest processor creates its own by default
-            this.executor = Executors.newCachedThreadPool();
-        }
+        final PayloadFormat payloadFormat = endpoint.getEndpointConfiguration().getPayloadFormat();
+
+        this.restClient = new DefaultRestClient(httpClient, endpointConfig.get(API_VERSION),
+            payloadFormat.toString().toLowerCase() , session);
+
+        this.classMap = endpoint.getComponent().getClassMap();
     }
 
     @Override
@@ -110,20 +93,17 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case GET_BASIC_INFO:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
                             responseEntity = restClient.getBasicInfo(sObjectName);
 
                             break;
 
                         case GET_DESCRIPTION:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
                             responseEntity = restClient.getDescription(sObjectName);
                             break;
 
                         case GET_SOBJECT:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
@@ -144,7 +124,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case CREATE_SOBJECT:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
                             responseEntity = restClient.createSObject(sObjectName,
@@ -153,7 +132,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case UPDATE_SOBJECT:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
 
@@ -163,7 +141,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case DELETE_SOBJECT:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
@@ -172,7 +149,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
     
                         case GET_SOBJECT_WITH_ID:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
@@ -186,7 +162,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case UPSERT_SOBJECT:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
@@ -198,7 +173,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case DELETE_SOBJECT_WITH_ID:
-                            // get parameters and set them in exchange
                             sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
                             sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
@@ -209,7 +183,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case QUERY:
-                            // get parameters and set them in exchange
                             final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
                             // use sObject name to load class
@@ -219,7 +192,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case QUERY_MORE:
-                            // get parameters and set them in exchange
                             // reuse SOBJECT_QUERY parameter name for nextRecordsUrl
                             final String nextRecordsUrl = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
@@ -230,7 +202,6 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
                             break;
 
                         case SEARCH:
-                            // get parameters and set them in exchange
                             final String sObjectSearch  = getParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL);
 
                             responseEntity = restClient.search(sObjectSearch);
@@ -305,34 +276,5 @@ public abstract class AbstractRestProcessor implements SalesforceProcessor {
 
     // process response entity and set out message in exchange
     protected abstract void processResponse(Exchange exchange, InputStream responseEntity) throws RestException;
-
-    /**
-     * Gets value for a parameter from exchange body (optional), header, or endpoint config.
-     *
-     * @param exchange exchange to inspect
-     * @param convertInBody converts In body to String value if true
-     * @param propName name of property
-     * @param optional if {@code true} returns null, otherwise throws RestException
-     * @return value of property, or {@code null} for optional parameters if not found.
-     * @throws RestException if the property can't be found.
-     */
-    protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) throws RestException {
-        String propValue = convertInBody ? exchange.getIn().getBody(String.class) : null;
-        propValue = propValue != null ? propValue : exchange.getIn().getHeader(propName, String.class);
-        propValue = propValue != null ? propValue : endpointConfig.get(propName);
-
-        // error if property was not set
-        if (propValue == null && !optional) {
-            String msg = "Missing property " + propName;
-            LOG.error(msg);
-            throw new RestException(msg, null);
-        }
-
-        return propValue;
-    }
-
-    protected ApiName getApiName() {
-        return apiName;
-    }
 
 }

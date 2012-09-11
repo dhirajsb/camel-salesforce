@@ -19,12 +19,8 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultAsyncProducer;
-import org.fusesource.camel.component.salesforce.api.DefaultRestClient;
 import org.fusesource.camel.component.salesforce.api.RestClient;
-import org.fusesource.camel.component.salesforce.internal.JsonRestProcessor;
-import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
-import org.fusesource.camel.component.salesforce.internal.SalesforceProcessor;
-import org.fusesource.camel.component.salesforce.internal.XmlRestProcessor;
+import org.fusesource.camel.component.salesforce.internal.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,33 +35,46 @@ public class SalesforceProducer extends DefaultAsyncProducer {
     private SalesforceProcessor processor;
 
     private RestClient restClient;
-    private final SalesforceEndpointConfig endpointConfig;
-
     public SalesforceProducer(SalesforceEndpoint endpoint) {
         super(endpoint);
 
-        this.endpointConfig = endpoint.getEndpointConfiguration();
-
-        final SalesforceComponent component = (SalesforceComponent) endpoint.getComponent();
+        final SalesforceEndpointConfig endpointConfig = endpoint.getEndpointConfiguration();
         final PayloadFormat payloadFormat = endpointConfig.getPayloadFormat();
-        restClient = new DefaultRestClient(component.getHttpClient(), endpointConfig.getApiVersion(),
-            payloadFormat.toString().toLowerCase(), component.getSession());
 
+        // check if its a Bulk API
+        if (isBulkApi(endpoint.getApiName())) {
+            processor = new BulkApiProcessor(endpoint);
+        }
         // set the default format
         switch (payloadFormat) {
             case JSON:
                 // create a JSON exchange processor
-                processor = new JsonRestProcessor(restClient, endpoint.getApiName(),
-                    component.getExecutor(),
-                    endpointConfig.toValueMap(),
-                    component.getClassMap());
+                processor = new JsonRestProcessor(endpoint);
                 break;
             case XML:
-                processor = new XmlRestProcessor(restClient, endpoint.getApiName(),
-                    component.getExecutor(),
-                    endpointConfig.toValueMap(),
-                    component.getClassMap());
+                processor = new XmlRestProcessor(endpoint);
                 break;
+        }
+    }
+
+    private boolean isBulkApi(ApiName apiName) {
+        switch (apiName) {
+            case CREATE_JOB:
+            case GET_JOB:
+            case CLOSE_JOB:
+            case ABORT_JOB:
+            case CREATE_BATCH:
+            case GET_BATCH:
+            case GET_ALL_BATCHES:
+            case GET_REQUEST:
+            case GET_RESULTS:
+            case CREATE_BATCH_QUERY:
+            case QUERY_RESULT_LIST:
+            case QUERY_RESULT:
+                return true;
+
+            default:
+                return false;
         }
     }
 
@@ -79,7 +88,7 @@ public class SalesforceProducer extends DefaultAsyncProducer {
             return true;
         }
 
-        LOG.debug("Processing {}", ((SalesforceEndpoint)getEndpoint()).getApiName());
+        LOG.debug("Processing {}", ((SalesforceEndpoint) getEndpoint()).getApiName());
         return processor.process(exchange, callback);
     }
 

@@ -2,6 +2,8 @@ package org.fusesource.camel.component.salesforce;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultEndpointConfiguration;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.ContentType;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.OperationEnum;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 
 import java.util.Collections;
@@ -10,6 +12,7 @@ import java.util.Map;
 
 public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
+    // parameters for Rest API
     public static final String FORMAT = "format";
     public static final String API_VERSION = "apiVersion";
     public static final String SOBJECT_NAME = "sObjectName";
@@ -20,6 +23,13 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     public static final String SOBJECT_CLASS = "sObjectClass";
     public static final String SOBJECT_QUERY = "sObjectQuery";
     public static final String SOBJECT_SEARCH = "sObjectSearch";
+
+    // parameters for Bulk API
+    public static final String BULK_OPERATION = "bulkOperation";
+    public static final String CONTENT_TYPE = "contentType";
+    public static final String JOB_ID = "jobId";
+    public static final String BATCH_ID = "batchId";
+    public static final String RESULT_ID = "resultId";
 
     private PayloadFormat format;
     private String apiVersion;
@@ -32,6 +42,12 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     private String sObjectClass;
     private String sObjectQuery;
     private String sObjectSearch;
+
+    private OperationEnum bulkOperation;
+    private ContentType contentType;
+    private String jobId;
+    private String batchId;
+    private String resultId;
 
     public SalesforceEndpointConfig(CamelContext camelContext) {
         super(camelContext);
@@ -121,6 +137,46 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         this.sObjectSearch = sObjectSearch;
     }
 
+    public OperationEnum getBulkOperation() {
+        return bulkOperation;
+    }
+
+    public void setBulkOperation(OperationEnum bulkOperation) {
+        this.bulkOperation = bulkOperation;
+    }
+
+    public ContentType getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(ContentType contentType) {
+        this.contentType = contentType;
+    }
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
+    }
+
+    public String getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(String batchId) {
+        this.batchId = batchId;
+    }
+
+    public String getResultId() {
+        return resultId;
+    }
+
+    public void setResultId(String resultId) {
+        this.resultId = resultId;
+    }
+
     @Override
     public String toUriString(UriFormat format) {
         // ignore format, what is this used for anyway???
@@ -141,6 +197,13 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         valueMap.put(SOBJECT_CLASS, sObjectClass);
         valueMap.put(SOBJECT_QUERY, sObjectQuery);
         valueMap.put(SOBJECT_SEARCH, sObjectSearch);
+
+        // add bulk API properties
+        valueMap.put(BULK_OPERATION, bulkOperation.value());
+        valueMap.put(CONTENT_TYPE, contentType.value());
+        valueMap.put(JOB_ID, jobId);
+        valueMap.put(BATCH_ID, batchId);
+        valueMap.put(RESULT_ID, resultId);
 
         return Collections.unmodifiableMap(valueMap);
     }

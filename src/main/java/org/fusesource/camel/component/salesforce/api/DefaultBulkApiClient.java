@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiClient {
@@ -45,7 +46,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     private JAXBContext context;
     private static final ContentType DEFAULT_ACCEPT_TYPE = ContentType.XML;
 
-    public DefaultBulkApiClient(String version, SalesforceSession session, HttpClient httpClient) throws RestException {
+    public DefaultBulkApiClient(String version, SalesforceSession session, HttpClient httpClient) {
         super(version, session, httpClient);
 
         try {
@@ -53,7 +54,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         } catch (JAXBException e) {
             String msg = "Error loading Bulk API DTOs: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new RuntimeException(msg, e);
         }
     }
 
@@ -174,7 +175,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         InputStream response = doHttpRequest(get);
 
         BatchResult value = unmarshalResponse(response, get, BatchResult.class);
-        return value.getResult();
+        return Collections.unmodifiableList(value.getResult());
     }
 
     @Override
@@ -201,7 +202,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         InputStream response = doHttpRequest(get);
 
         QueryResultList value = unmarshalResponse(response, get, QueryResultList.class);
-        return value.getResult();
+        return Collections.unmodifiableList(value.getResult());
     }
 
     @Override
