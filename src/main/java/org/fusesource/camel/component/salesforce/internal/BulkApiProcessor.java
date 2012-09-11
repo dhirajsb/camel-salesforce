@@ -137,7 +137,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             }
 
                             BatchInfo batchInfo = bulkClient.createBatch(request,
-                                jobId, ContentType.fromValue(contentType));
+                                jobId, contentType);
 
                             createResponse(exchange, batchInfo);
 
