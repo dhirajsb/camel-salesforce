@@ -199,8 +199,12 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         valueMap.put(SOBJECT_SEARCH, sObjectSearch);
 
         // add bulk API properties
-        valueMap.put(BULK_OPERATION, bulkOperation.value());
-        valueMap.put(CONTENT_TYPE, contentType.value());
+        if (bulkOperation != null) {
+            valueMap.put(BULK_OPERATION, bulkOperation.value());
+        }
+        if (contentType != null) {
+            valueMap.put(CONTENT_TYPE, contentType.value());
+        }
         valueMap.put(JOB_ID, jobId);
         valueMap.put(BATCH_ID, batchId);
         valueMap.put(RESULT_ID, resultId);
