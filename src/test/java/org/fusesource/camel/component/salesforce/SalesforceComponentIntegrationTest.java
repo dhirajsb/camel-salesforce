@@ -210,11 +210,13 @@ public class SalesforceComponentIntegrationTest extends AbstractSalesforceTestBa
         mock = getMockEndpoint("mock:testUpdateSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        merchandise__c = new Merchandise__c();
         // make the plane cheaper
         merchandise__c.setPrice__c(1500.0);
         // change inventory to half
         merchandise__c.setTotal_Inventory__c(25.0);
+        // also need to set the Id
+        merchandise__c.setId(result.getId());
+
         template().sendBodyAndHeader("direct:testUpdateSObject" + suffix,
             merchandise__c, SalesforceEndpointConfig.SOBJECT_ID, result.getId());
         mock.assertIsSatisfied();
@@ -262,17 +264,16 @@ public class SalesforceComponentIntegrationTest extends AbstractSalesforceTestBa
         assertNotNull(line_item__c);
         LOG.trace("GetWithId: {}", line_item__c);
 
-        // test JSON update
+        // test insert with id
         mock = getMockEndpoint("mock:testUpsertSObject" + suffix);
         mock.expectedMinimumMessageCount(1);
 
-        // change line_item__c to create a new Line Item
-        // otherwise we will get an error from Salesforce
-        line_item__c.clearBaseFields();
         // set the unit price and sold
         line_item__c.setUnit_Price__c(1000.0);
         line_item__c.setUnits_Sold__c(50.0);
         // update line item with Name NEW_LINE_ITEM_ID
+        line_item__c.setName(NEW_LINE_ITEM_ID);
+
         template().sendBodyAndHeader("direct:testUpsertSObject" + suffix,
             line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID);
         mock.assertIsSatisfied();
@@ -284,9 +285,6 @@ public class SalesforceComponentIntegrationTest extends AbstractSalesforceTestBa
         assertTrue(result.getSuccess());
         LOG.trace("CreateWithId: {}", result);
 
-        // change line_item__c to update existing Line Item
-        // otherwise we will get an error from Salesforce
-        line_item__c.clearBaseFields();
         // clear read only parent type fields
         line_item__c.setInvoice_Statement__c(null);
         line_item__c.setMerchandise__c(null);

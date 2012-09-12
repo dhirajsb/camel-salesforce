@@ -88,7 +88,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
                 // need to add alias for Salesforce XML that uses SObject name as root element
                 exchange.setProperty(RESPONSE_ALIAS,
-                    getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
+                    getParameter(SOBJECT_NAME, exchange, USE_BODY, NOT_OPTIONAL));
                 break;
 
             case GET_DESCRIPTION:
@@ -97,13 +97,13 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
                 // need to add alias for Salesforce XML that uses SObject name as root element
                 exchange.setProperty(RESPONSE_ALIAS,
-                    getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL));
+                    getParameter(SOBJECT_NAME, exchange, USE_BODY, NOT_OPTIONAL));
                 break;
 
             case GET_SOBJECT:
                 // need to add alias for Salesforce XML that uses SObject name as root element
                 exchange.setProperty(RESPONSE_ALIAS,
-                    getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
+                    getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL));
                 break;
 
             case CREATE_SOBJECT:
@@ -114,7 +114,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             case GET_SOBJECT_WITH_ID:
                 // need to add alias for Salesforce XML that uses SObject name as root element
                 exchange.setProperty(RESPONSE_ALIAS,
-                    getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
+                    getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL));
                 break;
 
             case UPSERT_SOBJECT:

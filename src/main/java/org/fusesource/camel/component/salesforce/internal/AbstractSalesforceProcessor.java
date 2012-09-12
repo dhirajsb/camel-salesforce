@@ -34,8 +34,8 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
 
     protected static final boolean NOT_OPTIONAL = false;
     protected static final boolean IS_OPTIONAL = true;
-    protected static final boolean USE_IN_BODY = true;
-    protected static final boolean IGNORE_IN_BODY = false;
+    protected static final boolean USE_BODY = true;
+    protected static final boolean IGNORE_BODY = false;
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     protected ApiName apiName;
@@ -63,7 +63,7 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
     public abstract boolean process(Exchange exchange, AsyncCallback callback);
 
     /**
-     * Gets value for a parameter from exchange body (optional), header, or endpoint config.
+     * Gets value for a parameter from header, endpoint config, or exchange body (optional).
      *
      * @param exchange exchange to inspect
      * @param convertInBody converts In body to String value if true
@@ -73,9 +73,9 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
      * @throws org.fusesource.camel.component.salesforce.api.RestException if the property can't be found.
      */
     protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) throws RestException {
-        String propValue = convertInBody ? exchange.getIn().getBody(String.class) : null;
-        propValue = propValue != null ? propValue : exchange.getIn().getHeader(propName, String.class);
-        propValue = propValue != null ? propValue : endpointConfig.get(propName);
+        String propValue = exchange.getIn().getHeader(propName, String.class);
+        propValue = propValue == null ? endpointConfig.get(propName) : propValue;
+        propValue = (propValue == null && convertInBody) ? exchange.getIn().getBody(String.class) : propValue;
 
         // error if property was not set
         if (propValue == null && !optional) {

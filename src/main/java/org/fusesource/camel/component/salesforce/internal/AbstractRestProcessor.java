@@ -23,9 +23,12 @@ import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.DefaultRestClient;
 import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import static org.fusesource.camel.component.salesforce.SalesforceEndpointConfig.*;
@@ -70,13 +73,18 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
         executor.execute(new Runnable() {
             @Override
             public void run() {
+
                 InputStream responseEntity = null;
+                // common parameters
+                String sObjectName;
+                String sObjectId = null;
+                String sObjectExtIdName = null;
+                String sObjectExtIdValue = null;
+                // input SObject
+                AbstractSObjectBase sObjectBase = null;
+                Object oldValue = null;
+
                 try {
-                    // common parameters
-                    String sObjectName = null;
-                    String sObjectId = null;
-                    String sObjectExtIdName = null;
-                    String sObjectExtIdValue = null;
 
                     // call API using REST client
                     switch (getApiName()) {
@@ -93,25 +101,32 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                             break;
 
                         case GET_BASIC_INFO:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, USE_BODY, NOT_OPTIONAL);
                             responseEntity = restClient.getBasicInfo(sObjectName);
 
                             break;
 
                         case GET_DESCRIPTION:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            sObjectName = getParameter(SOBJECT_NAME, exchange, USE_BODY, NOT_OPTIONAL);
                             responseEntity = restClient.getDescription(sObjectName);
                             break;
 
                         case GET_SOBJECT:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            // determine parameters from input AbstractSObject
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                                sObjectId = sObjectBase.getId();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                sObjectId = getParameter(SOBJECT_ID, exchange, USE_BODY, NOT_OPTIONAL);
+                            }
 
                             // use sObject name to load class
                             setResponseClass(exchange, sObjectName);
 
                             // get optional field list
-                            String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_IN_BODY, IS_OPTIONAL);
+                            String fieldsValue = getParameter(SOBJECT_FIELDS, exchange, IGNORE_BODY, IS_OPTIONAL);
                             String[] fields = null;
                             if (fieldsValue != null) {
                                 fields = fieldsValue.split(",");
@@ -124,7 +139,13 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                             break;
 
                         case CREATE_SOBJECT:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            // determine parameters from input AbstractSObject
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                            }
 
                             responseEntity = restClient.createSObject(sObjectName,
                                 getRequestStream(exchange));
@@ -132,26 +153,53 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                             break;
 
                         case UPDATE_SOBJECT:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectId = getParameter(SOBJECT_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            // determine parameters from input AbstractSObject
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                                // remember the sObject Id
+                                sObjectId = sObjectBase.getId();
+                                // clear base object fields, which cannot be updated
+                                sObjectBase.clearBaseFields();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                sObjectId = getParameter(SOBJECT_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                            }
 
                             restClient.updateSObject(sObjectName,
                                 sObjectId,
                                 getRequestStream(exchange));
+
                             break;
 
                         case DELETE_SOBJECT:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectId = getParameter(SOBJECT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            // determine parameters from input AbstractSObject
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                                sObjectId = sObjectBase.getId();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                sObjectId = getParameter(SOBJECT_ID, exchange, USE_BODY, NOT_OPTIONAL);
+                            }
 
                             restClient.deleteSObject(sObjectName,
                                 sObjectId);
                             break;
-    
+
                         case GET_SOBJECT_WITH_ID:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+
+                            // determine parameters from input AbstractSObject
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                                oldValue = getAndClearPropertyValue(sObjectBase, sObjectExtIdName);
+                                sObjectExtIdValue = oldValue.toString();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_BODY, NOT_OPTIONAL);
+                            }
 
                             // use sObject name to load class
                             setResponseClass(exchange, sObjectName);
@@ -159,31 +207,56 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                             responseEntity = restClient.getSObjectWithId(sObjectName,
                                 sObjectExtIdName,
                                 sObjectExtIdValue);
+
                             break;
 
                         case UPSERT_SOBJECT:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+
+                            // determine parameters from input AbstractSObject
+                            oldValue = null;
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                                oldValue = getAndClearPropertyValue(sObjectBase, sObjectExtIdName);
+                                sObjectExtIdValue = oldValue.toString();
+                                // clear base object fields, which cannot be updated
+                                sObjectBase.clearBaseFields();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                            }
 
                             responseEntity = restClient.upsertSObject(sObjectName,
                                 sObjectExtIdName,
                                 sObjectExtIdValue,
                                 getRequestStream(exchange));
+
                             break;
 
                         case DELETE_SOBJECT_WITH_ID:
-                            sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                            sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+
+                            // determine parameters from input AbstractSObject
+                            oldValue = null;
+                            sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                            if (sObjectBase != null) {
+                                sObjectName = sObjectBase.getClass().getSimpleName();
+                                oldValue = getAndClearPropertyValue(sObjectBase, sObjectExtIdName);
+                                sObjectExtIdValue = oldValue.toString();
+                            } else {
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                sObjectExtIdValue = getParameter(SOBJECT_EXT_ID_VALUE, exchange, USE_BODY, NOT_OPTIONAL);
+                            }
 
                             restClient.deleteSObjectWithId(sObjectName,
                                 sObjectExtIdName,
                                 sObjectExtIdValue);
+
                             break;
 
                         case QUERY:
-                            final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_BODY, NOT_OPTIONAL);
 
                             // use sObject name to load class
                             setResponseClass(exchange, null);
@@ -193,7 +266,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
 
                         case QUERY_MORE:
                             // reuse SOBJECT_QUERY parameter name for nextRecordsUrl
-                            final String nextRecordsUrl = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            final String nextRecordsUrl = getParameter(SOBJECT_QUERY, exchange, USE_BODY, NOT_OPTIONAL);
 
                             // use custom response class property
                             setResponseClass(exchange, null);
@@ -202,7 +275,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                             break;
 
                         case SEARCH:
-                            final String sObjectSearch  = getParameter(SOBJECT_SEARCH, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                            final String sObjectSearch = getParameter(SOBJECT_SEARCH, exchange, USE_BODY, NOT_OPTIONAL);
 
                             responseEntity = restClient.search(sObjectSearch);
                             break;
@@ -223,6 +296,23 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                     LOG.error(msg, e);
                     exchange.setException(new RestException(msg, e));
                 } finally {
+                    // restore fields
+                    if (sObjectBase != null) {
+                        // restore the Id if it was cleared
+                        if (sObjectId != null) {
+                            sObjectBase.setId(sObjectId);
+                        }
+                        // restore the external id if it was cleared
+                        if (sObjectExtIdName != null && oldValue != null) {
+                            try {
+                                setPropertyValue(sObjectBase, sObjectExtIdName, oldValue);
+                            } catch (RestException e) {
+                                // YES, the exchange may fail if the property cannot be reset!!!
+                                LOG.error(e.getMessage(), e);
+                                exchange.setException(e);
+                            }
+                        }
+                    }
                     // consume response entity
                     if (responseEntity != null) {
                         try {
@@ -239,6 +329,58 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
 
         // continue routing asynchronously
         return false;
+    }
+
+    private void setPropertyValue(AbstractSObjectBase sObjectBase, String name, Object value) throws RestException {
+        try {
+            // set the value with the set method
+            Method setMethod = sObjectBase.getClass().getMethod("set" + name, new Class<?>[] {value.getClass()});
+            setMethod.invoke(sObjectBase, new Object[] { value });
+        } catch (NoSuchMethodException e) {
+            String msg = String.format("SObject %s does not have a field %s",
+                sObjectBase.getClass().getName(), name);
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        } catch (InvocationTargetException e) {
+            String msg = String.format("Error setting value %s.%s",
+                sObjectBase.getClass().getSimpleName(), name);
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        } catch (IllegalAccessException e) {
+            String msg = String.format("Error accessing value %s.%s",
+                sObjectBase.getClass().getSimpleName(), name);
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        }
+    }
+
+    private Object getAndClearPropertyValue(AbstractSObjectBase sObjectBase, String propertyName) throws RestException {
+        try {
+            // obtain the value using the get method
+            Method getMethod = sObjectBase.getClass().getMethod("get" + propertyName, new Class<?>[] {});
+            Object value = getMethod.invoke(sObjectBase, new Object[] {});
+
+            // clear the value with the set method
+            Method setMethod = sObjectBase.getClass().getMethod("set" + propertyName, new Class<?>[] {getMethod.getReturnType()});
+            setMethod.invoke(sObjectBase, new Object[] { null });
+
+            return value;
+        } catch (NoSuchMethodException e) {
+            String msg = String.format("SObject %s does not have a field %s",
+                sObjectBase.getClass().getSimpleName(), propertyName);
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        } catch (InvocationTargetException e) {
+            String msg = String.format("Error getting/setting value %s.%s",
+                sObjectBase.getClass().getSimpleName(), propertyName);
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        } catch (IllegalAccessException e) {
+            String msg = String.format("Error accessing value %s.%s",
+                sObjectBase.getClass().getSimpleName(), propertyName);
+            LOG.error(msg, e);
+            throw new RestException(msg, e);
+        }
     }
 
     // pre-process request message
@@ -262,7 +404,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
         } else {
 
             // use custom response class property
-            final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+            final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_BODY, NOT_OPTIONAL);
 
             sObjectClass = ObjectHelper.loadClass(className, getClass().getClassLoader());
             if (null == sObjectClass) {

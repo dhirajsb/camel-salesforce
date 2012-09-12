@@ -63,10 +63,10 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 sObjectName = jobBody.getObject();
                             } else {
                                 operation = OperationEnum.fromValue(
-                                    getParameter(BULK_OPERATION, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
+                                    getParameter(BULK_OPERATION, exchange, IGNORE_BODY, NOT_OPTIONAL));
                                 contentType = ContentType.fromValue(
-                                    getParameter(CONTENT_TYPE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
-                                sObjectName = getParameter(SOBJECT_NAME, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                    getParameter(CONTENT_TYPE, exchange, IGNORE_BODY, NOT_OPTIONAL));
+                                sObjectName = getParameter(SOBJECT_NAME, exchange, USE_BODY, NOT_OPTIONAL);
                             }
 
                             JobInfo jobInfo = bulkClient.createJob(operation,
@@ -82,7 +82,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (jobBody != null) {
                                 jobId = jobBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             jobInfo = bulkClient.getJob(jobId);
 
@@ -95,7 +95,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (jobBody != null) {
                                 jobId = jobBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             jobInfo = bulkClient.closeJob(jobId);
 
@@ -108,7 +108,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (jobBody != null) {
                                 jobId = jobBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             jobInfo = bulkClient.abortJob(jobId);
 
@@ -123,8 +123,8 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 contentType = jobBody.getContentType();
                             } else {
                                 contentType = ContentType.fromValue(
-                                    getParameter(CONTENT_TYPE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
-                                jobId = getParameter(JOB_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                    getParameter(CONTENT_TYPE, exchange, IGNORE_BODY, NOT_OPTIONAL));
+                                jobId = getParameter(JOB_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
 
                             InputStream request = null;
@@ -150,8 +150,8 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 jobId = batchBody.getJobId();
                                 batchId = batchBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                                batchId = getParameter(BATCH_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                batchId = getParameter(BATCH_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             batchInfo = bulkClient.getBatch(jobId, batchId);
 
@@ -164,7 +164,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (jobBody != null) {
                                 jobId = jobBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             List<BatchInfo> batches = bulkClient.getAllBatches(jobId);
 
@@ -178,8 +178,8 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 jobId = batchBody.getJobId();
                                 batchId = batchBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                                batchId = getParameter(BATCH_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                batchId = getParameter(BATCH_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
 
                             request = bulkClient.getRequest(jobId, batchId);
@@ -209,8 +209,8 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 jobId = batchBody.getJobId();
                                 batchId = batchBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                                batchId = getParameter(BATCH_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                batchId = getParameter(BATCH_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             List<Result> results = bulkClient.getResults(jobId, batchId);
 
@@ -224,13 +224,13 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (jobBody != null) {
                                 jobId = jobBody.getId();
                                 contentType = jobBody.getContentType();
-                                soqlQuery = getParameter(SOBJECT_QUERY, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                                soqlQuery = getParameter(SOBJECT_QUERY, exchange, IGNORE_BODY, NOT_OPTIONAL);
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
                                 contentType = ContentType.fromValue(
-                                    getParameter(CONTENT_TYPE, exchange, IGNORE_IN_BODY, NOT_OPTIONAL));
+                                    getParameter(CONTENT_TYPE, exchange, IGNORE_BODY, NOT_OPTIONAL));
                                 // reuse SOBJECT_QUERY property
-                                soqlQuery = getParameter(SOBJECT_QUERY, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                soqlQuery = getParameter(SOBJECT_QUERY, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             batchInfo = bulkClient.createBatchQuery(jobId,
                                 soqlQuery, contentType);
@@ -245,8 +245,8 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 jobId = batchBody.getJobId();
                                 batchId = batchBody.getId();
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                                batchId = getParameter(BATCH_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                batchId = getParameter(BATCH_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             List<String> resultIdList = bulkClient.queryResultList(jobId, batchId);
 
@@ -260,11 +260,11 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (batchBody != null) {
                                 jobId = batchBody.getJobId();
                                 batchId = batchBody.getId();
-                                resultId = getParameter(RESULT_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
+                                resultId = getParameter(RESULT_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
                             } else {
-                                jobId = getParameter(JOB_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                                batchId = getParameter(BATCH_ID, exchange, IGNORE_IN_BODY, NOT_OPTIONAL);
-                                resultId = getParameter(RESULT_ID, exchange, USE_IN_BODY, NOT_OPTIONAL);
+                                jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                batchId = getParameter(BATCH_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                                resultId = getParameter(RESULT_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
                             InputStream result = bulkClient.queryResult(jobId, batchId, resultId);
 
