@@ -19,7 +19,6 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultAsyncProducer;
-import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.internal.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,6 @@ public class SalesforceProducer extends DefaultAsyncProducer {
 
     private SalesforceProcessor processor;
 
-    private RestClient restClient;
     public SalesforceProducer(SalesforceEndpoint endpoint) {
         super(endpoint);
 
@@ -44,16 +42,17 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         // check if its a Bulk API
         if (isBulkApi(endpoint.getApiName())) {
             processor = new BulkApiProcessor(endpoint);
-        }
-        // set the default format
-        switch (payloadFormat) {
-            case JSON:
-                // create a JSON exchange processor
-                processor = new JsonRestProcessor(endpoint);
-                break;
-            case XML:
-                processor = new XmlRestProcessor(endpoint);
-                break;
+        } else {
+            // set the default format
+            switch (payloadFormat) {
+                case JSON:
+                    // create a JSON exchange processor
+                    processor = new JsonRestProcessor(endpoint);
+                    break;
+                case XML:
+                    processor = new XmlRestProcessor(endpoint);
+                    break;
+            }
         }
     }
 
@@ -69,8 +68,8 @@ public class SalesforceProducer extends DefaultAsyncProducer {
             case GET_REQUEST:
             case GET_RESULTS:
             case CREATE_BATCH_QUERY:
-            case QUERY_RESULT_LIST:
-            case QUERY_RESULT:
+            case GET_QUERY_RESULT_IDS:
+            case GET_QUERY_RESULT:
                 return true;
 
             default:

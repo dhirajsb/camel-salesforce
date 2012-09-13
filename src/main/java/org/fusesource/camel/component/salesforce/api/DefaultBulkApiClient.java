@@ -45,6 +45,8 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
 
     private JAXBContext context;
     private static final ContentType DEFAULT_ACCEPT_TYPE = ContentType.XML;
+    private ObjectFactory objectFactory;
+    private static final int BUFFER_SIZE = 2048;
 
     public DefaultBulkApiClient(String version, SalesforceSession session, HttpClient httpClient) {
         super(version, session, httpClient);
@@ -56,23 +58,45 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
             LOG.error(msg, e);
             throw new RuntimeException(msg, e);
         }
+
+        this.objectFactory = new ObjectFactory();
     }
 
     @Override
-    public JobInfo createJob(OperationEnum operation, String sObjectName, ContentType contentType) throws RestException {
+    public JobInfo createJob(JobInfo request) throws RestException {
 
-        final JobInfo request = new JobInfo();
-        request.setObject(sObjectName);
-        request.setContentType(contentType);
+        // clear system fields if set
+        sanitizeJobRequest(request);
 
         final HttpPost post = new HttpPost(jobUrl(null));
-        marshalRequest(request, post, APPLICATION_XML_UTF8);
+        marshalRequest(objectFactory.createJobInfo(request), post, APPLICATION_XML_UTF8);
 
         // make the call and parse the result
         InputStream response = doHttpRequest(post);
 
         JobInfo value = unmarshalResponse(response, post, JobInfo.class);
         return value;
+    }
+
+    // reset read only fields
+    private void sanitizeJobRequest(JobInfo request) {
+        request.setApexProcessingTime(null);
+        request.setApiActiveProcessingTime(null);
+        request.setApiVersion(null);
+        request.setCreatedById(null);
+        request.setCreatedDate(null);
+        request.setId(null);
+        request.setNumberBatchesCompleted(null);
+        request.setNumberBatchesFailed(null);
+        request.setNumberBatchesInProgress(null);
+        request.setNumberBatchesQueued(null);
+        request.setNumberBatchesTotal(null);
+        request.setNumberRecordsFailed(null);
+        request.setNumberRecordsProcessed(null);
+        request.setNumberRetries(null);
+        request.setState(null);
+        request.setSystemModstamp(null);
+        request.setSystemModstamp(null);
     }
 
     @Override
@@ -93,7 +117,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         request.setState(JobStateEnum.CLOSED);
 
         final HttpPost post = new HttpPost(jobUrl(jobId));
-        marshalRequest(request, post, APPLICATION_XML_UTF8);
+        marshalRequest(objectFactory.createJobInfo(request), post, APPLICATION_XML_UTF8);
 
         // make the call and parse the result
         InputStream response = doHttpRequest(post);
@@ -108,7 +132,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         request.setState(JobStateEnum.ABORTED);
 
         final HttpPost post = new HttpPost(jobUrl(jobId));
-        marshalRequest(request, post, APPLICATION_XML_UTF8);
+        marshalRequest(objectFactory.createJobInfo(request), post, APPLICATION_XML_UTF8);
 
         // make the call and parse the result
         InputStream response = doHttpRequest(post);
@@ -168,14 +192,11 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public List<Result> getResults(String jobId, String batchId) throws RestException {
+    public InputStream getResults(String jobId, String batchId) throws RestException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, null));
 
-        // make the call and parse the result
-        InputStream response = doHttpRequest(get);
-
-        BatchResult value = unmarshalResponse(response, get, BatchResult.class);
-        return Collections.unmodifiableList(value.getResult());
+        // make the call and return the result
+        return doHttpRequest(get);
     }
 
     @Override
@@ -195,7 +216,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public List<String> queryResultList(String jobId, String batchId) throws RestException {
+    public List<String> getQueryResultIds(String jobId, String batchId) throws RestException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, null));
 
         // make the call and parse the result
@@ -206,7 +227,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public InputStream queryResult(String jobId, String batchId, String resultId) throws RestException {
+    public InputStream getQueryResult(String jobId, String batchId, String resultId) throws RestException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, resultId));
 
         // make the call and parse the result
@@ -222,9 +243,13 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
 
     @Override
     protected InputStream doHttpRequest(HttpUriRequest request) throws RestException {
+        // set access token for all requests
+        setAccessToken(request);
+
         // set default charset
         request.setHeader("Accept-Charset", Consts.UTF_8.toString());
 
+        // TODO check if this is really needed or not, since SF response content type seems fixed
         // check if the default accept content type must be used
         if (!request.containsHeader("Accept")) {
             final String contentType = getContentType(DEFAULT_ACCEPT_TYPE);
@@ -322,7 +347,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         if (jobId != null) {
             return super.instanceUrl + "/services/async/" + version + "/job/" + jobId;
         } else {
-            return super.instanceUrl + "/services/async/" + version + "/job/";
+            return super.instanceUrl + "/services/async/" + version + "/job";
         }
     }
 
@@ -330,15 +355,15 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
         if (batchId != null) {
             return jobUrl(jobId) + "/batch/" + batchId;
         } else {
-            return jobUrl(jobId) + "/batch/";
+            return jobUrl(jobId) + "/batch";
         }
     }
 
     private String batchResultUrl(String jobId, String batchId, String resultId) {
         if (resultId != null) {
-            return batchUrl(jobId, batchId) + "result/" + resultId;
+            return batchUrl(jobId, batchId) + "/result/" + resultId;
         } else {
-            return batchUrl(jobId, batchId) + "result/";
+            return batchUrl(jobId, batchId) + "/result";
         }
     }
 

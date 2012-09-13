@@ -52,25 +52,8 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                 try {
                     switch (apiName) {
                         case CREATE_JOB:
-                            OperationEnum operation;
-                            ContentType contentType;
-                            String sObjectName;
-
-                            JobInfo jobBody = exchange.getIn().getBody(JobInfo.class);
-                            if (jobBody != null) {
-                                operation = jobBody.getOperation();
-                                contentType = jobBody.getContentType();
-                                sObjectName = jobBody.getObject();
-                            } else {
-                                operation = OperationEnum.fromValue(
-                                    getParameter(BULK_OPERATION, exchange, IGNORE_BODY, NOT_OPTIONAL));
-                                contentType = ContentType.fromValue(
-                                    getParameter(CONTENT_TYPE, exchange, IGNORE_BODY, NOT_OPTIONAL));
-                                sObjectName = getParameter(SOBJECT_NAME, exchange, USE_BODY, NOT_OPTIONAL);
-                            }
-
-                            JobInfo jobInfo = bulkClient.createJob(operation,
-                                sObjectName, contentType);
+                            JobInfo jobBody = exchange.getIn().getMandatoryBody(JobInfo.class);
+                            JobInfo jobInfo = bulkClient.createJob(jobBody);
 
                             createResponse(exchange, jobInfo);
 
@@ -117,15 +100,10 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             break;
 
                         case CREATE_BATCH:
-                            jobBody = exchange.getIn().getBody(JobInfo.class);
-                            if (jobBody != null) {
-                                jobId = jobBody.getId();
-                                contentType = jobBody.getContentType();
-                            } else {
-                                contentType = ContentType.fromValue(
-                                    getParameter(CONTENT_TYPE, exchange, IGNORE_BODY, NOT_OPTIONAL));
-                                jobId = getParameter(JOB_ID, exchange, USE_BODY, NOT_OPTIONAL);
-                            }
+                            // since request is in the body, use headers or endpoint params
+                            ContentType contentType = ContentType.fromValue(
+                                getParameter(CONTENT_TYPE, exchange, IGNORE_BODY, NOT_OPTIONAL));
+                            jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
 
                             InputStream request = null;
                             try {
@@ -212,9 +190,24 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
                                 batchId = getParameter(BATCH_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
-                            List<Result> results = bulkClient.getResults(jobId, batchId);
+                            InputStream results = bulkClient.getResults(jobId, batchId);
 
-                            createResponse(exchange, results);
+                            // read the result stream into a StreamCache temp file
+                            // ensures the connection is read
+                            try {
+                                createResponse(exchange, StreamCacheConverter.convertToStreamCache(results, exchange));
+                            } catch (IOException e) {
+                                String msg = "Error retrieving batch results: " + e.getMessage();
+                                LOG.error(msg, e);
+                                throw new RestException(msg, e);
+                            } finally {
+                                // close the input stream to release the Http connection
+                                try {
+                                    results.close();
+                                } catch (IOException e) {
+                                    // ignore
+                                }
+                            }
 
                             break;
 
@@ -224,6 +217,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             if (jobBody != null) {
                                 jobId = jobBody.getId();
                                 contentType = jobBody.getContentType();
+                                // use SOQL query from header or endpoint config
                                 soqlQuery = getParameter(SOBJECT_QUERY, exchange, IGNORE_BODY, NOT_OPTIONAL);
                             } else {
                                 jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
@@ -239,7 +233,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
 
                             break;
 
-                        case QUERY_RESULT_LIST:
+                        case GET_QUERY_RESULT_IDS:
                             batchBody = exchange.getIn().getBody(BatchInfo.class);
                             if (batchBody != null) {
                                 jobId = batchBody.getJobId();
@@ -248,13 +242,13 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 jobId = getParameter(JOB_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
                                 batchId = getParameter(BATCH_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
-                            List<String> resultIdList = bulkClient.queryResultList(jobId, batchId);
+                            List<String> resultIdList = bulkClient.getQueryResultIds(jobId, batchId);
 
                             createResponse(exchange, resultIdList);
 
                             break;
 
-                        case QUERY_RESULT:
+                        case GET_QUERY_RESULT:
                             batchBody = exchange.getIn().getBody(BatchInfo.class);
                             String resultId;
                             if (batchBody != null) {
@@ -266,20 +260,20 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                                 batchId = getParameter(BATCH_ID, exchange, IGNORE_BODY, NOT_OPTIONAL);
                                 resultId = getParameter(RESULT_ID, exchange, USE_BODY, NOT_OPTIONAL);
                             }
-                            InputStream result = bulkClient.queryResult(jobId, batchId, resultId);
+                            results = bulkClient.getQueryResult(jobId, batchId, resultId);
 
                             // read the result stream into a StreamCache temp file
                             // ensures the connection is read
                             try {
-                                createResponse(exchange, StreamCacheConverter.convertToStreamCache(result, exchange));
+                                createResponse(exchange, StreamCacheConverter.convertToStreamCache(results, exchange));
                             } catch (IOException e) {
-                                String msg = "Error retrieving batch request: " + e.getMessage();
+                                String msg = "Error retrieving query result: " + e.getMessage();
                                 LOG.error(msg, e);
                                 throw new RestException(msg, e);
                             } finally {
                                 // close the input stream to release the Http connection
                                 try {
-                                    result.close();
+                                    results.close();
                                 } catch (IOException e) {
                                     // ignore
                                 }
@@ -298,6 +292,11 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                         apiName, e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(new RestException(msg, e));
+                } catch (InvalidPayloadException e) {
+                    String msg = String.format("Unexpected Error processing %s: \"%s\"",
+                        apiName, e.getMessage());
+                    LOG.error(msg, e);
+                    exchange.setException(new RestException(msg, e));
                 } finally {
                     callback.done(false);
                 }
@@ -310,11 +309,12 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
     }
 
     private void createResponse(Exchange exchange, Object body) {
-        exchange.getOut().setBody(body);
+        final Message out = exchange.getOut();
+        out.setBody(body);
 
         // copy headers and attachments
-        exchange.getOut().getHeaders().putAll(exchange.getIn().getHeaders());
-        exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
+        out.getHeaders().putAll(exchange.getIn().getHeaders());
+        out.getAttachments().putAll(exchange.getIn().getAttachments());
     }
 
 }

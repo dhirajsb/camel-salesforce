@@ -46,8 +46,8 @@ public enum ApiName {
     GET_REQUEST("getRequest"),
     GET_RESULTS("getResults"),
     CREATE_BATCH_QUERY("createBatchQuery"),
-    QUERY_RESULT_LIST("queryResultList"),
-    QUERY_RESULT("queryResult");
+    GET_QUERY_RESULT_IDS("getQueryResultIds"),
+    GET_QUERY_RESULT("getQueryResult");
 
     private final String value;
 

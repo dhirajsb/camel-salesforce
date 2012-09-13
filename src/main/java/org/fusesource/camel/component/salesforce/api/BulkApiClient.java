@@ -28,13 +28,11 @@ public interface BulkApiClient {
 
     /**
      * Creates a Bulk Job
-     * @param operation name of type {@link OperationEnum}
-     * @param sObjectName name of Salesforce Object
-     * @param contentType content of type {@link ContentType}
+     * @param jobInfo A {@link JobInfo} with required fields
      * @return a complete job description {@link JobInfo}
      * @throws RestException on error
      */
-    JobInfo createJob(OperationEnum operation, String sObjectName, ContentType contentType) throws RestException;
+    JobInfo createJob(JobInfo jobInfo) throws RestException;
 
     JobInfo getJob(String jobId) throws RestException;
 
@@ -50,12 +48,12 @@ public interface BulkApiClient {
 
     InputStream getRequest(String jobId, String batchId) throws RestException;
 
-    List<Result> getResults(String jobId, String batchId) throws RestException;
+    InputStream getResults(String jobId, String batchId) throws RestException;
 
     BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws RestException;
 
-    List<String> queryResultList(String jobId, String batchId) throws RestException;
+    List<String> getQueryResultIds(String jobId, String batchId) throws RestException;
 
-    InputStream queryResult(String jobId, String batchId, String resultId) throws RestException;
+    InputStream getQueryResult(String jobId, String batchId, String resultId) throws RestException;
 
 }
