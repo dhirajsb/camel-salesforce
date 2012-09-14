@@ -47,7 +47,7 @@ public class SalesforceComponent extends DefaultComponent {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponent.class);
 
-    private static final String DEFAULT_LOGIN_URL = "https://login.salesforce.com";
+    public static final String DEFAULT_LOGIN_URL = "https://login.salesforce.com";
     private static final String DEFAULT_VERSION = "25.0";
 
     private static final int DEFAULT_MAX_PER_ROUTE = 20;
