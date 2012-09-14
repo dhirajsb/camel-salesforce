@@ -37,32 +37,51 @@ import java.util.List;
 
 public class SalesforceSession {
 
-    private static final String OAUTH2_REVOKE_URL = "https://login.salesforce.com/services/oauth2/revoke?token=";
-    private static final String OAUTH2_TOKEN_URL = "https://login.salesforce.com/services/oauth2/token";
+    private static final String OAUTH2_REVOKE_PATH = "/services/oauth2/revoke?token=";
+    private static final String OAUTH2_TOKEN_PATH = "/services/oauth2/token";
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceSession.class);
     private static final ContentType FORM_CONTENT_TYPE = ContentType.create("application/x-www-form-urlencoded", Consts.UTF_8);
 
-    private HttpClient httpClient;
+    private final HttpClient httpClient;
 
-    private String clientId;
-    private String clientSecret;
-    private String userName;
-    private String password;
+    private final String loginUrl;
+    private final String clientId;
+    private final String clientSecret;
+    private final String userName;
+    private final String password;
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     private String accessToken;
     private String instanceUrl;
 
-    public SalesforceSession(HttpClient httpClient, String clientId, String clientSecret, String userName, String password) {
+    public SalesforceSession(HttpClient httpClient,
+                             String loginUrl,
+                             String clientId, String clientSecret, String userName, String password) {
+        // validate parameters
+        assertNotNull("Null httpClient", httpClient);
+        assertNotNull("Null loginUrl", loginUrl);
+        assertNotNull("Null clientId", clientId);
+        assertNotNull("Null clientSecret", clientSecret);
+        assertNotNull("Null userName", userName);
+        assertNotNull("Null password", password);
+
         this.httpClient = httpClient;
+        // strip trailing '/'
+        this.loginUrl = loginUrl.endsWith("/") ? loginUrl.substring(0, loginUrl.length() - 1) : loginUrl;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.userName = userName;
         this.password = password;
 
         this.objectMapper = new ObjectMapper();
+    }
+
+    private void assertNotNull(String s, Object o) {
+        if (o == null) {
+            throw new IllegalArgumentException(s);
+        }
     }
 
     public synchronized String login(String oldToken) throws RestException {
@@ -83,7 +102,7 @@ public class SalesforceSession {
             }
 
             // login to Salesforce and get session id
-            HttpPost post = new HttpPost(OAUTH2_TOKEN_URL);
+            HttpPost post = new HttpPost(loginUrl + OAUTH2_TOKEN_PATH);
             post.setHeader("Content-Type", FORM_CONTENT_TYPE.toString());
 
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
@@ -147,7 +166,7 @@ public class SalesforceSession {
             return;
         }
 
-        HttpGet get = new HttpGet(OAUTH2_REVOKE_URL + accessToken);
+        HttpGet get = new HttpGet(loginUrl + OAUTH2_REVOKE_PATH + accessToken);
         HttpEntity httpEntity = null;
         try {
             final HttpResponse response = httpClient.execute(get);

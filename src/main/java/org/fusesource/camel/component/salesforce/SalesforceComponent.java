@@ -47,12 +47,15 @@ public class SalesforceComponent extends DefaultComponent {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponent.class);
 
+    private static final String DEFAULT_LOGIN_URL = "https://login.salesforce.com";
     private static final String DEFAULT_VERSION = "25.0";
+
     private static final int DEFAULT_MAX_PER_ROUTE = 20;
     private static final int MAX_TOTAL = 100;
     private static final int CONNECTION_TIMEOUT = 15000;
     private static final int SO_TIMEOUT = 15000;
 
+    private String loginUrl = DEFAULT_LOGIN_URL;
     private String clientId;
     private String clientSecret;
     private String userName;
@@ -119,7 +122,8 @@ public class SalesforceComponent extends DefaultComponent {
 
         // support restarts
         if (null == this.session) {
-            this.session = new SalesforceSession(httpClient, clientId, clientSecret, userName, password);
+            this.session = new SalesforceSession(httpClient, loginUrl,
+                clientId, clientSecret, userName, password);
         }
         try {
             // get a new token
@@ -169,6 +173,14 @@ public class SalesforceComponent extends DefaultComponent {
             // shutdown http client connections
             httpClient.getConnectionManager().shutdown();
         }
+    }
+
+    public String getLoginUrl() {
+        return loginUrl;
+    }
+
+    public void setLoginUrl(String loginUrl) {
+        this.loginUrl = loginUrl;
     }
 
     public String getClientId() {
