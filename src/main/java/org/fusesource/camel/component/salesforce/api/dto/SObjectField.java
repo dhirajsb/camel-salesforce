@@ -55,7 +55,7 @@ public class SObjectField extends AbstractDTOBase {
     private String defaultValueFormula;
     private String calculatedFormula;
     @XStreamImplicit
-    private List<String> picklistValues;
+    private List<PickListValue> picklistValues;
     private Boolean dependentPicklist;
     @XStreamImplicit
     private List<String> referenceTo;
@@ -324,11 +324,11 @@ public class SObjectField extends AbstractDTOBase {
         this.calculatedFormula = calculatedFormula;
     }
 
-    public List<String> getPicklistValues() {
+    public List<PickListValue> getPicklistValues() {
         return picklistValues;
     }
 
-    public void setPicklistValues(List<String> picklistValues) {
+    public void setPicklistValues(List<PickListValue> picklistValues) {
         this.picklistValues = picklistValues;
     }
 

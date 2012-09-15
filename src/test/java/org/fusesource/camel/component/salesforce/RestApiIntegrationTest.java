@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class SalesforceComponentIntegrationTest extends AbstractSalesforceTestBase {
+public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponentIntegrationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RestApiIntegrationTest.class);
     private static final String TEST_LINE_ITEM_ID = "1";
     private static final String NEW_LINE_ITEM_ID = "100";
 

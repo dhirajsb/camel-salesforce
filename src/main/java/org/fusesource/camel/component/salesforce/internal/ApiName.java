@@ -59,7 +59,7 @@ public enum ApiName {
         return value;
     }
 
-    public static ApiName fromValue(String value) {
+    public static ApiName forValue(String value) {
         for (ApiName apiName : ApiName.values()) {
             if (apiName.value.equals(value)) {
                 return apiName;

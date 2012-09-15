@@ -79,7 +79,7 @@ public class SalesforceComponent extends DefaultComponent {
         ApiName apiName = null;
         try {
             LOG.debug("Creating endpoint for ", remaining);
-            apiName = ApiName.fromValue(remaining);
+            apiName = ApiName.forValue(remaining);
         } catch (IllegalArgumentException ex) {
             LOG.error(ex.getMessage(), ex);
             throw new RuntimeCamelException(ex.getMessage(), ex);

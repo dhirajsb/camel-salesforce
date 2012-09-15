@@ -50,7 +50,7 @@ public class JodaTimeConverter implements Converter {
             return constructor.newInstance(dateTimeStr, DateTimeZone.UTC);
         } catch (Exception e) {
             String msg = String.format(
-                "Exception reading a Joda Time object: %s", context.getRequiredType().getSimpleName());
+                "Error reading Joda DateTime from value %s: %s", dateTimeStr, e.getMessage());
             LOG.error (msg, e);
             throw new RuntimeException(msg, e);
         }
