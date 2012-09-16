@@ -75,7 +75,7 @@ public abstract class AbstractBulkApiTestBase extends AbstractSalesforceTestBase
 
                 // test createBatchQuery
                 from("direct:createBatchQuery").
-                    to("force:createBatchQuery?sObjectQuery=SELECT+Name%2c+Description__c%2c+Price__c%2c+Total_Inventory__c+FROM+Merchandise__c+WHERE+Name+LIKE+%27%25Bulk+API%25%27");
+                    to("force:createBatchQuery?sObjectQuery=SELECT Name, Description__c, Price__c, Total_Inventory__c FROM Merchandise__c WHERE Name LIKE '%25Bulk API%25'");
 
                 // test getQueryResultIds
                 from("direct:getQueryResultIds").
