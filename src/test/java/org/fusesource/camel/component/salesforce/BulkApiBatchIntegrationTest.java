@@ -16,7 +16,6 @@
  */
 package org.fusesource.camel.component.salesforce;
 
-import org.apache.camel.component.mock.MockEndpoint;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theory;
@@ -61,27 +60,17 @@ public class BulkApiBatchIntegrationTest extends AbstractBulkApiTestBase {
         jobInfo = createJob(jobInfo);
 
         // test createBatch
-        MockEndpoint mock = getMockEndpoint("mock:createBatch");
-        mock.expectedMessageCount(1);
-
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put(SalesforceEndpointConfig.JOB_ID, jobInfo.getId());
         headers.put(SalesforceEndpointConfig.CONTENT_TYPE, jobInfo.getContentType());
-        template().sendBodyAndHeaders("direct:createBatch", request.stream, headers);
-
-        mock.assertIsSatisfied();
-        BatchInfo batchInfo = mock.getExchanges().get(0).getIn().getBody(BatchInfo.class);
+        BatchInfo batchInfo  = template().requestBodyAndHeaders("direct:createBatch",
+            request.stream, headers, BatchInfo.class);
         assertNotNull("Null batch", batchInfo);
         assertNotNull("Null batch id", batchInfo.getId());
 
         // test getAllBatches
-        mock = getMockEndpoint("mock:getAllBatches");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getAllBatches", jobInfo);
-
-        mock.assertIsSatisfied();
         @SuppressWarnings("unchecked")
-        List<BatchInfo> batches = mock.getExchanges().get(0).getIn().getBody(List.class);
+        List<BatchInfo> batches = template().requestBody("direct:getAllBatches", jobInfo, List.class);
         assertNotNull("Null batches", batches);
         assertFalse("Empty batch list", batches.isEmpty());
 
@@ -90,12 +79,7 @@ public class BulkApiBatchIntegrationTest extends AbstractBulkApiTestBase {
         batchInfo = getBatchInfo(batchInfo);
 
         // test getRequest
-        mock = getMockEndpoint("mock:getRequest");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getRequest", batchInfo);
-
-        mock.assertIsSatisfied();
-        InputStream requestStream = mock.getExchanges().get(0).getIn().getBody(InputStream.class);
+        InputStream requestStream  = template().requestBody("direct:getRequest", batchInfo, InputStream.class);
         assertNotNull("Null batch request", requestStream);
 
         // wait for batch to finish
@@ -110,19 +94,11 @@ public class BulkApiBatchIntegrationTest extends AbstractBulkApiTestBase {
         assertEquals("Batch did not succeed", BatchStateEnum.COMPLETED, batchInfo.getState());
 
         // test getResults
-        mock = getMockEndpoint("mock:getResults");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getResults", batchInfo);
-
-        mock.assertIsSatisfied();
-        InputStream results = mock.getExchanges().get(0).getIn().getBody(InputStream.class);
+        InputStream results  = template().requestBody("direct:getResults", batchInfo, InputStream.class);
         assertNotNull("Null batch results", results);
 
         // close the test job
-        mock = getMockEndpoint("mock:closeJob");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:closeJob", jobInfo);
-        mock.assertIsSatisfied();
+        template().requestBody("direct:closeJob", jobInfo, JobInfo.class);
     }
 
     private static class BatchTest {

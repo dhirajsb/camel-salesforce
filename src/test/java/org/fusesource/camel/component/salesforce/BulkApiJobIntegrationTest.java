@@ -16,8 +16,10 @@
  */
 package org.fusesource.camel.component.salesforce;
 
-import org.apache.camel.component.mock.MockEndpoint;
-import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.ContentType;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.JobInfo;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.JobStateEnum;
+import org.fusesource.camel.component.salesforce.api.dto.bulk.OperationEnum;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theory;
 
@@ -93,30 +95,15 @@ public class BulkApiJobIntegrationTest extends AbstractBulkApiTestBase {
         jobInfo = createJob(jobInfo);
 
         // test get
-        MockEndpoint mock = getMockEndpoint("mock:getJob");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getJob", jobInfo);
-
-        mock.assertIsSatisfied();
-        jobInfo = mock.getExchanges().get(0).getIn().getBody(JobInfo.class);
+        jobInfo = template().requestBody("direct:getJob", jobInfo, JobInfo.class);
         assertSame("Job should be OPEN", JobStateEnum.OPEN, jobInfo.getState());
 
         // test close
-        mock = getMockEndpoint("mock:closeJob");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:closeJob", jobInfo);
-
-        mock.assertIsSatisfied();
-        jobInfo = mock.getExchanges().get(0).getIn().getBody(JobInfo.class);
+        jobInfo = template().requestBody("direct:closeJob", jobInfo, JobInfo.class);
         assertSame("Job should be CLOSED", JobStateEnum.CLOSED, jobInfo.getState());
 
         // test abort
-        mock = getMockEndpoint("mock:abortJob");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:abortJob", jobInfo);
-
-        mock.assertIsSatisfied();
-        jobInfo = mock.getExchanges().get(0).getIn().getBody(JobInfo.class);
+        jobInfo = template().requestBody("direct:abortJob", jobInfo, JobInfo.class);
         assertSame("Job should be ABORTED", JobStateEnum.ABORTED, jobInfo.getState());
     }
 

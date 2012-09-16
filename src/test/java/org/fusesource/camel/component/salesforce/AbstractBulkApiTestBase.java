@@ -17,7 +17,6 @@
 package org.fusesource.camel.component.salesforce;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.BatchInfo;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.BatchStateEnum;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.JobInfo;
@@ -28,14 +27,7 @@ import org.junit.runner.RunWith;
 public abstract class AbstractBulkApiTestBase extends AbstractSalesforceTestBase {
 
     protected JobInfo createJob(JobInfo jobInfo) throws InterruptedException {
-        MockEndpoint mock = getMockEndpoint("mock:createJob");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:createJob", jobInfo);
-
-        mock.assertIsSatisfied();
-        jobInfo = mock.getExchanges().get(0).getIn().getBody(JobInfo.class);
-        // reset mock:createJob
-        mock.reset();
+        jobInfo = template().requestBody("direct:createJob", jobInfo, JobInfo.class);
         assertNotNull("Missing JobId", jobInfo.getId());
         return jobInfo;
     }
@@ -47,63 +39,51 @@ public abstract class AbstractBulkApiTestBase extends AbstractSalesforceTestBase
             public void configure() throws Exception {
                 // test createJob
                 from("direct:createJob").
-                    to("force://createJob").
-                    to("mock:createJob");
+                    to("force://createJob");
 
                 // test getJob
                 from("direct:getJob").
-                    to("force:getJob").
-                    to("mock:getJob");
+                    to("force:getJob");
 
                 // test closeJob
                 from("direct:closeJob").
-                    to("force:closeJob").
-                    to("mock:closeJob");
+                    to("force:closeJob");
 
                 // test abortJob
                 from("direct:abortJob").
-                    to("force:abortJob").
-                    to("mock:abortJob");
+                    to("force:abortJob");
 
                 // test createBatch
                 from("direct:createBatch").
-                    to("force:createBatch").
-                    to("mock:createBatch");
+                    to("force:createBatch");
 
                 // test getBatch
                 from("direct:getBatch").
-                    to("force:getBatch").
-                    to("mock:getBatch");
+                    to("force:getBatch");
 
                 // test getAllBatches
                 from("direct:getAllBatches").
-                    to("force:getAllBatches").
-                    to("mock:getAllBatches");
+                    to("force:getAllBatches");
 
                 // test getRequest
                 from("direct:getRequest").
-                    to("force:getRequest").
-                    to("mock:getRequest");
+                    to("force:getRequest");
 
                 // test getResults
                 from("direct:getResults").
-                    to("force:getResults").
-                    to("mock:getResults");
+                    to("force:getResults");
 
                 // test createBatchQuery
                 from("direct:createBatchQuery").
-                    to("force:createBatchQuery?sObjectQuery=SELECT+Name%2c+Description__c%2c+Price__c%2c+Total_Inventory__c+FROM+Merchandise__c+WHERE+Name+LIKE+%27%25Bulk+API%25%27").
-                    to("mock:createBatchQuery");
+                    to("force:createBatchQuery?sObjectQuery=SELECT+Name%2c+Description__c%2c+Price__c%2c+Total_Inventory__c+FROM+Merchandise__c+WHERE+Name+LIKE+%27%25Bulk+API%25%27");
 
                 // test getQueryResultIds
                 from("direct:getQueryResultIds").
-                    to("force:getQueryResultIds").
-                    to("mock:getQueryResultIds");
+                    to("force:getQueryResultIds");
 
                 // test getQueryResult
                 from("direct:getQueryResult").
-                    to("force:getQueryResult").
-                    to("mock:getQueryResult");
+                    to("force:getQueryResult");
 
             }
         };
@@ -115,15 +95,8 @@ public abstract class AbstractBulkApiTestBase extends AbstractSalesforceTestBase
     }
 
     protected BatchInfo getBatchInfo(BatchInfo batchInfo) throws InterruptedException {
-        MockEndpoint mock;
-        mock = getMockEndpoint("mock:getBatch");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getBatch", batchInfo);
+        batchInfo = template().requestBody("direct:getBatch", batchInfo, BatchInfo.class);
 
-        mock.assertIsSatisfied();
-        batchInfo = mock.getExchanges().get(0).getIn().getBody(BatchInfo.class);
-        // reset mock:getBatch
-        mock.reset();
         assertNotNull("Null batch", batchInfo);
         assertNotNull("Null batch id", batchInfo.getId());
 

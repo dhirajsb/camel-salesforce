@@ -16,7 +16,6 @@
  */
 package org.fusesource.camel.component.salesforce;
 
-import org.apache.camel.component.mock.MockEndpoint;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theory;
@@ -46,23 +45,12 @@ public class BulkApiQueryIntegrationTest extends AbstractBulkApiTestBase {
         jobInfo = createJob(jobInfo);
 
         // test createQuery
-        MockEndpoint mock = getMockEndpoint("mock:createBatchQuery");
-        mock.expectedMessageCount(1);
-
-        template().sendBody("direct:createBatchQuery", jobInfo);
-
-        mock.assertIsSatisfied();
-        BatchInfo batchInfo = mock.getExchanges().get(0).getIn().getBody(BatchInfo.class);
+        BatchInfo batchInfo = template().requestBody("direct:createBatchQuery", jobInfo, BatchInfo.class);
         assertNotNull("Null batch query", batchInfo);
         assertNotNull("Null batch query id", batchInfo.getId());
 
         // test getRequest
-        mock = getMockEndpoint("mock:getRequest");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getRequest", batchInfo);
-
-        mock.assertIsSatisfied();
-        InputStream requestStream = mock.getExchanges().get(0).getIn().getBody(InputStream.class);
+        InputStream requestStream = template().requestBody("direct:getRequest", batchInfo, InputStream.class);
         assertNotNull("Null batch request", requestStream);
 
         // wait for batch to finish
@@ -77,33 +65,20 @@ public class BulkApiQueryIntegrationTest extends AbstractBulkApiTestBase {
         assertEquals("Query did not succeed", BatchStateEnum.COMPLETED, batchInfo.getState());
 
         // test getQueryResultList
-        mock = getMockEndpoint("mock:getQueryResultIds");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:getQueryResultIds", batchInfo);
-
-        mock.assertIsSatisfied();
         @SuppressWarnings("unchecked")
-        List<String> resultIds = mock.getExchanges().get(0).getIn().getBody(List.class);
+        List<String> resultIds = template().requestBody("direct:getQueryResultIds", batchInfo, List.class);
         assertNotNull("Null query result ids", resultIds);
         assertFalse("Empty result ids", resultIds.isEmpty());
 
         // test getQueryResult
         for (String resultId : resultIds) {
-            mock = getMockEndpoint("mock:getQueryResult");
-            mock.expectedMessageCount(1);
-            template().sendBodyAndHeader("direct:getQueryResult", batchInfo,
-                SalesforceEndpointConfig.RESULT_ID, resultId);
-
-            mock.assertIsSatisfied();
-            InputStream results = mock.getExchanges().get(0).getIn().getBody(InputStream.class);
+            InputStream results = template().requestBodyAndHeader("direct:getQueryResult", batchInfo,
+                SalesforceEndpointConfig.RESULT_ID, resultId, InputStream.class);
             assertNotNull("Null query result", results);
         }
 
         // close the test job
-        mock = getMockEndpoint("mock:closeJob");
-        mock.expectedMessageCount(1);
-        template().sendBody("direct:closeJob", jobInfo);
-        mock.assertIsSatisfied();
+        template().requestBody("direct:closeJob", jobInfo, JobInfo.class);
     }
 
 }
