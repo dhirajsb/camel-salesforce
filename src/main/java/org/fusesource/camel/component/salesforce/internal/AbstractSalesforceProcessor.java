@@ -38,14 +38,14 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
     protected static final boolean IGNORE_BODY = false;
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    protected ApiName apiName;
+    protected OperationName operationName;
     protected Executor executor;
     protected Map<String, String> endpointConfig;
     protected SalesforceSession session;
     protected HttpClient httpClient;
 
     public AbstractSalesforceProcessor(SalesforceEndpoint endpoint) {
-        this.apiName = endpoint.getApiName();
+        this.operationName = endpoint.getEndpointConfiguration().getOperationName();
         this.endpointConfig = endpoint.getEndpointConfiguration().toValueMap();
 
         final SalesforceComponent component = endpoint.getComponent();
@@ -87,7 +87,7 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
         return propValue;
     }
 
-    protected ApiName getApiName() {
-        return apiName;
+    protected OperationName getOperationName() {
+        return operationName;
     }
 }

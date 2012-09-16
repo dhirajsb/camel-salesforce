@@ -50,7 +50,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
             public void run() {
 
                 try {
-                    switch (apiName) {
+                    switch (operationName) {
                         case CREATE_JOB:
                             JobInfo jobBody = exchange.getIn().getMandatoryBody(JobInfo.class);
                             JobInfo jobInfo = bulkClient.createJob(jobBody);
@@ -284,17 +284,17 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
 
                 } catch (RestException e) {
                     String msg = String.format("Error processing %s: [%s] \"%s\"",
-                        apiName, e.getStatusCode(), e.getMessage());
+                        operationName, e.getStatusCode(), e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(e);
                 } catch (RuntimeException e) {
                     String msg = String.format("Unexpected Error processing %s: \"%s\"",
-                        apiName, e.getMessage());
+                        operationName, e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(new RestException(msg, e));
                 } catch (InvalidPayloadException e) {
                     String msg = String.format("Unexpected Error processing %s: \"%s\"",
-                        apiName, e.getMessage());
+                        operationName, e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(new RestException(msg, e));
                 } finally {

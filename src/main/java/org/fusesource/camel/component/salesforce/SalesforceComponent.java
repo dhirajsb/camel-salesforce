@@ -18,7 +18,6 @@ package org.fusesource.camel.component.salesforce;
 
 import org.apache.camel.CamelException;
 import org.apache.camel.Endpoint;
-import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.impl.DefaultComponent;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -29,7 +28,7 @@ import org.apache.http.params.HttpParams;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.SalesforceSession;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
-import org.fusesource.camel.component.salesforce.internal.ApiName;
+import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,20 +74,25 @@ public class SalesforceComponent extends DefaultComponent {
     private Map<String, Class<?>> classMap;
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        // get API name from remaining URI
-        ApiName apiName = null;
+        // get Operation from remaining URI
+        OperationName operationName = null;
+        String topicName = null;
         try {
             LOG.debug("Creating endpoint for ", remaining);
-            apiName = ApiName.forValue(remaining);
+            operationName = OperationName.fromValue(remaining);
         } catch (IllegalArgumentException ex) {
-            LOG.error(ex.getMessage(), ex);
-            throw new RuntimeCamelException(ex.getMessage(), ex);
+            // if its not an operation name, treat is as topic name for consumer endpoints
+            topicName = remaining;
         }
 
-        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this, apiName);
+        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this);
 
-        // parse and set API name from uri
-        final SalesforceEndpointConfig endpointConfig = new SalesforceEndpointConfig(getCamelContext(), uri);
+        // create endpoint config
+        final SalesforceEndpointConfig endpointConfig = new SalesforceEndpointConfig(getCamelContext());
+
+        // set operation/topic name
+        endpointConfig.setOperationName(operationName);
+        endpointConfig.setTopicName(topicName);
 
         // inherit default values from component
         endpointConfig.setFormat(payloadFormat.toString());
@@ -167,9 +171,6 @@ public class SalesforceComponent extends DefaultComponent {
                 session.logout();
             }
         } finally {
-            // get a new session next time
-            session = null;
-
             // shutdown http client connections
             httpClient.getConnectionManager().shutdown();
         }

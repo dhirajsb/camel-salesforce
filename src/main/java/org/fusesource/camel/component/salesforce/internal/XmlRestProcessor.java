@@ -68,7 +68,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     @Override
     protected void processRequest(Exchange exchange) throws RestException {
 
-        switch (getApiName()) {
+        switch (getOperationName()) {
             case GET_VERSIONS:
                 exchange.setProperty(RESPONSE_CLASS, Versions.class);
                 break;

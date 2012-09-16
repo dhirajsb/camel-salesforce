@@ -16,9 +16,9 @@
  */
 package org.fusesource.camel.component.salesforce.internal;
 
-public enum ApiName {
+public enum OperationName {
 
-    // rest APIs
+    // rest API
     GET_VERSIONS("getVersions"),
     GET_RESOURCES("getResources"),
     GET_GLOBAL_OBJECTS("getGlobalObjects"),
@@ -35,7 +35,7 @@ public enum ApiName {
     QUERY_MORE("queryMore"),
     SEARCH("search"),
 
-    // bulk APIs
+    // bulk API
     CREATE_JOB("createJob"),
     GET_JOB("getJob"),
     CLOSE_JOB("closeJob"),
@@ -51,7 +51,7 @@ public enum ApiName {
 
     private final String value;
 
-    private ApiName(String value) {
+    private OperationName(String value) {
         this.value = value;
     }
 
@@ -59,10 +59,10 @@ public enum ApiName {
         return value;
     }
 
-    public static ApiName forValue(String value) {
-        for (ApiName apiName : ApiName.values()) {
-            if (apiName.value.equals(value)) {
-                return apiName;
+    public static OperationName fromValue(String value) {
+        for (OperationName operationName : OperationName.values()) {
+            if (operationName.value.equals(value)) {
+                return operationName;
             }
         }
         throw new IllegalArgumentException(value);

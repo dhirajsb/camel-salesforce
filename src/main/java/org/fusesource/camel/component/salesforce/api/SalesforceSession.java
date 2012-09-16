@@ -193,6 +193,9 @@ public class SalesforceSession {
             throw new RestException(msg, e);
         } finally {
             EntityUtils.consumeQuietly(httpEntity);
+            // reset session
+            accessToken = null;
+            instanceUrl = null;
         }
     }
 

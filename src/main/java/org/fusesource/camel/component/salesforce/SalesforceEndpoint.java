@@ -16,12 +16,12 @@
  */
 package org.fusesource.camel.component.salesforce;
 
+import org.apache.camel.CamelException;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.SynchronousDelegateProducer;
-import org.fusesource.camel.component.salesforce.internal.ApiName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +32,19 @@ public class SalesforceEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceEndpoint.class);
 
-    private final ApiName apiName;// endpoint properties for APIs
-
-    public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent, ApiName apiName) {
+    public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent) {
         super(uri, salesforceComponent);
-
-        this.apiName = apiName;
     }
 
     public Producer createProducer() throws Exception {
+        // producer requires an operation, topicName must be the invalid operation name
+        final SalesforceEndpointConfig config = getEndpointConfiguration();
+        if (config.getOperationName() == null) {
+            String msg = String.format("Invalid Operation %s", config.getTopicName());
+            LOG.error(msg);
+            throw new CamelException(msg);
+        }
+
         SalesforceProducer producer = new SalesforceProducer(this);
         if (isSynchronous()) {
             return new SynchronousDelegateProducer(producer);
@@ -50,10 +54,16 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     }
 
     public Consumer createConsumer(Processor processor) throws Exception {
-        // TODO add consumer support
-        throw new UnsupportedOperationException();
+        // consumer requires a topicName, operation name must be the invalid topic name
+        final SalesforceEndpointConfig config = getEndpointConfiguration();
+        if (config.getTopicName() == null) {
+            String msg = String.format("Invalid topic name %s, matches a producer operation name",
+                config.getOperationName().value());
+            LOG.error(msg);
+            throw new CamelException(msg);
+        }
 
-//        return new SalesforceConsumer(this, processor);
+        return new SalesforceConsumer(this, processor);
     }
 
     @Override
@@ -68,10 +78,6 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     @Override
     public SalesforceEndpointConfig getEndpointConfiguration() {
         return (SalesforceEndpointConfig) super.getEndpointConfiguration();
-    }
-
-    public ApiName getApiName() {
-        return apiName;
     }
 
 }

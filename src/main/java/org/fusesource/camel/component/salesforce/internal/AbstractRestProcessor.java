@@ -86,8 +86,8 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
 
                 try {
 
-                    // call API using REST client
-                    switch (getApiName()) {
+                    // call Operation using REST client
+                    switch (getOperationName()) {
                         case GET_VERSIONS:
                             responseEntity = restClient.getVersions();
                             break;
@@ -287,12 +287,12 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
 
                 } catch (RestException e) {
                     String msg = String.format("Error processing %s: [%s] \"%s\"",
-                        apiName, e.getStatusCode(), e.getMessage());
+                        operationName, e.getStatusCode(), e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(e);
                 } catch (RuntimeException e) {
                     String msg = String.format("Unexpected Error processing %s: \"%s\"",
-                        apiName, e.getMessage());
+                        operationName, e.getMessage());
                     LOG.error(msg, e);
                     exchange.setException(new RestException(msg, e));
                 } finally {

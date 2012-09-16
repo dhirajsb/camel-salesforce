@@ -39,8 +39,8 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         final SalesforceEndpointConfig endpointConfig = endpoint.getEndpointConfiguration();
         final PayloadFormat payloadFormat = endpointConfig.getPayloadFormat();
 
-        // check if its a Bulk API
-        if (isBulkApi(endpoint.getApiName())) {
+        // check if its a Bulk Operation
+        if (isBulkOperation(endpointConfig.getOperationName())) {
             processor = new BulkApiProcessor(endpoint);
         } else {
             // set the default format
@@ -56,8 +56,8 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         }
     }
 
-    private boolean isBulkApi(ApiName apiName) {
-        switch (apiName) {
+    private boolean isBulkOperation(OperationName operationName) {
+        switch (operationName) {
             case CREATE_JOB:
             case GET_JOB:
             case CLOSE_JOB:
@@ -87,7 +87,8 @@ public class SalesforceProducer extends DefaultAsyncProducer {
             return true;
         }
 
-        LOG.debug("Processing {}", ((SalesforceEndpoint) getEndpoint()).getApiName());
+        LOG.debug("Processing {}",
+            ((SalesforceEndpoint) getEndpoint()).getEndpointConfiguration().getOperationName());
         return processor.process(exchange, callback);
     }
 

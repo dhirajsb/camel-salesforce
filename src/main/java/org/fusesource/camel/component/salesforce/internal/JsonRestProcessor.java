@@ -49,7 +49,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     @Override
     protected void processRequest(Exchange exchange) {
 
-        switch (getApiName()) {
+        switch (getOperationName()) {
             case GET_VERSIONS:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<Version>>() {});

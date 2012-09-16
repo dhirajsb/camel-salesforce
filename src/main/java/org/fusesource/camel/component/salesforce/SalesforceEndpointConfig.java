@@ -4,6 +4,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultEndpointConfiguration;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.ContentType;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.OperationEnum;
+import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 
 import java.util.Collections;
@@ -12,9 +13,11 @@ import java.util.Map;
 
 public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
+    // general parameter
+    public static final String API_VERSION = "apiVersion";
+
     // parameters for Rest API
     public static final String FORMAT = "format";
-    public static final String API_VERSION = "apiVersion";
     public static final String SOBJECT_NAME = "sObjectName";
     public static final String SOBJECT_ID = "sObjectId";
     public static final String SOBJECT_FIELDS = "sObjectFields";
@@ -31,9 +34,13 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     public static final String BATCH_ID = "batchId";
     public static final String RESULT_ID = "resultId";
 
-    private PayloadFormat format;
+    // general properties
+    private OperationName operationName;
+    private String topicName;
     private String apiVersion;
 
+    // Rest API properties
+    private PayloadFormat format;
     private String sObjectName;
     private String sObjectId;
     private String sObjectFields;
@@ -43,6 +50,7 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     private String sObjectQuery;
     private String sObjectSearch;
 
+    // Bulk API properties
     private OperationEnum bulkOperation;
     private ContentType contentType;
     private String jobId;
@@ -51,10 +59,6 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     public SalesforceEndpointConfig(CamelContext camelContext) {
         super(camelContext);
-    }
-
-    public SalesforceEndpointConfig(CamelContext camelContext, String uri) {
-        super(camelContext, uri);
     }
 
     public PayloadFormat getPayloadFormat() {
@@ -71,6 +75,14 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
+    }
+
+    public OperationName getOperationName() {
+        return operationName;
+    }
+
+    public void setOperationName(OperationName operationName) {
+        this.operationName = operationName;
     }
 
     public String getSObjectName() {
@@ -175,6 +187,14 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     public void setResultId(String resultId) {
         this.resultId = resultId;
+    }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
     }
 
     @Override
