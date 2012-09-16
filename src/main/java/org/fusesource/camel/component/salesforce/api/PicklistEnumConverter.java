@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 
 public class PicklistEnumConverter implements Converter {
     private static final Logger LOG = LoggerFactory.getLogger(PicklistEnumConverter.class);
-    private static final String FACTORY_METHOD = "forValue";
+    private static final String FACTORY_METHOD = "fromValue";
 
     @SuppressWarnings("unchecked")
     @Override
@@ -74,10 +74,11 @@ public class PicklistEnumConverter implements Converter {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean canConvert(Class aClass) {
         try {
             return Enum.class.isAssignableFrom(aClass) &&
-                aClass.getMethod("forValue", String.class) != null;
+                aClass.getMethod(FACTORY_METHOD, String.class) != null;
         } catch (NoSuchMethodException e) {
             return false;
         }
