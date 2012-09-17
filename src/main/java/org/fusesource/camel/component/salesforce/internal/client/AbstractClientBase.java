@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api;
+package org.fusesource.camel.component.salesforce.internal.client;
 
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
@@ -22,6 +22,8 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
+import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,7 @@ import java.io.InputStream;
 
 public abstract class AbstractClientBase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractClientBase.class);
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private static final int SESSION_EXPIRED = 401;
     protected static final ContentType APPLICATION_JSON_UTF8 = ContentType.create("application/json", Consts.UTF_8);

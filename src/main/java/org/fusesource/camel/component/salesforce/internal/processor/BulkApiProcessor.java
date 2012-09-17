@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.internal;
+package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.*;
 import org.apache.camel.converter.stream.StreamCacheConverter;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
-import org.fusesource.camel.component.salesforce.api.BulkApiClient;
-import org.fusesource.camel.component.salesforce.api.DefaultBulkApiClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
+import org.fusesource.camel.component.salesforce.internal.client.BulkApiClient;
+import org.fusesource.camel.component.salesforce.internal.client.DefaultBulkApiClient;
 
 import java.io.IOException;
 import java.io.InputStream;

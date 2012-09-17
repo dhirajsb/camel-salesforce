@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.internal;
+package org.fusesource.camel.component.salesforce.internal.processor;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
@@ -68,7 +68,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     @Override
     protected void processRequest(Exchange exchange) throws RestException {
 
-        switch (getOperationName()) {
+        switch (operationName) {
             case GET_VERSIONS:
                 exchange.setProperty(RESPONSE_CLASS, Versions.class);
                 break;

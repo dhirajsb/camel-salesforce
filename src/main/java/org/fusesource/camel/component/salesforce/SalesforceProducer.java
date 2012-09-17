@@ -20,8 +20,10 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultAsyncProducer;
 import org.fusesource.camel.component.salesforce.internal.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.fusesource.camel.component.salesforce.internal.processor.BulkApiProcessor;
+import org.fusesource.camel.component.salesforce.internal.processor.JsonRestProcessor;
+import org.fusesource.camel.component.salesforce.internal.processor.SalesforceProcessor;
+import org.fusesource.camel.component.salesforce.internal.processor.XmlRestProcessor;
 
 import java.util.concurrent.RejectedExecutionException;
 
@@ -29,7 +31,6 @@ import java.util.concurrent.RejectedExecutionException;
  * The Salesforce producer.
  */
 public class SalesforceProducer extends DefaultAsyncProducer {
-    private static final transient Logger LOG = LoggerFactory.getLogger(SalesforceProducer.class);
 
     private SalesforceProcessor processor;
 
@@ -40,7 +41,7 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         final PayloadFormat payloadFormat = endpointConfig.getPayloadFormat();
 
         // check if its a Bulk Operation
-        if (isBulkOperation(endpointConfig.getOperationName())) {
+        if (isBulkOperation(endpoint.getOperationName())) {
             processor = new BulkApiProcessor(endpoint);
         } else {
             // set the default format
@@ -87,8 +88,8 @@ public class SalesforceProducer extends DefaultAsyncProducer {
             return true;
         }
 
-        LOG.debug("Processing {}",
-            ((SalesforceEndpoint) getEndpoint()).getEndpointConfiguration().getOperationName());
+        log.debug("Processing {}",
+            ((SalesforceEndpoint) getEndpoint()).getOperationName());
         return processor.process(exchange, callback);
     }
 

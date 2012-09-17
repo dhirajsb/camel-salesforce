@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api;
+package org.fusesource.camel.component.salesforce.internal.client;
+
+import org.fusesource.camel.component.salesforce.api.RestException;
 
 import java.io.InputStream;
 
@@ -25,7 +27,7 @@ public interface RestClient {
      * including the version, label, and a link to each version's root.
      *
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.RestException
      */
     InputStream getVersions() throws RestException;
 

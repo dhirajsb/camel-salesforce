@@ -2,9 +2,11 @@ package org.fusesource.camel.component.salesforce;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultEndpointConfiguration;
+import org.eclipse.jetty.client.HttpClient;
+import org.fusesource.camel.component.salesforce.internal.dto.NotifyForFieldsEnum;
+import org.fusesource.camel.component.salesforce.internal.dto.NotifyForOperationsEnum;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.ContentType;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.OperationEnum;
-import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 
 import java.util.Collections;
@@ -34,9 +36,10 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     public static final String BATCH_ID = "batchId";
     public static final String RESULT_ID = "resultId";
 
+    // parameters for Streaming API
+    public static final String UPDATE_TOPIC = "updateTopic";
+
     // general properties
-    private OperationName operationName;
-    private String topicName;
     private String apiVersion;
 
     // Rest API properties
@@ -57,6 +60,13 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     private String batchId;
     private String resultId;
 
+    // Streaming API properties
+    private boolean updateTopic;
+    private NotifyForFieldsEnum notifyForFields;
+    private NotifyForOperationsEnum notifyForOperations;
+    // Jetty HttpClient, set using reference
+    private HttpClient httpClient;
+
     public SalesforceEndpointConfig(CamelContext camelContext) {
         super(camelContext);
     }
@@ -75,14 +85,6 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
-    }
-
-    public OperationName getOperationName() {
-        return operationName;
-    }
-
-    public void setOperationName(OperationName operationName) {
-        this.operationName = operationName;
     }
 
     public String getSObjectName() {
@@ -189,12 +191,36 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         this.resultId = resultId;
     }
 
-    public String getTopicName() {
-        return topicName;
+    public boolean isUpdateTopic() {
+        return updateTopic;
     }
 
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
+    public void setUpdateTopic(boolean updateTopic) {
+        this.updateTopic = updateTopic;
+    }
+
+    public NotifyForFieldsEnum getNotifyForFields() {
+        return notifyForFields;
+    }
+
+    public void setNotifyForFields(NotifyForFieldsEnum notifyForFields) {
+        this.notifyForFields = notifyForFields;
+    }
+
+    public NotifyForOperationsEnum getNotifyForOperations() {
+        return notifyForOperations;
+    }
+
+    public void setNotifyForOperations(NotifyForOperationsEnum notifyForOperations) {
+        this.notifyForOperations = notifyForOperations;
+    }
+
+    public void setHttpClient(HttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    public HttpClient getHttpClient() {
+        return httpClient;
     }
 
     @Override
@@ -229,7 +255,8 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
         valueMap.put(BATCH_ID, batchId);
         valueMap.put(RESULT_ID, resultId);
 
+        valueMap.put(UPDATE_TOPIC, String.valueOf(updateTopic));
+
         return Collections.unmodifiableMap(valueMap);
     }
-
 }

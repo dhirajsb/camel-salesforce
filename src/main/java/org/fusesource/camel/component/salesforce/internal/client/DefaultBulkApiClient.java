@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api;
+package org.fusesource.camel.component.salesforce.internal.client;
 
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
@@ -22,11 +22,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.InputStreamEntity;
+import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.Error;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 
 import javax.xml.bind.*;
 import javax.xml.transform.stream.StreamSource;
@@ -40,7 +40,6 @@ import java.util.List;
 
 public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiClient {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultBulkApiClient.class);
     private static final String TOKEN_HEADER = "X-SFDC-Session";
 
     private JAXBContext context;

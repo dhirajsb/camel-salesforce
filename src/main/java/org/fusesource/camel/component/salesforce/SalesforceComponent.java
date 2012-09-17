@@ -26,10 +26,11 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.fusesource.camel.component.salesforce.api.RestException;
-import org.fusesource.camel.component.salesforce.api.SalesforceSession;
+import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
+import org.fusesource.camel.component.salesforce.internal.streaming.SubscriptionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +74,9 @@ public class SalesforceComponent extends DefaultComponent {
     private Executor executor;
     private Map<String, Class<?>> classMap;
 
+    // Lazily created helper for consumer endpoints
+    private SubscriptionHelper subscriptionHelper;
+
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         // get Operation from remaining URI
         OperationName operationName = null;
@@ -85,14 +89,10 @@ public class SalesforceComponent extends DefaultComponent {
             topicName = remaining;
         }
 
-        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this);
+        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this, operationName, topicName);
 
         // create endpoint config
         final SalesforceEndpointConfig endpointConfig = new SalesforceEndpointConfig(getCamelContext());
-
-        // set operation/topic name
-        endpointConfig.setOperationName(operationName);
-        endpointConfig.setTopicName(topicName);
 
         // inherit default values from component
         endpointConfig.setFormat(payloadFormat.toString());
@@ -174,6 +174,14 @@ public class SalesforceComponent extends DefaultComponent {
             // shutdown http client connections
             httpClient.getConnectionManager().shutdown();
         }
+    }
+
+    public SubscriptionHelper getSubscriptionHelper() throws Exception {
+        if (subscriptionHelper == null) {
+            // lazily create subscription helper
+            subscriptionHelper = new SubscriptionHelper(this);
+        }
+        return subscriptionHelper;
     }
 
     public String getLoginUrl() {

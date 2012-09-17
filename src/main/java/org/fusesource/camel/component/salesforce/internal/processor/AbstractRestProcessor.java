@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.internal;
+package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
-import org.apache.camel.util.ObjectHelper;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
-import org.fusesource.camel.component.salesforce.api.DefaultRestClient;
-import org.fusesource.camel.component.salesforce.api.RestClient;
 import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
+import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
+import org.fusesource.camel.component.salesforce.internal.client.DefaultRestClient;
+import org.fusesource.camel.component.salesforce.internal.client.RestClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,7 +87,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                 try {
 
                     // call Operation using REST client
-                    switch (getOperationName()) {
+                    switch (operationName) {
                         case GET_VERSIONS:
                             responseEntity = restClient.getVersions();
                             break;
@@ -389,7 +389,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
     // get request stream from In message
     protected abstract InputStream getRequestStream(Exchange exchange) throws RestException;
 
-    protected void setResponseClass(Exchange exchange, String sObjectName) throws RestException {
+    private void setResponseClass(Exchange exchange, String sObjectName) throws RestException {
         Class<?> sObjectClass = null;
 
         if (sObjectName != null) {
@@ -405,12 +405,12 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
 
             // use custom response class property
             final String className = getParameter(SOBJECT_CLASS, exchange, IGNORE_BODY, NOT_OPTIONAL);
-
-            sObjectClass = ObjectHelper.loadClass(className, getClass().getClassLoader());
-            if (null == sObjectClass) {
-                String msg = String.format("Error loading class %s", className);
-                LOG.error(msg);
-                throw new RestException(msg, null);
+            try {
+                sObjectClass = endpoint.getComponent().getCamelContext().getClassResolver().resolveMandatoryClass(className);
+            } catch (ClassNotFoundException e) {
+                String msg = String.format("SObject class not found %s, %s", className, e.getMessage());
+                LOG.error(msg, e);
+                throw new RestException(msg, e);
             }
         }
         exchange.setProperty(RESPONSE_CLASS, sObjectClass);

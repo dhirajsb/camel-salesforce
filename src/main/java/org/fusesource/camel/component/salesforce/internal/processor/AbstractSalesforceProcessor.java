@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.internal;
+package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
@@ -22,7 +22,8 @@ import org.apache.http.client.HttpClient;
 import org.fusesource.camel.component.salesforce.SalesforceComponent;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.RestException;
-import org.fusesource.camel.component.salesforce.api.SalesforceSession;
+import org.fusesource.camel.component.salesforce.internal.OperationName;
+import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,21 +39,25 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
     protected static final boolean IGNORE_BODY = false;
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    protected OperationName operationName;
-    protected Executor executor;
-    protected Map<String, String> endpointConfig;
-    protected SalesforceSession session;
-    protected HttpClient httpClient;
+    protected final SalesforceEndpoint endpoint;
+    protected final Map<String, String> endpointConfig;
+
+    protected final OperationName operationName;
+    protected final Executor executor;
+    protected final SalesforceSession session;
+    protected final HttpClient httpClient;
 
     public AbstractSalesforceProcessor(SalesforceEndpoint endpoint) {
-        this.operationName = endpoint.getEndpointConfiguration().getOperationName();
+        this.endpoint = endpoint;
+        this.operationName = endpoint.getOperationName();
         this.endpointConfig = endpoint.getEndpointConfiguration().toValueMap();
 
         final SalesforceComponent component = endpoint.getComponent();
-        this.executor = component.getExecutor();
-        if (null == this.executor) {
+        if (null == component.getExecutor()) {
             // every processor creates its own by default
             this.executor = Executors.newCachedThreadPool();
+        } else {
+            this.executor = component.getExecutor();
         }
 
         this.session = component.getSession();
@@ -87,7 +92,4 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
         return propValue;
     }
 
-    protected OperationName getOperationName() {
-        return operationName;
-    }
 }

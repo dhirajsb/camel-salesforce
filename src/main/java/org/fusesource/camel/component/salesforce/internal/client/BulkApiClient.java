@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api;
+package org.fusesource.camel.component.salesforce.internal.client;
 
+import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 
 import java.io.InputStream;
@@ -30,7 +31,7 @@ public interface BulkApiClient {
      * Creates a Bulk Job
      * @param jobInfo A {@link JobInfo} with required fields
      * @return a complete job description {@link JobInfo}
-     * @throws RestException on error
+     * @throws org.fusesource.camel.component.salesforce.api.RestException on error
      */
     JobInfo createJob(JobInfo jobInfo) throws RestException;
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api;
+package org.fusesource.camel.component.salesforce.internal;
 
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
@@ -25,6 +25,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.internal.dto.LoginError;
 import org.fusesource.camel.component.salesforce.internal.dto.LoginToken;
@@ -207,4 +208,7 @@ public class SalesforceSession {
         return instanceUrl;
     }
 
+    public String getUserName() {
+        return userName;
+    }
 }

@@ -22,6 +22,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.SynchronousDelegateProducer;
+import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,16 +32,22 @@ import org.slf4j.LoggerFactory;
 public class SalesforceEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceEndpoint.class);
+    private final OperationName operationName;
+    private final String topicName;
 
-    public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent) {
+    public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent,
+                              OperationName operationName, String topicName) {
         super(uri, salesforceComponent);
+
+        this.operationName = operationName;
+        this.topicName = topicName;
     }
 
     public Producer createProducer() throws Exception {
         // producer requires an operation, topicName must be the invalid operation name
         final SalesforceEndpointConfig config = getEndpointConfiguration();
-        if (config.getOperationName() == null) {
-            String msg = String.format("Invalid Operation %s", config.getTopicName());
+        if (operationName == null) {
+            String msg = String.format("Invalid Operation %s", topicName);
             LOG.error(msg);
             throw new CamelException(msg);
         }
@@ -56,14 +63,15 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     public Consumer createConsumer(Processor processor) throws Exception {
         // consumer requires a topicName, operation name must be the invalid topic name
         final SalesforceEndpointConfig config = getEndpointConfiguration();
-        if (config.getTopicName() == null) {
+        if (topicName == null) {
             String msg = String.format("Invalid topic name %s, matches a producer operation name",
-                config.getOperationName().value());
+                operationName.value());
             LOG.error(msg);
             throw new CamelException(msg);
         }
 
-        return new SalesforceConsumer(this, processor);
+        return new SalesforceConsumer(this, processor,
+            getComponent().getSubscriptionHelper());
     }
 
     @Override
@@ -78,6 +86,14 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     @Override
     public SalesforceEndpointConfig getEndpointConfiguration() {
         return (SalesforceEndpointConfig) super.getEndpointConfiguration();
+    }
+
+    public OperationName getOperationName() {
+        return operationName;
+    }
+
+    public String getTopicName() {
+        return topicName;
     }
 
 }

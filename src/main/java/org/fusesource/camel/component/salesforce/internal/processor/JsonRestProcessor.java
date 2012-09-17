@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.internal;
+package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -49,7 +49,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     @Override
     protected void processRequest(Exchange exchange) {
 
-        switch (getOperationName()) {
+        switch (operationName) {
             case GET_VERSIONS:
                 // handle in built response types
                 exchange.setProperty(RESPONSE_TYPE, new TypeReference<List<Version>>() {});

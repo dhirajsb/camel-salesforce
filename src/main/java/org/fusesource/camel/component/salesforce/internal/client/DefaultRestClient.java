@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce.api;
+package org.fusesource.camel.component.salesforce.internal.client;
 
 import com.thoughtworks.xstream.XStream;
 import org.apache.http.Consts;
@@ -28,10 +28,10 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.fusesource.camel.component.salesforce.api.RestException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
+import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.fusesource.camel.component.salesforce.internal.dto.RestErrors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +41,6 @@ import java.util.List;
 
 public class DefaultRestClient extends AbstractClientBase implements RestClient {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultRestClient.class);
     private static final String SERVICES_DATA = "/services/data/";
     private static final String TOKEN_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
