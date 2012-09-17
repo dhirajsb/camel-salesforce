@@ -22,7 +22,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.InputStreamEntity;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.Error;
@@ -62,7 +62,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public JobInfo createJob(JobInfo request) throws RestException {
+    public JobInfo createJob(JobInfo request) throws SalesforceException {
 
         // clear system fields if set
         sanitizeJobRequest(request);
@@ -99,7 +99,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public JobInfo getJob(String jobId) throws RestException {
+    public JobInfo getJob(String jobId) throws SalesforceException {
 
         final HttpGet get = new HttpGet(jobUrl(jobId));
 
@@ -111,7 +111,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public JobInfo closeJob(String jobId) throws RestException {
+    public JobInfo closeJob(String jobId) throws SalesforceException {
         final JobInfo request = new JobInfo();
         request.setState(JobStateEnum.CLOSED);
 
@@ -126,7 +126,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public JobInfo abortJob(String jobId) throws RestException {
+    public JobInfo abortJob(String jobId) throws SalesforceException {
         final JobInfo request = new JobInfo();
         request.setState(JobStateEnum.ABORTED);
 
@@ -141,7 +141,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public BatchInfo createBatch(InputStream batchStream, String jobId, ContentType contentTypeEnum) throws RestException {
+    public BatchInfo createBatch(InputStream batchStream, String jobId, ContentType contentTypeEnum) throws SalesforceException {
 
         final HttpPost post = new HttpPost(batchUrl(jobId, null));
         post.setEntity(new InputStreamEntity(
@@ -156,7 +156,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public BatchInfo getBatch(String jobId, String batchId) throws RestException {
+    public BatchInfo getBatch(String jobId, String batchId) throws SalesforceException {
 
         final HttpGet get = new HttpGet(batchUrl(jobId, batchId));
 
@@ -168,7 +168,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public List<BatchInfo> getAllBatches(String jobId) throws RestException {
+    public List<BatchInfo> getAllBatches(String jobId) throws SalesforceException {
 
         final HttpGet get = new HttpGet(batchUrl(jobId, null));
 
@@ -180,7 +180,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public InputStream getRequest(String jobId, String batchId) throws RestException {
+    public InputStream getRequest(String jobId, String batchId) throws SalesforceException {
 
         final HttpGet get = new HttpGet(batchUrl(jobId, batchId));
 
@@ -191,7 +191,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public InputStream getResults(String jobId, String batchId) throws RestException {
+    public InputStream getResults(String jobId, String batchId) throws SalesforceException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, null));
 
         // make the call and return the result
@@ -199,7 +199,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws RestException {
+    public BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws SalesforceException {
 
         final HttpPost post = new HttpPost(batchUrl(jobId, null));
         byte[] queryBytes = soqlQuery.getBytes(Consts.UTF_8);
@@ -215,7 +215,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public List<String> getQueryResultIds(String jobId, String batchId) throws RestException {
+    public List<String> getQueryResultIds(String jobId, String batchId) throws SalesforceException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, null));
 
         // make the call and parse the result
@@ -226,7 +226,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    public InputStream getQueryResult(String jobId, String batchId, String resultId) throws RestException {
+    public InputStream getQueryResult(String jobId, String batchId, String resultId) throws SalesforceException {
         final HttpGet get = new HttpGet(batchResultUrl(jobId, batchId, resultId));
 
         // make the call and parse the result
@@ -241,7 +241,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    protected InputStream doHttpRequest(HttpUriRequest request) throws RestException {
+    protected InputStream doHttpRequest(HttpUriRequest request) throws SalesforceException {
         // set access token for all requests
         setAccessToken(request);
 
@@ -281,7 +281,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
     }
 
     @Override
-    protected RestException createRestException(HttpUriRequest request, HttpResponse response) {
+    protected SalesforceException createRestException(HttpUriRequest request, HttpResponse response) {
         // this must be of type Error
         try {
             final Error error = unmarshalResponse(response.getEntity().getContent(), request, Error.class);
@@ -290,19 +290,19 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
             restError.setErrorCode(error.getExceptionCode());
             restError.setMessage(error.getExceptionMessage());
 
-            return new RestException(Arrays.asList(restError), response.getStatusLine().getStatusCode());
-        } catch (RestException e) {
+            return new SalesforceException(Arrays.asList(restError), response.getStatusLine().getStatusCode());
+        } catch (SalesforceException e) {
             String msg = "Error un-marshaling Salesforce Error: " + e.getMessage();
             LOG.error(msg, e);
-            return new RestException(msg, e);
+            return new SalesforceException(msg, e);
         } catch (IOException e) {
             String msg = "Error reading Salesforce Error: " + e.getMessage();
             LOG.error(msg, e);
-            return new RestException(msg, e);
+            return new SalesforceException(msg, e);
         }
     }
 
-    private <T> T unmarshalResponse(InputStream response, HttpUriRequest request, Class<T> resultClass) throws RestException {
+    private <T> T unmarshalResponse(InputStream response, HttpUriRequest request, Class<T> resultClass) throws SalesforceException {
         try {
             Unmarshaller unmarshaller = context.createUnmarshaller();
             JAXBElement<T> result = unmarshaller.unmarshal(new StreamSource(response), resultClass);
@@ -311,16 +311,16 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
             String msg = String.format("Error unmarshaling response {%s:%s} : %s",
                 request.getMethod(), request.getURI(), e.getMessage());
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (IllegalArgumentException e) {
             String msg = String.format("Error unmarshaling response for {%s:%s} : %s",
                 request.getMethod(), request.getURI(), e.getMessage());
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
-    private void marshalRequest(Object input, HttpEntityEnclosingRequest request, org.apache.http.entity.ContentType contentType) throws RestException {
+    private void marshalRequest(Object input, HttpEntityEnclosingRequest request, org.apache.http.entity.ContentType contentType) throws SalesforceException {
         final RequestLine requestLine = request.getRequestLine();
         try {
             Marshaller marshaller = context.createMarshaller();
@@ -333,12 +333,12 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
             String msg = String.format("Error marshaling request for {%s:%s} : %s",
                 requestLine.getMethod(), requestLine.getUri(), e.getMessage());
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (IllegalArgumentException e) {
             String msg = String.format("Error marshaling request for {%s:%s} : %s",
                 requestLine.getMethod(), requestLine.getUri(), e.getMessage());
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 

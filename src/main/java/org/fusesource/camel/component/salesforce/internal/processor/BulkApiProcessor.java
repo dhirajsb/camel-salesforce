@@ -20,7 +20,7 @@ import org.apache.camel.*;
 import org.apache.camel.converter.stream.StreamCacheConverter;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 import org.fusesource.camel.component.salesforce.internal.client.BulkApiClient;
 import org.fusesource.camel.component.salesforce.internal.client.DefaultBulkApiClient;
@@ -111,7 +111,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             } catch (CamelException e) {
                                 String msg = "Error preparing batch request: " + e.getMessage();
                                 LOG.error(msg, e);
-                                throw new RestException(msg, e);
+                                throw new SalesforceException(msg, e);
                             }
 
                             BatchInfo batchInfo = bulkClient.createBatch(request,
@@ -169,7 +169,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             } catch (IOException e) {
                                 String msg = "Error retrieving batch request: " + e.getMessage();
                                 LOG.error(msg, e);
-                                throw new RestException(msg, e);
+                                throw new SalesforceException(msg, e);
                             } finally {
                                 // close the input stream to release the Http connection
                                 try {
@@ -199,7 +199,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             } catch (IOException e) {
                                 String msg = "Error retrieving batch results: " + e.getMessage();
                                 LOG.error(msg, e);
-                                throw new RestException(msg, e);
+                                throw new SalesforceException(msg, e);
                             } finally {
                                 // close the input stream to release the Http connection
                                 try {
@@ -269,7 +269,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             } catch (IOException e) {
                                 String msg = "Error retrieving query result: " + e.getMessage();
                                 LOG.error(msg, e);
-                                throw new RestException(msg, e);
+                                throw new SalesforceException(msg, e);
                             } finally {
                                 // close the input stream to release the Http connection
                                 try {
@@ -282,7 +282,7 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                             break;
                     }
 
-                } catch (RestException e) {
+                } catch (SalesforceException e) {
                     String msg = String.format("Error processing %s: [%s] \"%s\"",
                         operationName, e.getStatusCode(), e.getMessage());
                     LOG.error(msg, e);
@@ -291,12 +291,12 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                     String msg = String.format("Unexpected Error processing %s: \"%s\"",
                         operationName, e.getMessage());
                     LOG.error(msg, e);
-                    exchange.setException(new RestException(msg, e));
+                    exchange.setException(new SalesforceException(msg, e));
                 } catch (InvalidPayloadException e) {
                     String msg = String.format("Unexpected Error processing %s: \"%s\"",
                         operationName, e.getMessage());
                     LOG.error(msg, e);
-                    exchange.setException(new RestException(msg, e));
+                    exchange.setException(new SalesforceException(msg, e));
                 } finally {
                     callback.done(false);
                 }

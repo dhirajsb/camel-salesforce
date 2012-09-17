@@ -4,7 +4,7 @@ import org.apache.camel.CamelException;
 import org.apache.http.HttpStatus;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.CreateSObjectResult;
 import org.fusesource.camel.component.salesforce.internal.client.RestClient;
 import org.fusesource.camel.component.salesforce.internal.dto.PushTopic;
@@ -68,7 +68,7 @@ public class PushTopicHelper {
                 createTopic();
             }
 
-        } catch (RestException e) {
+        } catch (SalesforceException e) {
             String msg = String.format("Error retrieving Topic %s: %s", topicName, e.getMessage());
             LOG.error(msg, e);
             throw new CamelException(msg, e);
@@ -105,11 +105,11 @@ public class PushTopicHelper {
             CreateSObjectResult result = objectMapper.readValue(stream, CreateSObjectResult.class);
             if (!result.getSuccess()) {
                 String msg = String.format("Error creating Topic %s: %s", topicName, result.getErrors());
-                final RestException restException = new RestException(result.getErrors(), HttpStatus.SC_BAD_REQUEST);
-                LOG.error(msg, restException);
-                throw new CamelException(msg, restException);
+                final SalesforceException salesforceException = new SalesforceException(result.getErrors(), HttpStatus.SC_BAD_REQUEST);
+                LOG.error(msg, salesforceException);
+                throw new CamelException(msg, salesforceException);
             }
-        } catch (RestException e) {
+        } catch (SalesforceException e) {
             String msg = String.format("Error creating Topic %s: %s", topicName, e.getMessage());
             LOG.error(msg, e);
             throw new CamelException(msg, e);
@@ -141,7 +141,7 @@ public class PushTopicHelper {
 
             restClient.updateSObject("PushTopic", topicId,
                 new ByteArrayInputStream(objectMapper.writeValueAsBytes(topic)));
-        } catch (RestException e) {
+        } catch (SalesforceException e) {
             String msg = String.format("Error updating topic %s with query [%s] : %s",
                 topicName, query, e.getMessage());
             LOG.error(msg, e);

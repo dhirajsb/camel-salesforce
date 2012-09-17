@@ -23,28 +23,28 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RestException extends CamelException {
+public class SalesforceException extends CamelException {
 
     private List<RestError> errors;
     private int statusCode;
 
-    public RestException(List<RestError> errors, int statusCode) {
+    public SalesforceException(List<RestError> errors, int statusCode) {
         this(toErrorMessage(errors, statusCode), statusCode);
 
         this.errors = errors;
     }
 
-    public RestException(String message, int statusCode) {
+    public SalesforceException(String message, int statusCode) {
         super(message);
 
         this.statusCode = statusCode;
     }
 
-    public RestException(String message, Throwable cause) {
+    public SalesforceException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public RestException(Throwable cause) {
+    public SalesforceException(Throwable cause) {
         super(cause);
     }
 

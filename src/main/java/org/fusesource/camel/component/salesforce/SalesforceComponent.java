@@ -25,7 +25,7 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
@@ -133,7 +133,7 @@ public class SalesforceComponent extends DefaultComponent {
             // get a new token
             session.login(session.getAccessToken());
             loggedIn = true;
-        } catch (RestException e) {
+        } catch (SalesforceException e) {
             LOG.error(e.getMessage(), e);
             throw new CamelException(e.getMessage(), e);
         }

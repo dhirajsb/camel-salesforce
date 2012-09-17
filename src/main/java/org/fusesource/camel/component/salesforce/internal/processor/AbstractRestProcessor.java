@@ -19,7 +19,7 @@ package org.fusesource.camel.component.salesforce.internal.processor;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 import org.fusesource.camel.component.salesforce.internal.client.DefaultRestClient;
@@ -57,14 +57,14 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
         // pre-process request message
         try {
             processRequest(exchange);
-        } catch (RestException e) {
+        } catch (SalesforceException e) {
             LOG.error(e.getMessage(), e);
             exchange.setException(e);
             callback.done(true);
             return true;
         } catch (RuntimeException e) {
             LOG.error(e.getMessage(), e);
-            exchange.setException(new RestException(e.getMessage(), e));
+            exchange.setException(new SalesforceException(e.getMessage(), e));
             callback.done(true);
             return true;
         }
@@ -285,7 +285,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                     // process response entity and create out message
                     processResponse(exchange, responseEntity);
 
-                } catch (RestException e) {
+                } catch (SalesforceException e) {
                     String msg = String.format("Error processing %s: [%s] \"%s\"",
                         operationName, e.getStatusCode(), e.getMessage());
                     LOG.error(msg, e);
@@ -294,7 +294,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                     String msg = String.format("Unexpected Error processing %s: \"%s\"",
                         operationName, e.getMessage());
                     LOG.error(msg, e);
-                    exchange.setException(new RestException(msg, e));
+                    exchange.setException(new SalesforceException(msg, e));
                 } finally {
                     // restore fields
                     if (sObjectBase != null) {
@@ -306,7 +306,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                         if (sObjectExtIdName != null && oldValue != null) {
                             try {
                                 setPropertyValue(sObjectBase, sObjectExtIdName, oldValue);
-                            } catch (RestException e) {
+                            } catch (SalesforceException e) {
                                 // YES, the exchange may fail if the property cannot be reset!!!
                                 LOG.error(e.getMessage(), e);
                                 exchange.setException(e);
@@ -331,7 +331,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
         return false;
     }
 
-    private void setPropertyValue(AbstractSObjectBase sObjectBase, String name, Object value) throws RestException {
+    private void setPropertyValue(AbstractSObjectBase sObjectBase, String name, Object value) throws SalesforceException {
         try {
             // set the value with the set method
             Method setMethod = sObjectBase.getClass().getMethod("set" + name, new Class<?>[] {value.getClass()});
@@ -340,21 +340,21 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
             String msg = String.format("SObject %s does not have a field %s",
                 sObjectBase.getClass().getName(), name);
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (InvocationTargetException e) {
             String msg = String.format("Error setting value %s.%s",
                 sObjectBase.getClass().getSimpleName(), name);
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (IllegalAccessException e) {
             String msg = String.format("Error accessing value %s.%s",
                 sObjectBase.getClass().getSimpleName(), name);
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
-    private Object getAndClearPropertyValue(AbstractSObjectBase sObjectBase, String propertyName) throws RestException {
+    private Object getAndClearPropertyValue(AbstractSObjectBase sObjectBase, String propertyName) throws SalesforceException {
         try {
             // obtain the value using the get method
             Method getMethod = sObjectBase.getClass().getMethod("get" + propertyName, new Class<?>[] {});
@@ -369,27 +369,27 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
             String msg = String.format("SObject %s does not have a field %s",
                 sObjectBase.getClass().getSimpleName(), propertyName);
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (InvocationTargetException e) {
             String msg = String.format("Error getting/setting value %s.%s",
                 sObjectBase.getClass().getSimpleName(), propertyName);
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (IllegalAccessException e) {
             String msg = String.format("Error accessing value %s.%s",
                 sObjectBase.getClass().getSimpleName(), propertyName);
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
     // pre-process request message
-    protected abstract void processRequest(Exchange exchange) throws RestException;
+    protected abstract void processRequest(Exchange exchange) throws SalesforceException;
 
     // get request stream from In message
-    protected abstract InputStream getRequestStream(Exchange exchange) throws RestException;
+    protected abstract InputStream getRequestStream(Exchange exchange) throws SalesforceException;
 
-    private void setResponseClass(Exchange exchange, String sObjectName) throws RestException {
+    private void setResponseClass(Exchange exchange, String sObjectName) throws SalesforceException {
         Class<?> sObjectClass = null;
 
         if (sObjectName != null) {
@@ -398,7 +398,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
             if (null == sObjectClass) {
                 String msg = String.format("No class found for SObject %s", sObjectName);
                 LOG.error(msg);
-                throw new RestException(msg, null);
+                throw new SalesforceException(msg, null);
             }
 
         } else {
@@ -410,13 +410,13 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
             } catch (ClassNotFoundException e) {
                 String msg = String.format("SObject class not found %s, %s", className, e.getMessage());
                 LOG.error(msg, e);
-                throw new RestException(msg, e);
+                throw new SalesforceException(msg, e);
             }
         }
         exchange.setProperty(RESPONSE_CLASS, sObjectClass);
     }
 
     // process response entity and set out message in exchange
-    protected abstract void processResponse(Exchange exchange, InputStream responseEntity) throws RestException;
+    protected abstract void processResponse(Exchange exchange, InputStream responseEntity) throws SalesforceException;
 
 }

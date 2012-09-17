@@ -22,7 +22,7 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public abstract class AbstractClientBase {
         this.instanceUrl = session.getInstanceUrl();
     }
 
-    protected InputStream doHttpRequest(HttpUriRequest request) throws RestException {
+    protected InputStream doHttpRequest(HttpUriRequest request) throws SalesforceException {
         HttpResponse httpResponse = null;
         try {
             // execute the request
@@ -96,7 +96,7 @@ public abstract class AbstractClientBase {
             }
             String msg = "Unexpected Error: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (RuntimeException e) {
             request.abort();
             if (httpResponse != null) {
@@ -104,13 +104,13 @@ public abstract class AbstractClientBase {
             }
             String msg = "Unexpected Error: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
     protected abstract void setAccessToken(HttpRequest httpRequest);
 
-    protected abstract RestException createRestException(HttpUriRequest request, HttpResponse response);
+    protected abstract SalesforceException createRestException(HttpUriRequest request, HttpResponse response);
 
     public void setVersion(String version) {
         this.version = version;

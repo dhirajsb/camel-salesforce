@@ -21,7 +21,7 @@ import org.apache.camel.Exchange;
 import org.apache.http.client.HttpClient;
 import org.fusesource.camel.component.salesforce.SalesforceComponent;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.slf4j.Logger;
@@ -75,9 +75,9 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
      * @param propName name of property
      * @param optional if {@code true} returns null, otherwise throws RestException
      * @return value of property, or {@code null} for optional parameters if not found.
-     * @throws org.fusesource.camel.component.salesforce.api.RestException if the property can't be found.
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException if the property can't be found.
      */
-    protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) throws RestException {
+    protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) throws SalesforceException {
         String propValue = exchange.getIn().getHeader(propName, String.class);
         propValue = propValue == null ? endpointConfig.get(propName) : propValue;
         propValue = (propValue == null && convertInBody) ? exchange.getIn().getBody(String.class) : propValue;
@@ -86,7 +86,7 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
         if (propValue == null && !optional) {
             String msg = "Missing property " + propName;
             LOG.error(msg);
-            throw new RestException(msg, null);
+            throw new SalesforceException(msg, null);
         }
 
         return propValue;

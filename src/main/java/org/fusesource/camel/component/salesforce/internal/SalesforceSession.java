@@ -25,7 +25,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.internal.dto.LoginError;
 import org.fusesource.camel.component.salesforce.internal.dto.LoginToken;
@@ -85,7 +85,7 @@ public class SalesforceSession {
         }
     }
 
-    public synchronized String login(String oldToken) throws RestException {
+    public synchronized String login(String oldToken) throws SalesforceException {
 
         // check if we need a new session
         // this way there's always a single valid session
@@ -96,7 +96,7 @@ public class SalesforceSession {
             if (accessToken != null) {
                 try {
                     logout();
-                } catch (RestException e) {
+                } catch (SalesforceException e) {
                     LOG.warn("Error revoking old access token: " + e.getMessage(), e);
                 }
                 accessToken = null;
@@ -141,18 +141,18 @@ public class SalesforceSession {
                         LOG.error(msg);
                         List<RestError> errors = new ArrayList<RestError>();
                         errors.add(new RestError(error.getError(), error.getErrorDescription()));
-                        throw new RestException(errors, 400);
+                        throw new SalesforceException(errors, 400);
 
                     default:
                         String msg2 = String.format("Login error status:[%s] reason:[%s]", statusLine.getStatusCode(),
                             statusLine.getReasonPhrase());
                         LOG.error(msg2);
-                        throw new RestException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+                        throw new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
                 }
             } catch (IOException e) {
                 String msg = "Login error: Unknown exception " + e.getMessage();
                 LOG.error(msg, e);
-                throw new RestException(msg, e);
+                throw new SalesforceException(msg, e);
             } finally {
                 // make sure entity is consumed
                 EntityUtils.consumeQuietly(httpEntity);
@@ -162,7 +162,7 @@ public class SalesforceSession {
         return accessToken;
     }
 
-    public void logout() throws RestException {
+    public void logout() throws SalesforceException {
         if (accessToken == null) {
             return;
         }
@@ -181,17 +181,17 @@ public class SalesforceSession {
                 case 400:
                     String msg = "Logout error: " + statusLine.getReasonPhrase();
                     LOG.error(msg);
-                    throw new RestException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+                    throw new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
                 default:
                     String msg2 = "Logout error code: " + statusLine.getStatusCode() + " reason: " + statusLine.getReasonPhrase();
                     LOG.error(msg2);
-                    throw new RestException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+                    throw new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
             }
 
         } catch (IOException e) {
             String msg = "Logout error: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } finally {
             EntityUtils.consumeQuietly(httpEntity);
             // reset session

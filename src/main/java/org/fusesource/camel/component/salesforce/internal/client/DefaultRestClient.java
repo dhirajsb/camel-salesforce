@@ -28,7 +28,7 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.fusesource.camel.component.salesforce.internal.dto.RestErrors;
@@ -61,7 +61,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    protected InputStream doHttpRequest(HttpUriRequest request) throws RestException {
+    protected InputStream doHttpRequest(HttpUriRequest request) throws SalesforceException {
         // set standard headers for all requests
         final String contentType = ("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8).toString();
         request.setHeader("Accept", contentType);
@@ -72,18 +72,18 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    protected RestException createRestException(HttpUriRequest request, HttpResponse response) {
+    protected SalesforceException createRestException(HttpUriRequest request, HttpResponse response) {
         StatusLine statusLine = response.getStatusLine();
 
         // try parsing response according to format
         try {
             if ("json".equals(format)) {
                 List<RestError> restErrors = objectMapper.readValue(response.getEntity().getContent(), new TypeReference<List<RestError>>(){});
-                return new RestException(restErrors, statusLine.getStatusCode());
+                return new SalesforceException(restErrors, statusLine.getStatusCode());
             } else {
                 RestErrors errors = new RestErrors();
                 xStream.fromXML(response.getEntity().getContent(), errors);
-                return new RestException(errors.getErrors(), statusLine.getStatusCode());
+                return new SalesforceException(errors.getErrors(), statusLine.getStatusCode());
             }
         } catch (IOException e) {
             // log and ignore
@@ -98,11 +98,11 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         }
 
         // just report HTTP status info
-        return new RestException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+        return new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
     }
 
     @Override
-    public InputStream getVersions() throws RestException {
+    public InputStream getVersions() throws SalesforceException {
         HttpGet get = new HttpGet(servicesDataUrl());
         // does not require authorization token
 
@@ -110,7 +110,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getResources() throws RestException {
+    public InputStream getResources() throws SalesforceException {
         HttpGet get = new HttpGet(versionUrl());
         // requires authorization token
         setAccessToken(get);
@@ -119,7 +119,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getGlobalObjects() throws RestException {
+    public InputStream getGlobalObjects() throws SalesforceException {
         HttpGet get = new HttpGet(sobjectsUrl(""));
         // requires authorization token
         setAccessToken(get);
@@ -128,7 +128,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getBasicInfo(String sObjectName) throws RestException {
+    public InputStream getBasicInfo(String sObjectName) throws SalesforceException {
         HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/"));
         // requires authorization token
         setAccessToken(get);
@@ -137,7 +137,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getDescription(String sObjectName) throws RestException {
+    public InputStream getDescription(String sObjectName) throws SalesforceException {
         HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/describe/"));
         // requires authorization token
         setAccessToken(get);
@@ -146,7 +146,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getSObject(String sObjectName, String id, String[] fields) throws RestException {
+    public InputStream getSObject(String sObjectName, String id, String[] fields) throws SalesforceException {
 
         // parse fields if set
         String params = "";
@@ -168,7 +168,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream createSObject(String sObjectName, InputStream sObject) throws RestException {
+    public InputStream createSObject(String sObjectName, InputStream sObject) throws SalesforceException {
         // post the sObject
         final HttpPost post = new HttpPost(sobjectsUrl(sObjectName));
 
@@ -183,7 +183,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public void updateSObject(String sObjectName, String id, InputStream sObject) throws RestException {
+    public void updateSObject(String sObjectName, String id, InputStream sObject) throws SalesforceException {
         final HttpPatch patch = new HttpPatch(sobjectsUrl(sObjectName + "/" + id));
         // requires authorization token
         setAccessToken(patch);
@@ -196,7 +196,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public void deleteSObject(String sObjectName, String id) throws RestException {
+    public void deleteSObject(String sObjectName, String id) throws SalesforceException {
         final HttpDelete delete = new HttpDelete(sobjectsUrl(sObjectName + "/" + id));
 
         // requires authorization token
@@ -206,7 +206,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream getSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws RestException {
+    public InputStream getSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws SalesforceException {
         final HttpGet get = new HttpGet(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
@@ -216,7 +216,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream upsertSObject(String sObjectName, String fieldName, String fieldValue, InputStream sObject) throws RestException {
+    public InputStream upsertSObject(String sObjectName, String fieldName, String fieldValue, InputStream sObject) throws SalesforceException {
         final HttpPatch patch = new HttpPatch(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
@@ -230,7 +230,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public void deleteSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws RestException {
+    public void deleteSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws SalesforceException {
         final HttpDelete delete = new HttpDelete(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
@@ -240,7 +240,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream query(String soqlQuery) throws RestException {
+    public InputStream query(String soqlQuery) throws SalesforceException {
         try {
 
             String encodedQuery = URLEncoder.encode(soqlQuery, Consts.UTF_8.toString());
@@ -256,12 +256,12 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
     @Override
-    public InputStream queryMore(String nextRecordsUrl) throws RestException {
+    public InputStream queryMore(String nextRecordsUrl) throws SalesforceException {
         final HttpGet get = new HttpGet(instanceUrl + nextRecordsUrl);
 
         // requires authorization token
@@ -271,7 +271,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    public InputStream search(String soslQuery) throws RestException {
+    public InputStream search(String soslQuery) throws SalesforceException {
         try {
 
             String encodedQuery = URLEncoder.encode(soslQuery, Consts.UTF_8.toString());
@@ -287,7 +287,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
@@ -295,23 +295,23 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         return instanceUrl + SERVICES_DATA;
     }
 
-    private String versionUrl() throws RestException {
+    private String versionUrl() throws SalesforceException {
         if (version == null) {
-            throw new RestException("NULL API version", new NullPointerException("version"));
+            throw new SalesforceException("NULL API version", new NullPointerException("version"));
         }
         return servicesDataUrl() + "v" + version + "/";
     }
 
-    private String sobjectsUrl(String sObjectName) throws RestException {
+    private String sobjectsUrl(String sObjectName) throws SalesforceException {
         if (sObjectName == null) {
-            throw new RestException("Null SObject name", new NullPointerException("sObjectName"));
+            throw new SalesforceException("Null SObject name", new NullPointerException("sObjectName"));
         }
         return versionUrl() + "sobjects/" + sObjectName;
     }
 
-    private String sobjectsExternalIdUrl(String sObjectName, String fieldName, String fieldValue) throws RestException {
+    private String sobjectsExternalIdUrl(String sObjectName, String fieldName, String fieldValue) throws SalesforceException {
         if (fieldName == null || fieldValue == null) {
-            throw new RestException("External field name and value cannot be NULL",
+            throw new SalesforceException("External field name and value cannot be NULL",
                 new NullPointerException("fieldName,fieldValue"));
         }
         try {
@@ -322,7 +322,7 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
             LOG.error(msg, e);
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 

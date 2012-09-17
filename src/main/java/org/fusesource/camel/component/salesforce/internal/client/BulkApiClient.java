@@ -16,7 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.internal.client;
 
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
 
 import java.io.InputStream;
@@ -31,30 +31,30 @@ public interface BulkApiClient {
      * Creates a Bulk Job
      * @param jobInfo A {@link JobInfo} with required fields
      * @return a complete job description {@link JobInfo}
-     * @throws org.fusesource.camel.component.salesforce.api.RestException on error
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException on error
      */
-    JobInfo createJob(JobInfo jobInfo) throws RestException;
+    JobInfo createJob(JobInfo jobInfo) throws SalesforceException;
 
-    JobInfo getJob(String jobId) throws RestException;
+    JobInfo getJob(String jobId) throws SalesforceException;
 
-    JobInfo closeJob(String jobId) throws RestException;
+    JobInfo closeJob(String jobId) throws SalesforceException;
 
-    JobInfo abortJob(String jobId) throws RestException;
+    JobInfo abortJob(String jobId) throws SalesforceException;
 
-    BatchInfo createBatch(InputStream batchStream, String jobId, ContentType contentTypeEnum) throws RestException;
+    BatchInfo createBatch(InputStream batchStream, String jobId, ContentType contentTypeEnum) throws SalesforceException;
 
-    BatchInfo getBatch(String jobId, String batchId) throws RestException;
+    BatchInfo getBatch(String jobId, String batchId) throws SalesforceException;
 
-    List<BatchInfo> getAllBatches(String jobId) throws RestException;
+    List<BatchInfo> getAllBatches(String jobId) throws SalesforceException;
 
-    InputStream getRequest(String jobId, String batchId) throws RestException;
+    InputStream getRequest(String jobId, String batchId) throws SalesforceException;
 
-    InputStream getResults(String jobId, String batchId) throws RestException;
+    InputStream getResults(String jobId, String batchId) throws SalesforceException;
 
-    BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws RestException;
+    BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws SalesforceException;
 
-    List<String> getQueryResultIds(String jobId, String batchId) throws RestException;
+    List<String> getQueryResultIds(String jobId, String batchId) throws SalesforceException;
 
-    InputStream getQueryResult(String jobId, String batchId, String resultId) throws RestException;
+    InputStream getQueryResult(String jobId, String batchId, String resultId) throws SalesforceException;
 
 }

@@ -27,7 +27,7 @@ import org.apache.camel.Message;
 import org.apache.http.Consts;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.JodaTimeConverter;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 
 import java.io.*;
@@ -66,7 +66,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     }
 
     @Override
-    protected void processRequest(Exchange exchange) throws RestException {
+    protected void processRequest(Exchange exchange) throws SalesforceException {
 
         switch (operationName) {
             case GET_VERSIONS:
@@ -138,7 +138,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
     }
 
-    protected InputStream getRequestStream(Exchange exchange) throws RestException {
+    protected InputStream getRequestStream(Exchange exchange) throws SalesforceException {
         try {
             // get request stream from In message
             Message in = exchange.getIn();
@@ -159,7 +159,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                     if (null == body) {
                         String msg = "Unsupported request message body " +
                             (in.getBody() == null ? null : in.getBody().getClass());
-                        throw new RestException(msg, null);
+                        throw new SalesforceException(msg, null);
                     } else {
                         request = new ByteArrayInputStream(body.getBytes(Consts.UTF_8));
                     }
@@ -168,12 +168,12 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             return request;
         } catch (XStreamException e) {
             String msg = "Error marshaling request: " + e.getMessage();
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
     @Override
-    protected void processResponse(Exchange exchange, InputStream responseEntity) throws RestException {
+    protected void processResponse(Exchange exchange, InputStream responseEntity) throws SalesforceException {
         try {
             // do we need to un-marshal a response
             if (responseEntity != null) {
@@ -193,10 +193,10 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (XStreamException e) {
             String msg = "Error parsing XML response: " + e.getMessage();
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         } catch (Exception e) {
             String msg = "Error creating XML response: " + e.getMessage();
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 

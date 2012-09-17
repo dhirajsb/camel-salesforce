@@ -23,7 +23,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.type.TypeReference;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
 
 import java.io.ByteArrayInputStream;
@@ -94,7 +94,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     }
 
     @Override
-    protected InputStream getRequestStream(Exchange exchange) throws RestException {
+    protected InputStream getRequestStream(Exchange exchange) throws SalesforceException {
         try {
             InputStream request;
             Message in = exchange.getIn();
@@ -112,7 +112,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                     if (null == body) {
                         String msg = "Unsupported request message body " +
                             (in.getBody() == null ? null : in.getBody().getClass());
-                        throw new RestException(msg, null);
+                        throw new SalesforceException(msg, null);
                     } else {
                         request = new ByteArrayInputStream(body.getBytes(Consts.UTF_8));
                     }
@@ -123,12 +123,12 @@ public class JsonRestProcessor extends AbstractRestProcessor {
 
         } catch (IOException e) {
             String msg = "Error marshaling request: " + e.getMessage();
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 
     @Override
-    protected void processResponse(Exchange exchange, InputStream responseEntity) throws RestException {
+    protected void processResponse(Exchange exchange, InputStream responseEntity) throws SalesforceException {
         // process JSON response for TypeReference
         try {
             // do we need to un-marshal a response
@@ -148,7 +148,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
             exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (IOException e) {
             String msg = "Error parsing JSON response: " + e.getMessage();
-            throw new RestException(msg, e);
+            throw new SalesforceException(msg, e);
         }
     }
 

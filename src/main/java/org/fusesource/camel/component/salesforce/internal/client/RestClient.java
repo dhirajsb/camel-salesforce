@@ -16,7 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.internal.client;
 
-import org.fusesource.camel.component.salesforce.api.RestException;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
 
 import java.io.InputStream;
 
@@ -27,9 +27,9 @@ public interface RestClient {
      * including the version, label, and a link to each version's root.
      *
      * @return response entity
-     * @throws org.fusesource.camel.component.salesforce.api.RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getVersions() throws RestException;
+    InputStream getVersions() throws SalesforceException;
 
     /**
      * Set the API version to use for the rest of the APIs. Since this is possible not thread safe,
@@ -43,35 +43,35 @@ public interface RestClient {
      * Lists available resources for the specified API version, including resource name and URI.
      *
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getResources() throws RestException;
+    InputStream getResources() throws SalesforceException;
 
     /**
      * Lists the available objects and their metadata for your organization's data.
      *
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getGlobalObjects() throws RestException;
+    InputStream getGlobalObjects() throws SalesforceException;
 
     /**
      * Describes the individual metadata for the specified object.
      *
      * @param sObjectName specified object name
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getBasicInfo(String sObjectName) throws RestException;
+    InputStream getBasicInfo(String sObjectName) throws SalesforceException;
 
     /**
      * Completely describes the individual metadata at all levels for the specified object.
      *
      * @param sObjectName specified object name
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getDescription(String sObjectName) throws RestException;
+    InputStream getDescription(String sObjectName) throws SalesforceException;
 
     /**
      * Retrieves a record for the specified object ID.
@@ -79,9 +79,9 @@ public interface RestClient {
      * @param sObjectName specified object name
      * @param id          object id
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getSObject(String sObjectName, String id, String[] fields) throws RestException;
+    InputStream getSObject(String sObjectName, String id, String[] fields) throws SalesforceException;
 
     /**
      * Creates a record for the specified object.
@@ -89,9 +89,9 @@ public interface RestClient {
      * @param sObjectName specified object name
      * @param sObject     request entity
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream createSObject(String sObjectName, InputStream sObject) throws RestException;
+    InputStream createSObject(String sObjectName, InputStream sObject) throws SalesforceException;
 
     /**
      * Updates a record for the specified object ID.
@@ -100,9 +100,9 @@ public interface RestClient {
      * @param id          object id
      * @param sObject     request entity
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    void updateSObject(String sObjectName, String id, InputStream sObject) throws RestException;
+    void updateSObject(String sObjectName, String id, InputStream sObject) throws SalesforceException;
 
     /**
      * Deletes a record for the specified object ID.
@@ -110,9 +110,9 @@ public interface RestClient {
      * @param sObjectName specified object name
      * @param id          object id
      * @return response entity
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    void deleteSObject(String sObjectName, String id) throws RestException;
+    void deleteSObject(String sObjectName, String id) throws SalesforceException;
 
     /**
      * Retrieves a record for the specified external ID.
@@ -121,9 +121,9 @@ public interface RestClient {
      * @param fieldName
      * @param fieldValue
      * @return
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream getSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws RestException;
+    InputStream getSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws SalesforceException;
 
     /**
      * Creates or updates a record based on the value of a specified external ID field.
@@ -133,10 +133,10 @@ public interface RestClient {
      * @param fieldValue
      * @param sObject
      * @return
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
     InputStream upsertSObject(String sObjectName,
-                              String fieldName, String fieldValue, InputStream sObject) throws RestException;
+                              String fieldName, String fieldValue, InputStream sObject) throws SalesforceException;
 
     /**
      * Deletes a record based on the value of a specified external ID field.
@@ -144,10 +144,10 @@ public interface RestClient {
      * @param sObjectName
      * @param fieldName
      * @param fieldValue
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
     void deleteSObjectWithId(String sObjectName,
-                             String fieldName, String fieldValue) throws RestException;
+                             String fieldName, String fieldValue) throws SalesforceException;
 
 /*
     TODO
@@ -165,26 +165,26 @@ public interface RestClient {
      *
      * @param soqlQuery
      * @return
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream query(String soqlQuery) throws RestException;
+    InputStream query(String soqlQuery) throws SalesforceException;
 
     /**
      * Get SOQL query results using nextRecordsUrl.
      *
      * @param nextRecordsUrl
      * @return
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream queryMore(String nextRecordsUrl) throws RestException;
+    InputStream queryMore(String nextRecordsUrl) throws SalesforceException;
 
     /**
      * Executes the specified SOSL search.
      *
      * @param soslQuery
      * @return
-     * @throws RestException
+     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException
      */
-    InputStream search(String soslQuery) throws RestException;
+    InputStream search(String soslQuery) throws SalesforceException;
 
 }
