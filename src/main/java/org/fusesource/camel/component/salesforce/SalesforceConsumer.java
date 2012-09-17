@@ -59,16 +59,27 @@ public class SalesforceConsumer extends DefaultConsumer {
         this.subscriptionHelper = helper;
 
         // get sObjectClass to convert to
-        final String className = endpoint.getEndpointConfiguration().getSObjectClass();
-        if (className != null) {
-            sObjectClass = endpoint.getComponent().getCamelContext().getClassResolver().resolveClass(className);
+        final String sObjectName = endpoint.getEndpointConfiguration().getSObjectName();
+        if (sObjectName != null) {
+            sObjectClass = endpoint.getComponent().getClassMap().get(sObjectName);
             if (sObjectClass == null) {
-                String msg = String.format("SObject Class not found %s", className);
+                String msg = String.format("SObject Class not found for %s", sObjectName);
                 log.error(msg);
                 throw new RuntimeCamelException(msg);
             }
         } else {
-            sObjectClass = null;
+            final String className = endpoint.getEndpointConfiguration().getSObjectClass();
+            if (className != null) {
+                sObjectClass = endpoint.getComponent().getCamelContext().getClassResolver().resolveClass(className);
+                if (sObjectClass == null) {
+                    String msg = String.format("SObject Class not found %s", className);
+                    log.error(msg);
+                    throw new RuntimeCamelException(msg);
+                }
+            } else {
+                log.warn("Property sObjectName or sObjectClass NOT set, messages will be of type java.lang.Map");
+                sObjectClass = null;
+            }
         }
 
     }

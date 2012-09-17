@@ -71,9 +71,11 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
+
                 // test topic subscription
                 from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&" +
-                    "sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&" +
+//                    "sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&" +
+                    "sObjectName=Merchandise__c&" +
                     "updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c").
                     to("mock:CamelTestTopic");
 
@@ -81,7 +83,7 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
                 from("direct:upsertSObject").
                     to("force:upsertSObject?SObjectIdName=Name");
 
-                // route for finding test record
+                // route for finding test topic
                 from("direct:query").
                     to("force:query?sObjectQuery=SELECT Id FROM PushTopic WHERE Name = 'CamelTestTopic'&" +
                         "sObjectClass=org.fusesource.camel.component.salesforce.internal.dto.QueryRecordsPushTopic");
@@ -93,6 +95,7 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
                 // route for removing topic
                 from("direct:deleteSObject").
                     to("force:deleteSObject");
+
             }
         };
     }

@@ -166,6 +166,10 @@ public class SalesforceComponent extends DefaultComponent {
         super.doStop();
 
         try {
+            if (subscriptionHelper != null) {
+                // shutdown all streaming connections
+                subscriptionHelper.shutdown();
+            }
             if (loggedIn) {
                 // logout of Salesforce
                 session.logout();

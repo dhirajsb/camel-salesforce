@@ -244,8 +244,8 @@ public class SubscriptionHelper {
     }
 
     public void shutdown() {
-        // TODO handle false return if the disconnect didn't happen in the given timeout
-        client.disconnect(DEFAULT_CONNECTION_TIMEOUT);
+        // TODO find and log any disconnect errors
+        client.disconnect();
     }
 
 }
