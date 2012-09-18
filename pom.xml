@@ -24,9 +24,6 @@
     <java.specification.version>1.6</java.specification.version>
     <maven-plugin.version>2.9</maven-plugin.version>
     <excluded.tests>**/*IntegrationTest.class</excluded.tests>
-    <cometd-java-server.version>2.3.1_2</cometd-java-server.version>
-    <jetty-cometd.version>6.1.26_1</jetty-cometd.version>
-    <servlet-api.version>3.0.1</servlet-api.version>
     <cometd-java-client.version>2.4.3</cometd-java-client.version>
   </properties>
 
@@ -123,18 +120,6 @@
       <artifactId>org.apache.servicemix.bundles.xstream</artifactId>
       <version>${xstream.version}</version>
     </dependency>
-<!--
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.cometd-java-server</artifactId>
-      <version>${cometd-java-server.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.jetty-cometd</artifactId>
-      <version>${jetty-cometd.version}</version>
-    </dependency>
--->
     <dependency>
       <groupId>org.cometd.java</groupId>
       <artifactId>cometd-java-client</artifactId>
@@ -249,7 +234,11 @@
               org.fusesource.camel.component.salesforce.api.*;version=${project.version}
             </Export-Package>
             <Private-Package>org.fusesource.camel.component.salesforce.internal.*</Private-Package>
-            <!--<Import-Package>*,org.apache.camel.osgi</Import-Package>-->
+            <Import-Package>*,org.apache.camel.osgi</Import-Package>
+
+            <!-- Embed Jetty, since our version clashes with servicemix jetty feature -->
+            <Embed-Dependency>jetty*|cometd*|bayeux*;artifactId=*;inline=false</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
           </instructions>
         </configuration>
       </plugin>

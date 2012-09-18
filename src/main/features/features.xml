@@ -19,17 +19,32 @@
 
   <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
 
-  <feature name="camel-salesforce" version="${project.version}" resolver="obr" start-level="50">
+  <feature name="camel-salesforce" version="${project.version}" resolver="(obr)" start-level="50">
 
     <feature version="${camel.version}">camel-core</feature>
+    <!--<feature>jetty</feature>-->
 
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient-osgi.version}</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient-osgi.version}</bundle>
+
     <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
     <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream.version}</bundle>
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3.version}</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.cometd-java-server/${cometd-java-server.version}</bundle>
+
+<!--
+    Inlined dependencies cometd and jetty to avoid conflicts with Karaf jetty feature
+    <bundle dependency="true">mvn:org.cometd.java/cometd-java-client/${cometd-java-client.version}</bundle>
+    <bundle dependency="true">mvn:org.cometd.java/bayeux-api/${cometd-java-client.version}</bundle>
+    <bundle dependency="true">mvn:org.cometd.java/cometd-java-common/${cometd-java-client.version}</bundle>
+
+    <bundle dependency="true">mvn:org.eclipse.jetty/jetty-util/${jetty.version}</bundle>
+    <bundle dependency="true">mvn:org.eclipse.jetty/jetty-io/${jetty.version}</bundle>
+    <bundle dependency="true">mvn:org.eclipse.jetty/jetty-http/${jetty.version}</bundle>
+    <bundle dependency="true">mvn:org.eclipse.jetty/jetty-client/${jetty.version}</bundle>
+-->
+
     <bundle dependency="true">mvn:joda-time/joda-time/${joda-time.version}</bundle>
 
     <bundle start="true" start-level="50">mvn:org.fusesource.camel/camel-salesforce/${project.version}</bundle>

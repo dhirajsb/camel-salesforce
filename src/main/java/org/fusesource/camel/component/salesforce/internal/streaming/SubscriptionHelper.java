@@ -19,7 +19,6 @@ package org.fusesource.camel.component.salesforce.internal.streaming;
 import org.apache.camel.CamelException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.cometd.bayeux.Channel;
-import org.cometd.bayeux.ChannelId;
 import org.cometd.bayeux.Message;
 import org.cometd.bayeux.client.ClientSessionChannel;
 import org.cometd.client.BayeuxClient;
@@ -33,7 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class SubscriptionHelper {
     private static final Logger LOG = LoggerFactory.getLogger(SubscriptionHelper.class);
@@ -55,10 +56,18 @@ public class SubscriptionHelper {
     private Exception handshakeException;
 
     private final Map<SalesforceConsumer, ClientSessionChannel.MessageListener> listenerMap;
+    private final Set<String> subscriptions;
+
+    private Map<String, String> subscribeError;
+    private Map<String, String> unsubscribeError;
 
     public SubscriptionHelper(SalesforceComponent component) throws Exception {
         this.component = component;
+
         this.listenerMap = new HashMap<SalesforceConsumer, ClientSessionChannel.MessageListener>();
+        this.subscriptions = new HashSet<String>();
+        this.subscribeError = new HashMap<String, String>();
+        this.unsubscribeError = new HashMap<String, String>();
 
         this.isSummer11 = component.getApiVersion().equals(SUMMER_11);
 
@@ -88,7 +97,10 @@ public class SubscriptionHelper {
         client.getChannel(Channel.META_HANDSHAKE).addListener
             (new ClientSessionChannel.MessageListener() {
                 public void onMessage(ClientSessionChannel channel, Message message) {
-                    LOG.info(String.format("[CHANNEL:META_HANDSHAKE]: %s", message));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(String.format("[CHANNEL:META_HANDSHAKE]: %s", message));
+                    }
+
                     boolean success = message.isSuccessful();
                     if (!success) {
                         String error = (String) message.get(Message.ERROR_FIELD);
@@ -107,7 +119,10 @@ public class SubscriptionHelper {
         client.getChannel(Channel.META_CONNECT).addListener(
             new ClientSessionChannel.MessageListener() {
                 public void onMessage(ClientSessionChannel channel, Message message) {
-                    LOG.info("[CHANNEL:META_CONNECT]: " + message);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("[CHANNEL:META_CONNECT]: " + message);
+                    }
+
                     boolean success = message.isSuccessful();
                     if (!success) {
                         String error = (String) message.get(Message.ERROR_FIELD);
@@ -122,17 +137,44 @@ public class SubscriptionHelper {
         client.getChannel(Channel.META_SUBSCRIBE).addListener(
             new ClientSessionChannel.MessageListener() {
                 public void onMessage(ClientSessionChannel channel, Message message) {
-                    LOG.info("[CHANNEL:META_SUBSCRIBE]: " + message);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("[CHANNEL:META_SUBSCRIBE]: " + message);
+                    }
+                    final String channelName = message.get(Message.SUBSCRIPTION_FIELD).toString();
+
                     boolean success = message.isSuccessful();
                     if (!success) {
                         String error = (String) message.get(Message.ERROR_FIELD);
                         if (error != null) {
-                            // we are only interested in the last segment
-                            // which is the Salesforce topic name
-                            final ChannelId channelId = channel.getChannelId();
-                            String topicName = channelId.getSegment(channelId.depth() - 1);
-                            LOG.error(String.format("Error during SUBSCRIBE for %s: %s", topicName, error));
+                            subscribeError.put(channelName, error);
                         }
+                    } else {
+                        // remember subscription
+                        LOG.info("Subscribed to channel " + channelName);
+                        subscriptions.add(channelName);
+                    }
+                }
+            });
+
+        // listen for unsubscribe error
+        client.getChannel(Channel.META_UNSUBSCRIBE).addListener(
+            new ClientSessionChannel.MessageListener() {
+                public void onMessage(ClientSessionChannel channel, Message message) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("[CHANNEL:META_UNSUBSCRIBE]: " + message);
+                    }
+                    String channelName = message.get(Message.SUBSCRIPTION_FIELD).toString();
+
+                    boolean success = message.isSuccessful();
+                    if (!success) {
+                        String error = (String) message.get(Message.ERROR_FIELD);
+                        if (error != null) {
+                            unsubscribeError.put(channelName, error);
+                        }
+                    } else {
+                        // forget subscription
+                        LOG.info("Unsubscribed from channel " + channelName);
+                        subscriptions.remove(channelName);
                     }
                 }
             });
@@ -170,9 +212,9 @@ public class SubscriptionHelper {
 
     public void subscribe(final String topicName, final SalesforceConsumer consumer) throws CamelException {
         // create subscription for consumer
-        final String channel = getChannelName(topicName);
+        final String channelName = getChannelName(topicName);
 
-        LOG.info("Subscribing to channel: " + channel);
+        LOG.info(String.format("Subscribing to channel %s...", channelName));
         final ClientSessionChannel.MessageListener listener = new ClientSessionChannel.MessageListener() {
 
             @Override
@@ -186,17 +228,18 @@ public class SubscriptionHelper {
 
         };
 
-        final ClientSessionChannel clientChannel = client.getChannel(channel);
+        final ClientSessionChannel clientChannel = client.getChannel(channelName);
         clientChannel.subscribe(listener);
 
         // confirm that a subscription was created
         boolean subscribed = true;
-        if (!clientChannel.getSubscribers().contains(listener)) {
+        if (!subscriptions.contains(channelName)) {
             subscribed = false;
             try {
                 Thread.sleep(DEFAULT_CONNECTION_TIMEOUT);
-                if (!clientChannel.getSubscribers().contains(listener)) {
-                    String message = String.format("Unable to subscribe to %s", topicName);
+                if (!subscriptions.contains(channelName)) {
+                    String message = String.format("Error subscribing to topic %s: %s",
+                        topicName, subscribeError.remove(channelName));
                     throw new CamelException(message);
                 } else {
                     subscribed = true;
@@ -217,17 +260,24 @@ public class SubscriptionHelper {
     }
 
     public void unsubscribe(String topicName, SalesforceConsumer consumer) throws CamelException {
+
         // unsubscribe from channel
         final ClientSessionChannel.MessageListener listener = listenerMap.remove(consumer);
         if (listener != null) {
-            final ClientSessionChannel clientChannel = client.getChannel(getChannelName(topicName));
+
+            final String channelName = getChannelName(topicName);
+            LOG.info(String.format("Unsubscribing from channel %s...", channelName));
+
+            final ClientSessionChannel clientChannel = client.getChannel(channelName);
             clientChannel.unsubscribe(listener);
+
             // confirm unsubscribe
-            if (clientChannel.getSubscribers().contains(listener)) {
+            if (subscriptions.contains(channelName)) {
                 try {
                     Thread.sleep(DEFAULT_CONNECTION_TIMEOUT);
-                    if (clientChannel.getSubscribers().contains(listener)) {
-                        String message = String.format("Unable to remove subscription to %s", topicName);
+                    if (subscriptions.contains(channelName)) {
+                        String message = String.format("Error unsubscribing from topic %s: %s",
+                            topicName, unsubscribeError.remove(channelName));
                         throw new CamelException(message);
                     }
                 } catch (InterruptedException e) {
@@ -235,6 +285,7 @@ public class SubscriptionHelper {
                     // probably shutting down, forget unsubscribe and return
                 }
             }
+
         }
     }
 
