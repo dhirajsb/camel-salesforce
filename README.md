@@ -51,11 +51,14 @@ and the response may also be saved to a file to be correlated with the request.
 Consumer endpoints can use the following sytax for streaming endpoints to receive Salesforce notifications on create/update. 
 
 * To create a topic
+~~~
 	from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&" +
 		sObjectName=Merchandise__c&" +
 		updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c").
 		...
-
+~~~
 * To subscribe to an existing topic
+~~~
 	from("force:CamelTestTopic").
 		...
+~~~
