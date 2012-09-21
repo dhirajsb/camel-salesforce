@@ -25,6 +25,12 @@ Producer endpoints can use the following APIs. Most of the APIs process one reco
 * queryMore - Retrieves more results (in case of large number of results) using result link returned from the 'query' API
 * search - Runs a Salesforce SOSL query
 
+For example, the following producer endpoint uses the upsertSObject API, with the sObjectIdName parameter specifying 'Name' as the external id field. 
+The request message body should be an SObject DTO generated using the maven plugin. 
+The response message will either be NULL if an existing record was updated, or [CreateSObjectResult](https://github.com/dhirajsb/camel-salesforce/blob/master/src/main/java/org/fusesource/camel/component/salesforce/api/dto/CreateSObjectResult.java) with an id of the new record, or a list of errors while creating the new object. 
+
+	...to("force:upsertSObject?sObjectIdName=Name")...
+
 ## Bulk API ##
 
 Producer endpoints can use the following APIs. All Job data formats, i.e. xml, csv, zip/xml, and zip/csv are supported. 
@@ -44,14 +50,19 @@ and the response may also be saved to a file to be correlated with the request.
 * getQueryResultIds - Gets a list of Result Ids for a Batch Query
 * getQueryResult - Gets results for a Result Id
 
+For example, the following producer endpoint uses the createBatch API to create a Job Batch. 
+The in message must contain a body that can be converted into an InputStream (usually UTF-8 CSV or XML content from a file, etc.) and header fields 'jobId' for the Job and 'contentType' for the Job content type, which can be XML, CSV, ZIP\_XML or ZIP\_CSV. The put message body will contain [BatchInfo](https://github.com/dhirajsb/camel-salesforce/blob/master/src/main/java/org/fusesource/camel/component/salesforce/api/dto/bulk/BatchInfo.java) on success, or throw a [SalesforceException](https://github.com/dhirajsb/camel-salesforce/blob/master/src/main/java/org/fusesource/camel/component/salesforce/api/SalesforceException.java) on error. 
+
+	...to("force:createBatchJob")..
+
 ## Streaming API ##
 
 Consumer endpoints can use the following sytax for streaming endpoints to receive Salesforce notifications on create/update. 
 
 To create and subscribe to a topic
 
-	from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&sObjectName=Merchandise\_\_c&updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c")...
+	from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&sObjectName=Merchandise__c&updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c")...
 
 To subscribe to an existing topic
 
-	from("force:CamelTestTopic&sObjectName=Merchandise\_\_c")...
+	from("force:CamelTestTopic&sObjectName=Merchandise__c")...
