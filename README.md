@@ -1,6 +1,4 @@
-# camel-salesforce
-
-Camel Salesforce component
+# Camel Salesforce component #
 
 This component supports producer and consumer endpoints to communicate with Salesforce using Java DTOs. 
 There is a companion maven plugin [camel-salesforce-plugin](https://github.com/dhirajsb/camel-salesforce-maven-plugin) that generates these DTOs. 
@@ -50,15 +48,12 @@ and the response may also be saved to a file to be correlated with the request.
 
 Consumer endpoints can use the following sytax for streaming endpoints to receive Salesforce notifications on create/update. 
 
-* To create a topic
-~~~
-	from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&" +
-		sObjectName=Merchandise__c&" +
-		updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c").
+* To create and subscribe to a topic
+
+	from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&sObjectName=Merchandise\_\_c&updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c").
 		...
-~~~
+
 * To subscribe to an existing topic
-~~~
+
 	from("force:CamelTestTopic").
 		...
-~~~
