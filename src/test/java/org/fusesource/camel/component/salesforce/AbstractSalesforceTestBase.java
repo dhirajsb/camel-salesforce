@@ -25,7 +25,7 @@ import java.util.Properties;
 
 public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
     private static final String TEST_LOGIN_PROPERTIES = "/test-login.properties";
-    private static final String API_VERSION = "25.0";
+    private static final String API_VERSION = "27.0";
     private static final String DEFAULT_FORMAT = "json";
 
     @Override

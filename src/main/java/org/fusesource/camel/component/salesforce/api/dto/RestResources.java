@@ -31,6 +31,7 @@ public class RestResources extends AbstractDTOBase {
     private String query;
     private String chatter;
     private String recent;
+    private String tooling;
 
     public String getSobjects() {
         return sobjects;
@@ -86,6 +87,14 @@ public class RestResources extends AbstractDTOBase {
 
     public void setRecent(String recent) {
         this.recent = recent;
+    }
+
+    public String getTooling() {
+        return tooling;
+    }
+
+    public void setTooling(String tooling) {
+        this.tooling = tooling;
     }
 
 }
