@@ -52,7 +52,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
             versions = (List<Version>) o;
         }
         assertNotNull(versions);
-        LOG.trace("Versions: {}", versions);
+        LOG.debug("Versions: {}", versions);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
         RestResources resources = template().requestBody("direct:getResources" + suffix, null, RestResources.class);
         assertNotNull(resources);
-        LOG.trace("Resources: {}", resources);
+        LOG.debug("Resources: {}", resources);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
         GlobalObjects globalObjects = template().requestBody("direct:getGlobalObjects" + suffix, null, GlobalObjects.class);
         assertNotNull(globalObjects);
-        LOG.trace("GlobalObjects: {}", globalObjects);
+        LOG.debug("GlobalObjects: {}", globalObjects);
     }
 
     @Test
@@ -92,7 +92,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
     private void doTestGetBasicInfo(String suffix) throws Exception {
         SObjectBasicInfo objectBasicInfo = template().requestBody("direct:getBasicInfo" + suffix, null, SObjectBasicInfo.class);
         assertNotNull(objectBasicInfo);
-        LOG.trace("SObjectBasicInfo: {}", objectBasicInfo);
+        LOG.debug("SObjectBasicInfo: {}", objectBasicInfo);
 
         // set test Id for testGetSObject
         assertFalse("RecentItems is empty", objectBasicInfo.getRecentItems().isEmpty());
@@ -110,7 +110,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
         SObjectDescription sObjectDescription = template().requestBody("direct:getDescription" + suffix, null, SObjectDescription.class);
         assertNotNull(sObjectDescription);
-        LOG.trace("SObjectDescription: {}", sObjectDescription);
+        LOG.debug("SObjectDescription: {}", sObjectDescription);
     }
 
     @Test
@@ -134,7 +134,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
             assertNotNull(merchandise.getTotal_Inventory__c());
             assertNull(merchandise.getPrice__c());
         }
-        LOG.trace("SObjectById: {}", merchandise);
+        LOG.debug("SObjectById: {}", merchandise);
     }
 
     @Test
@@ -153,7 +153,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
             merchandise__c, CreateSObjectResult.class);
         assertNotNull(result);
         assertTrue("Create success", result.getSuccess());
-        LOG.trace("Create: " + result);
+        LOG.debug("Create: " + result);
 
         // test JSON update
         // make the plane cheaper
@@ -165,11 +165,11 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
         assertNull(template().requestBodyAndHeader("direct:UpdateSObject" + suffix,
             merchandise__c, SalesforceEndpointConfig.SOBJECT_ID, result.getId()));
-        LOG.trace("Update successful");
+        LOG.debug("Update successful");
 
         // delete the newly created SObject
         assertNull(template().requestBody("direct:deleteSObject" + suffix, result.getId()));
-        LOG.trace("Delete successful");
+        LOG.debug("Delete successful");
     }
 
     @Test
@@ -183,7 +183,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
         Line_Item__c line_item__c = template().requestBody("direct:getSObjectWithId" + suffix, TEST_LINE_ITEM_ID,
             Line_Item__c.class);
         assertNotNull(line_item__c);
-        LOG.trace("GetWithId: {}", line_item__c);
+        LOG.debug("GetWithId: {}", line_item__c);
 
         // test insert with id
         // set the unit price and sold
@@ -197,7 +197,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
             CreateSObjectResult.class);
         assertNotNull(result);
         assertTrue(result.getSuccess());
-        LOG.trace("CreateWithId: {}", result);
+        LOG.debug("CreateWithId: {}", result);
 
         // clear read only parent type fields
         line_item__c.setInvoice_Statement__c(null);
@@ -210,11 +210,11 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
             line_item__c, SalesforceEndpointConfig.SOBJECT_EXT_ID_VALUE, NEW_LINE_ITEM_ID,
             CreateSObjectResult.class);
         assertNull(result);
-        LOG.trace("UpdateWithId: {}", result);
+        LOG.debug("UpdateWithId: {}", result);
 
         // delete the SObject with Name NEW_LINE_ITEM_ID
         assertNull(template().requestBody("direct:deleteSObjectWithId" + suffix, NEW_LINE_ITEM_ID));
-        LOG.trace("DeleteWithId successful");
+        LOG.debug("DeleteWithId successful");
     }
 
     @Test
@@ -227,7 +227,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
         QueryRecordsLine_Item__c queryRecords = template().requestBody("direct:query" + suffix, null,
             QueryRecordsLine_Item__c.class);
         assertNotNull(queryRecords);
-        LOG.trace("ExecuteQuery: {}", queryRecords);
+        LOG.debug("ExecuteQuery: {}", queryRecords);
     }
 
 
@@ -249,7 +249,7 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
             searchResults = (List<SearchResult>) obj;
         }
         assertNotNull(searchResults);
-        LOG.trace("ExecuteSearch: {}", searchResults);
+        LOG.debug("ExecuteSearch: {}", searchResults);
     }
 
     @Override
