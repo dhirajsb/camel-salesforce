@@ -73,7 +73,7 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
             public void configure() throws Exception {
 
                 // test topic subscription
-                from("force:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&" +
+                from("salesforce:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&" +
 //                    "sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&" +
                     "sObjectName=Merchandise__c&" +
                     "updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c").
@@ -81,20 +81,20 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
 
                 // route for creating test record
                 from("direct:upsertSObject").
-                    to("force:upsertSObject?SObjectIdName=Name");
+                    to("salesforce:upsertSObject?SObjectIdName=Name");
 
                 // route for finding test topic
                 from("direct:query").
-                    to("force:query?sObjectQuery=SELECT Id FROM PushTopic WHERE Name = 'CamelTestTopic'&" +
+                    to("salesforce:query?sObjectQuery=SELECT Id FROM PushTopic WHERE Name = 'CamelTestTopic'&" +
                         "sObjectClass=org.fusesource.camel.component.salesforce.internal.dto.QueryRecordsPushTopic");
 
                 // route for removing test record
                 from("direct:deleteSObjectWithId").
-                    to("force:deleteSObjectWithId?sObjectIdName=Name");
+                    to("salesforce:deleteSObjectWithId?sObjectIdName=Name");
 
                 // route for removing topic
                 from("direct:deleteSObject").
-                    to("force:deleteSObject");
+                    to("salesforce:deleteSObject");
 
             }
         };

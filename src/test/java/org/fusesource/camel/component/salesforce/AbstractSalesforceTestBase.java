@@ -59,7 +59,7 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
         });
 
         // add it to context
-        context().addComponent("force", component);
+        context().addComponent("salesforce", component);
     }
 
     private void setLoginProperties(SalesforceComponent component) throws IllegalAccessException, IOException {

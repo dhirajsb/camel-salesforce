@@ -264,102 +264,102 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
                 // testGetVersion
                 from("direct:getVersions")
-                    .to("force:getVersions");
+                    .to("salesforce:getVersions");
 
                 // allow overriding format per endpoint
                 from("direct:getVersionsXml")
-                    .to("force:getVersions?format=xml");
+                    .to("salesforce:getVersions?format=xml");
 
                 // testGetResources
                 from("direct:getResources")
-                    .to("force:getResources");
+                    .to("salesforce:getResources");
 
                 from("direct:getResourcesXml")
-                    .to("force:getResources?format=xml");
+                    .to("salesforce:getResources?format=xml");
 
                 // testGetGlobalObjects
                 from("direct:getGlobalObjects")
-                    .to("force:getGlobalObjects");
+                    .to("salesforce:getGlobalObjects");
 
                 from("direct:getGlobalObjectsXml")
-                    .to("force:getGlobalObjects?format=xml");
+                    .to("salesforce:getGlobalObjects?format=xml");
 
                 // testGetBasicInfo
                 from("direct:getBasicInfo")
-                    .to("force:getBasicInfo?sObjectName=Merchandise__c");
+                    .to("salesforce:getBasicInfo?sObjectName=Merchandise__c");
 
                 from("direct:getBasicInfoXml")
-                    .to("force:getBasicInfo?format=xml&sObjectName=Merchandise__c");
+                    .to("salesforce:getBasicInfo?format=xml&sObjectName=Merchandise__c");
 
                 // testGetDescription
                 from("direct:getDescription")
-                    .to("force:getDescription?sObjectName=Merchandise__c");
+                    .to("salesforce:getDescription?sObjectName=Merchandise__c");
 
                 from("direct:getDescriptionXml")
-                    .to("force:getDescription?format=xml&sObjectName=Merchandise__c");
+                    .to("salesforce:getDescription?format=xml&sObjectName=Merchandise__c");
 
                 // testGetSObject
                 from("direct:getSObject")
-                    .to("force:getSObject?sObjectName=Merchandise__c&sObjectFields=Description__c,Price__c");
+                    .to("salesforce:getSObject?sObjectName=Merchandise__c&sObjectFields=Description__c,Price__c");
 
                 from("direct:getSObjectXml")
-                    .to("force:getSObject?format=xml&sObjectName=Merchandise__c&sObjectFields=Description__c,Total_Inventory__c");
+                    .to("salesforce:getSObject?format=xml&sObjectName=Merchandise__c&sObjectFields=Description__c,Total_Inventory__c");
 
                 // testCreateSObject
                 from("direct:CreateSObject")
-                    .to("force:createSObject?sObjectName=Merchandise__c");
+                    .to("salesforce:createSObject?sObjectName=Merchandise__c");
 
                 from("direct:CreateSObjectXml")
-                    .to("force:createSObject?format=xml&sObjectName=Merchandise__c");
+                    .to("salesforce:createSObject?format=xml&sObjectName=Merchandise__c");
 
                 // testUpdateSObject
                 from("direct:UpdateSObject")
-                    .to("force:updateSObject?sObjectName=Merchandise__c");
+                    .to("salesforce:updateSObject?sObjectName=Merchandise__c");
 
                 from("direct:UpdateSObjectXml")
-                    .to("force:updateSObject?format=xml&sObjectName=Merchandise__c");
+                    .to("salesforce:updateSObject?format=xml&sObjectName=Merchandise__c");
 
                 // testDeleteSObject
                 from("direct:deleteSObject")
-                    .to("force:deleteSObject?sObjectName=Merchandise__c");
+                    .to("salesforce:deleteSObject?sObjectName=Merchandise__c");
 
                 from("direct:deleteSObjectXml")
-                    .to("force:deleteSObject?format=xml&sObjectName=Merchandise__c");
+                    .to("salesforce:deleteSObject?format=xml&sObjectName=Merchandise__c");
 
                 // testGetSObjectWithId
                 from("direct:getSObjectWithId")
-                    .to("force:getSObjectWithId?sObjectName=Line_Item__c&sObjectIdName=Name");
+                    .to("salesforce:getSObjectWithId?sObjectName=Line_Item__c&sObjectIdName=Name");
 
                 from("direct:getSObjectWithIdXml")
-                    .to("force:getSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
+                    .to("salesforce:getSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
 
                 // testUpsertSObject
                 from("direct:upsertSObject")
-                    .to("force:upsertSObject?sObjectName=Line_Item__c&sObjectIdName=Name");
+                    .to("salesforce:upsertSObject?sObjectName=Line_Item__c&sObjectIdName=Name");
 
                 from("direct:upsertSObjectXml")
-                    .to("force:upsertSObject?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
+                    .to("salesforce:upsertSObject?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
 
                 // testDeleteSObjectWithId
                 from("direct:deleteSObjectWithId")
-                    .to("force:deleteSObjectWithId?sObjectName=Line_Item__c&sObjectIdName=Name");
+                    .to("salesforce:deleteSObjectWithId?sObjectName=Line_Item__c&sObjectIdName=Name");
 
                 from("direct:deleteSObjectWithIdXml")
-                    .to("force:deleteSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
+                    .to("salesforce:deleteSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
 
                 // testQuery
                 from("direct:query")
-                    .to("force:query?sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.QueryRecordsLine_Item__c");
+                    .to("salesforce:query?sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.QueryRecordsLine_Item__c");
 
                 from("direct:queryXml")
-                    .to("force:query?format=xml&sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.QueryRecordsLine_Item__c");
+                    .to("salesforce:query?format=xml&sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.QueryRecordsLine_Item__c");
 
                 // testSearch
                 from("direct:search")
-                    .to("force:search?sObjectSearch=FIND {Wee}");
+                    .to("salesforce:search?sObjectSearch=FIND {Wee}");
 
                 from("direct:searchXml")
-                    .to("force:search?format=xml&sObjectSearch=FIND {Wee}");
+                    .to("salesforce:search?format=xml&sObjectSearch=FIND {Wee}");
             }
         };
     }
