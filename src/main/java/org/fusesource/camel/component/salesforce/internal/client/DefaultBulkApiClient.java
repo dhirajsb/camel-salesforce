@@ -353,7 +353,7 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
 
     @Override
     protected void setAccessToken(HttpExchange httpExchange) {
-        httpExchange.setRequestHeader(TOKEN_HEADER, session.getAccessToken());
+        httpExchange.setRequestHeader(TOKEN_HEADER, accessToken);
     }
 
     @Override
