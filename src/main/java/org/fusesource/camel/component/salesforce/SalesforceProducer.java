@@ -32,7 +32,7 @@ import org.fusesource.camel.component.salesforce.internal.processor.XmlRestProce
  */
 public class SalesforceProducer extends DefaultAsyncProducer {
 
-    private SalesforceProcessor processor;
+    private final SalesforceProcessor processor;
 
     public SalesforceProducer(SalesforceEndpoint endpoint) throws SalesforceException {
         super(endpoint);
@@ -44,15 +44,12 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         if (isBulkOperation(endpoint.getOperationName())) {
             processor = new BulkApiProcessor(endpoint);
         } else {
-            // set the default format
-            switch (payloadFormat) {
-                case JSON:
-                    // create a JSON exchange processor
-                    processor = new JsonRestProcessor(endpoint);
-                    break;
-                case XML:
-                    processor = new XmlRestProcessor(endpoint);
-                    break;
+            // create an appropriate processor
+            if (payloadFormat == PayloadFormat.JSON) {
+                // create a JSON exchange processor
+                processor = new JsonRestProcessor(endpoint);
+            } else {
+                processor = new XmlRestProcessor(endpoint);
             }
         }
     }
@@ -84,5 +81,7 @@ public class SalesforceProducer extends DefaultAsyncProducer {
             ((SalesforceEndpoint) getEndpoint()).getOperationName());
         return processor.process(exchange, callback);
     }
+
+
 
 }
