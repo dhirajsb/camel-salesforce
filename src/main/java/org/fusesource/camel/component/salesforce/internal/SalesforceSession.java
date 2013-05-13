@@ -16,15 +16,17 @@
  */
 package org.fusesource.camel.component.salesforce.internal;
 
-import org.apache.http.*;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.eclipse.jetty.client.ContentExchange;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.http.HttpMethods;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.io.Buffer;
+import org.eclipse.jetty.io.ByteArrayBuffer;
+import org.eclipse.jetty.util.StringUtil;
+import org.eclipse.jetty.util.UrlEncoded;
+import org.fusesource.camel.component.salesforce.SalesforceLoginConfig;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.internal.dto.LoginError;
@@ -42,39 +44,33 @@ public class SalesforceSession {
     private static final String OAUTH2_TOKEN_PATH = "/services/oauth2/token";
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceSession.class);
-    private static final ContentType FORM_CONTENT_TYPE = ContentType.create("application/x-www-form-urlencoded", Consts.UTF_8);
+    private static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded;charset=utf-8";
 
     private final HttpClient httpClient;
 
-    private final String loginUrl;
-    private final String clientId;
-    private final String clientSecret;
-    private final String userName;
-    private final String password;
+    private final SalesforceLoginConfig config;
 
     private final ObjectMapper objectMapper;
 
     private String accessToken;
     private String instanceUrl;
 
-    public SalesforceSession(HttpClient httpClient,
-                             String loginUrl,
-                             String clientId, String clientSecret, String userName, String password) {
+    public SalesforceSession(HttpClient httpClient, SalesforceLoginConfig config) {
         // validate parameters
         assertNotNull("Null httpClient", httpClient);
-        assertNotNull("Null loginUrl", loginUrl);
-        assertNotNull("Null clientId", clientId);
-        assertNotNull("Null clientSecret", clientSecret);
-        assertNotNull("Null userName", userName);
-        assertNotNull("Null password", password);
+        assertNotNull("Null SalesforceLoginConfig", config);
+        assertNotNull("Null loginUrl", config.getLoginUrl());
+        assertNotNull("Null clientId", config.getClientId());
+        assertNotNull("Null clientSecret", config.getClientSecret());
+        assertNotNull("Null userName", config.getUserName());
+        assertNotNull("Null password", config.getPassword());
 
         this.httpClient = httpClient;
+        this.config = config;
+
         // strip trailing '/'
-        this.loginUrl = loginUrl.endsWith("/") ? loginUrl.substring(0, loginUrl.length() - 1) : loginUrl;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.userName = userName;
-        this.password = password;
+        String loginUrl = config.getLoginUrl();
+        config.setLoginUrl(loginUrl.endsWith("/") ? loginUrl.substring(0, loginUrl.length() - 1) : loginUrl);
 
         this.objectMapper = new ObjectMapper();
     }
@@ -85,8 +81,10 @@ public class SalesforceSession {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public synchronized String login(String oldToken) throws SalesforceException {
 
+        // TODO create a TokenListener to automatically update clients with new access token and instance URL
         // check if we need a new session
         // this way there's always a single valid session
         if ((accessToken == null) || accessToken.equals(oldToken)) {
@@ -103,59 +101,84 @@ public class SalesforceSession {
             }
 
             // login to Salesforce and get session id
-            HttpPost post = new HttpPost(loginUrl + OAUTH2_TOKEN_PATH);
-            post.setHeader("Content-Type", FORM_CONTENT_TYPE.toString());
+            final StatusExceptionExchange loginPost = new StatusExceptionExchange(true);
+            loginPost.setURL(config.getLoginUrl() + OAUTH2_TOKEN_PATH);
+            loginPost.setMethod(HttpMethods.POST);
+            loginPost.setRequestContentType(FORM_CONTENT_TYPE);
 
-            List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+            final UrlEncoded nvps = new UrlEncoded();
+            nvps.put("grant_type", "password");
+            nvps.put("client_id", config.getClientId());
+            nvps.put("client_secret", config.getClientSecret());
+            nvps.put("username", config.getUserName());
+            nvps.put("password", config.getPassword());
+            nvps.put("format", "json");
 
-            nvps.add(new BasicNameValuePair("grant_type", "password"));
-            nvps.add(new BasicNameValuePair("client_id", clientId));
-            nvps.add(new BasicNameValuePair("client_secret", clientSecret));
-            nvps.add(new BasicNameValuePair("username", userName));
-            nvps.add(new BasicNameValuePair("password", password));
-            nvps.add(new BasicNameValuePair("format", "json"));
-            post.setEntity(new UrlEncodedFormEntity(nvps, Consts.UTF_8));
-
-            HttpEntity httpEntity = null;
             try {
-                final HttpResponse response = httpClient.execute(post);
-                httpEntity = response.getEntity();
 
-                final StatusLine statusLine = response.getStatusLine();
-                switch (statusLine.getStatusCode()) {
+                // set form content
+                loginPost.setRequestContent(new ByteArrayBuffer(
+                    nvps.encode(StringUtil.__UTF8, true).getBytes(StringUtil.__UTF8)));
+                httpClient.send(loginPost);
 
-                    case 200:
-                        // parse the response to get token
-                        LoginToken token = objectMapper.readValue(httpEntity.getContent(), LoginToken.class);
+                // wait for the login to finish
+                final int exchangeState = loginPost.waitForDone();
 
-                        accessToken = token.getAccessToken();
-                        instanceUrl = token.getInstanceUrl();
+                switch (exchangeState) {
+                    case HttpExchange.STATUS_COMPLETED:
+                        final byte[] responseContent = loginPost.getResponseContentBytes();
+                        final int responseStatus = loginPost.getResponseStatus();
+                        switch (responseStatus) {
 
+                            case HttpStatus.OK_200:
+                                // parse the response to get token
+                                LoginToken token = objectMapper.readValue(responseContent,
+                                    LoginToken.class);
+
+                                // don't log token or instance URL for security reasons
+                                LOG.info("Login successful");
+                                accessToken = token.getAccessToken();
+                                instanceUrl = token.getInstanceUrl();
+
+                                break;
+
+                            case HttpStatus.BAD_REQUEST_400:
+                                // parse the response to get error
+                                LoginError error = objectMapper.readValue(responseContent,
+                                    LoginError.class);
+                                String msg = String.format("Login error code:[%s] description:[%s]", error.getError(),
+                                    error.getErrorDescription());
+                                List<RestError> errors = new ArrayList<RestError>();
+                                errors.add(new RestError(msg, error.getErrorDescription()));
+                                throw new SalesforceException(errors, HttpStatus.BAD_REQUEST_400);
+
+                            default:
+                                String msg2 = String.format("Login error status:[%s] reason:[%s]", responseStatus,
+                                    loginPost.getReason());
+                                throw new SalesforceException(msg2, responseStatus);
+                        }
                         break;
 
-                    case 400:
-                        // parse the response to get error
-                        LoginError error = objectMapper.readValue(httpEntity.getContent(), LoginError.class);
-                        String msg = String.format("Login error code:[%s] description:[%s]", error.getError(),
-                            error.getErrorDescription());
-                        LOG.error(msg);
-                        List<RestError> errors = new ArrayList<RestError>();
-                        errors.add(new RestError(error.getError(), error.getErrorDescription()));
-                        throw new SalesforceException(errors, 400);
+                    case HttpExchange.STATUS_EXCEPTED:
+                        final Throwable ex = loginPost.getException();
+                        String msg = String.format("Unexpected login exception: %s",
+                            ex.getMessage());
+                        throw new SalesforceException(msg, ex);
 
-                    default:
-                        String msg2 = String.format("Login error status:[%s] reason:[%s]", statusLine.getStatusCode(),
-                            statusLine.getReasonPhrase());
-                        LOG.error(msg2);
-                        throw new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+                    case HttpExchange.STATUS_CANCELLED:
+                        throw new SalesforceException("Login request CANCELLED!", null);
+
+                    case HttpExchange.STATUS_EXPIRED:
+                        throw new SalesforceException("Login request TIMEOUT!", null);
+
                 }
+
             } catch (IOException e) {
-                String msg = "Login error: Unknown exception " + e.getMessage();
-                LOG.error(msg, e);
+                String msg = "Login error: unexpected exception " + e.getMessage();
                 throw new SalesforceException(msg, e);
-            } finally {
-                // make sure entity is consumed
-                EntityUtils.consumeQuietly(httpEntity);
+            } catch (InterruptedException e) {
+                String msg = "Login error: unexpected exception " + e.getMessage();
+                throw new SalesforceException(msg, e);
             }
         }
 
@@ -167,33 +190,47 @@ public class SalesforceSession {
             return;
         }
 
-        HttpGet get = new HttpGet(loginUrl + OAUTH2_REVOKE_PATH + accessToken);
-        HttpEntity httpEntity = null;
-        try {
-            final HttpResponse response = httpClient.execute(get);
-            httpEntity = response.getEntity();
+        StatusExceptionExchange logoutGet = new StatusExceptionExchange(true);
+        logoutGet.setURL(config.getLoginUrl() + OAUTH2_REVOKE_PATH + accessToken);
+        logoutGet.setMethod(HttpMethods.GET);
 
-            final StatusLine statusLine = response.getStatusLine();
-            switch (statusLine.getStatusCode()) {
-                case 200:
-                    LOG.info("Logout successful");
+        try {
+            httpClient.send(logoutGet);
+            final int done = logoutGet.waitForDone();
+            switch (done) {
+
+                case HttpExchange.STATUS_COMPLETED:
+                    final int statusCode = logoutGet.getResponseStatus();
+                    final String response = logoutGet.getResponseContent();
+                    final String reason = logoutGet.getReason();
+
+                    if (statusCode == HttpStatus.OK_200) {
+                        LOG.info("Logout successful");
+                    } else {
+                        String msg = String.format("Logout error, code: [%s] reason: [%s]",
+                            statusCode, reason);
+                        throw new SalesforceException(msg, statusCode);
+                    }
                     break;
-                case 400:
-                    String msg = "Logout error: " + statusLine.getReasonPhrase();
-                    LOG.error(msg);
-                    throw new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
-                default:
-                    String msg2 = "Logout error code: " + statusLine.getStatusCode() + " reason: " + statusLine.getReasonPhrase();
-                    LOG.error(msg2);
-                    throw new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+
+                case HttpExchange.STATUS_EXCEPTED:
+                    final Throwable ex = logoutGet.getException();
+                    throw new SalesforceException("Unexpected logout exception: " + ex.getMessage(), ex);
+
+                case HttpExchange.STATUS_CANCELLED:
+                    throw new SalesforceException("Logout request CANCELLED!", null);
+
+                case HttpExchange.STATUS_EXPIRED:
+                    throw new SalesforceException("Logout request TIMEOUT!", null);
+
             }
 
-        } catch (IOException e) {
+        } catch (SalesforceException e) {
+            throw e;
+        } catch (Exception e) {
             String msg = "Logout error: " + e.getMessage();
-            LOG.error(msg, e);
             throw new SalesforceException(msg, e);
         } finally {
-            EntityUtils.consumeQuietly(httpEntity);
             // reset session
             accessToken = null;
             instanceUrl = null;
@@ -208,7 +245,46 @@ public class SalesforceSession {
         return instanceUrl;
     }
 
-    public String getUserName() {
-        return userName;
+    /**
+     * Records status line, and exception from exchange.
+     *
+     * @author dbokde
+     */
+    private static class StatusExceptionExchange extends ContentExchange {
+
+        private String reason;
+        private Throwable exception;
+
+        public StatusExceptionExchange(boolean cacheFields) {
+            super(cacheFields);
+        }
+
+        @Override
+        protected synchronized void onResponseStatus(Buffer version, int status, Buffer reason) throws IOException {
+            // remember reason
+            this.reason = reason.toString(StringUtil.__ISO_8859_1);
+            super.onResponseStatus(version, status, reason);
+        }
+
+        @Override
+        protected void onConnectionFailed(Throwable x) {
+            this.exception = x;
+            super.onConnectionFailed(x);
+        }
+
+        @Override
+        protected void onException(Throwable x) {
+            this.exception = x;
+            super.onException(x);
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public Throwable getException() {
+            return exception;
+        }
+
     }
 }

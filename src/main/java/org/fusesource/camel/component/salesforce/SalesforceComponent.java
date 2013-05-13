@@ -19,17 +19,15 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.CamelException;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.apache.camel.util.ObjectHelper;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.RedirectListener;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
-import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
+import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
+import org.fusesource.camel.component.salesforce.internal.client.SalesforceSecurityListener;
 import org.fusesource.camel.component.salesforce.internal.streaming.SubscriptionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +36,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * Represents the component that manages {@link SalesforceEndpoint}.
@@ -47,31 +44,19 @@ public class SalesforceComponent extends DefaultComponent {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponent.class);
 
-    public static final String DEFAULT_LOGIN_URL = "https://login.salesforce.com";
-    private static final String DEFAULT_VERSION = "25.0";
+    private static final String DEFAULT_VERSION = "27.0";
 
-    private static final int DEFAULT_MAX_PER_ROUTE = 20;
-    private static final int MAX_TOTAL = 100;
+    private static final int MAX_CONNECTIONS_PER_ADDRESS = 20;
     private static final int CONNECTION_TIMEOUT = 15000;
-    private static final int SO_TIMEOUT = 15000;
+    private static final int RESPONSE_TIMEOUT = 15000;
 
-    private String loginUrl = DEFAULT_LOGIN_URL;
-    private String clientId;
-    private String clientSecret;
-    private String userName;
-    private String password;
-
-    private PayloadFormat payloadFormat = PayloadFormat.JSON;
-    private String apiVersion = DEFAULT_VERSION;
-
-    private HttpClient httpClient;
-    private SalesforceSession session;
-    private boolean loggedIn;
-
+    private SalesforceLoginConfig loginConfig;
+    private SalesforceEndpointConfig config;
     private String[] packages;
 
-    // executor for Salesforce calls
-    private Executor executor;
+    // component state
+    private HttpClient httpClient;
+    private SalesforceSession session;
     private Map<String, Class<?>> classMap;
 
     // Lazily created helper for consumer endpoints
@@ -89,23 +74,25 @@ public class SalesforceComponent extends DefaultComponent {
             topicName = remaining;
         }
 
-        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this, operationName, topicName);
-
         // create endpoint config
-        final SalesforceEndpointConfig endpointConfig = new SalesforceEndpointConfig(getCamelContext());
+        if (config == null) {
+            config = new SalesforceEndpointConfig();
 
-        // inherit default values from component
-        endpointConfig.setFormat(payloadFormat.toString());
-        endpointConfig.setApiVersion(apiVersion);
+            // inherit default values from component
+            config.setFormat(PayloadFormat.JSON.toString());
+            config.setApiVersion(DEFAULT_VERSION);
+        }
 
-        // map endpoint parameters to endpointConfig
-        setProperties(endpointConfig, parameters);
+        // create a deep copy and map parameters
+        final SalesforceEndpointConfig copy = config.copy();
+        setProperties(copy, parameters);
+
+        final SalesforceEndpoint endpoint = new SalesforceEndpoint(uri, this, copy,
+            operationName, topicName);
 
         // map remaining parameters to endpoint (specifically, synchronous)
         setProperties(endpoint, parameters);
 
-        // set endpointConfig on endpoint
-        endpoint.setEndpointConfiguration(endpointConfig);
         return endpoint;
     }
 
@@ -113,29 +100,50 @@ public class SalesforceComponent extends DefaultComponent {
     protected void doStart() throws Exception {
         super.doStart();
 
-        // create an Apache 4.0 HttpClient if not already set
+        // validate properties
+        ObjectHelper.notNull(loginConfig, "loginConfig");
+
+        // create a Jetty HttpClient if not already set
         if (null == httpClient) {
-            PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
-            connectionManager.setDefaultMaxPerRoute(DEFAULT_MAX_PER_ROUTE);
-            connectionManager.setMaxTotal(MAX_TOTAL);
-            HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, CONNECTION_TIMEOUT);
-            HttpConnectionParams.setSoTimeout(params, SO_TIMEOUT);
-            httpClient = new DefaultHttpClient(connectionManager, params);
+            if (config != null && config.getHttpClient() != null) {
+                httpClient = config.getHttpClient();
+            } else {
+                httpClient = new HttpClient();
+                httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+                httpClient.setMaxConnectionsPerAddress(MAX_CONNECTIONS_PER_ADDRESS);
+                httpClient.setConnectTimeout(CONNECTION_TIMEOUT);
+                httpClient.setTimeout(RESPONSE_TIMEOUT);
+            }
         }
+
+        // add redirect listener to handle Salesforce redirects
+        String listenerClass = RedirectListener.class.getName();
+        if (httpClient.getRegisteredListeners() == null ||
+            !httpClient.getRegisteredListeners().contains(listenerClass)) {
+            httpClient.registerListener(listenerClass);
+        }
+        listenerClass = SalesforceSecurityListener.class.getName();
+        if (httpClient.getRegisteredListeners() == null ||
+            !httpClient.getRegisteredListeners().contains(listenerClass)) {
+            httpClient.registerListener(listenerClass);
+        }
+
+        // start the Jetty client to initialize thread pool, etc.
+        httpClient.start();
 
         // support restarts
         if (null == this.session) {
-            this.session = new SalesforceSession(httpClient, loginUrl,
-                clientId, clientSecret, userName, password);
+            this.session = new SalesforceSession(httpClient, loginConfig);
         }
-        try {
-            // get a new token
-            session.login(session.getAccessToken());
-            loggedIn = true;
-        } catch (SalesforceException e) {
-            LOG.error(e.getMessage(), e);
-            throw new CamelException(e.getMessage(), e);
+        // login at startup if lazyLogin is disabled
+        // TODO login has to be done later, when the first call is made
+        if (!loginConfig.isLazyLogin()) {
+            try {
+                // get a new token
+                session.login(session.getAccessToken());
+            } catch (SalesforceException e) {
+                throw new CamelException(e.getMessage(), e);
+            }
         }
 
         if (packages != null && packages.length > 0) {
@@ -170,13 +178,18 @@ public class SalesforceComponent extends DefaultComponent {
                 // shutdown all streaming connections
                 subscriptionHelper.shutdown();
             }
-            if (loggedIn) {
-                // logout of Salesforce
-                session.logout();
+            if (session != null && session.getAccessToken() != null) {
+                try {
+                    // logout of Salesforce
+                    session.logout();
+                } catch (SalesforceException ignored) {
+                }
             }
         } finally {
-            // shutdown http client connections
-            httpClient.getConnectionManager().shutdown();
+            if (httpClient != null) {
+                // shutdown http client connections
+                httpClient.stop();
+            }
         }
     }
 
@@ -188,85 +201,20 @@ public class SalesforceComponent extends DefaultComponent {
         return subscriptionHelper;
     }
 
-    public String getLoginUrl() {
-        return loginUrl;
+    public SalesforceLoginConfig getLoginConfig() {
+        return loginConfig;
     }
 
-    public void setLoginUrl(String loginUrl) {
-        this.loginUrl = loginUrl;
+    public void setLoginConfig(SalesforceLoginConfig loginConfig) {
+        this.loginConfig = loginConfig;
     }
 
-    public String getClientId() {
-        return clientId;
+    public SalesforceEndpointConfig getConfig() {
+        return config;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public String getClientSecret() {
-        return clientSecret;
-    }
-
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setFormat(String format) {
-        this.payloadFormat = PayloadFormat.valueOf(format.toUpperCase());
-    }
-
-    public PayloadFormat getPayloadFormat() {
-        return payloadFormat;
-    }
-
-    public HttpClient getHttpClient() {
-        return httpClient;
-    }
-
-    public void setHttpClient(HttpClient httpClient) {
-        if (null == httpClient) {
-            String msg = "Null httpClient";
-            LOG.error(msg);
-            throw new NullPointerException(msg);
-        }
-        this.httpClient = httpClient;
-    }
-
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
-    public SalesforceSession getSession() {
-        return session;
-    }
-
-    public Executor getExecutor() {
-        return executor;
-    }
-
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
+    public void setConfig(SalesforceEndpointConfig config) {
+        this.config = config;
     }
 
     public String[] getPackages() {
@@ -277,7 +225,16 @@ public class SalesforceComponent extends DefaultComponent {
         this.packages = packages;
     }
 
+    public HttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public SalesforceSession getSession() {
+        return session;
+    }
+
     public Map<String, Class<?>> getClassMap() {
         return classMap;
     }
+
 }

@@ -51,8 +51,7 @@ public class JodaTimeConverter implements Converter {
         } catch (Exception e) {
             String msg = String.format(
                 "Error reading Joda DateTime from value %s: %s", dateTimeStr, e.getMessage());
-            LOG.error (msg, e);
-            throw new RuntimeException(msg, e);
+            throw new IllegalArgumentException(msg, e);
         }
     }
 

@@ -20,11 +20,8 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.junit4.CamelTestSupport;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
-    private static final String TEST_LOGIN_PROPERTIES = "/test-login.properties";
     private static final String API_VERSION = "27.0";
     private static final String DEFAULT_FORMAT = "json";
 
@@ -47,12 +44,8 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
     protected void createComponent() throws IllegalAccessException, IOException {
         // create the component
         SalesforceComponent component = new SalesforceComponent();
-        setLoginProperties(component);
+        component.setLoginConfig(LoginConfigHelper.getLoginConfig());
 
-        // default component level payload format
-        component.setFormat(DEFAULT_FORMAT);
-        // default api version
-        component.setApiVersion(API_VERSION);
         // set DTO package
         component.setPackages(new String[] {
             Merchandise__c.class.getPackage().getName()
@@ -62,24 +55,4 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
         context().addComponent("salesforce", component);
     }
 
-    private void setLoginProperties(SalesforceComponent component) throws IllegalAccessException, IOException {
-        // load test-login properties
-        Properties properties = new Properties();
-        InputStream stream = getClass().getResourceAsStream(TEST_LOGIN_PROPERTIES);
-        if (null == stream) {
-            throw new IllegalAccessException("Create a properties file named " +
-                TEST_LOGIN_PROPERTIES + " with clientId, clientSecret, userName, and password" +
-                " for a Salesforce account with the Merchandise object from Salesforce Guides.");
-        }
-        properties.load(stream);
-        component.setClientId(properties.getProperty("clientId"));
-        component.setClientSecret(properties.getProperty("clientSecret"));
-        component.setUserName(properties.getProperty("userName"));
-        component.setPassword(properties.getProperty("password"));
-
-        assertNotNull("Null clientId", component.getClientId());
-        assertNotNull("Null clientSecret", component.getClientSecret());
-        assertNotNull("Null userName", component.getUserName());
-        assertNotNull("Null password", component.getPassword());
-    }
 }

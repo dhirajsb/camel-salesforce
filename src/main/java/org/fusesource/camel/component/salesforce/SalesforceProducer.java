@@ -19,13 +19,13 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultAsyncProducer;
-import org.fusesource.camel.component.salesforce.internal.*;
+import org.fusesource.camel.component.salesforce.api.SalesforceException;
+import org.fusesource.camel.component.salesforce.internal.OperationName;
+import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 import org.fusesource.camel.component.salesforce.internal.processor.BulkApiProcessor;
 import org.fusesource.camel.component.salesforce.internal.processor.JsonRestProcessor;
 import org.fusesource.camel.component.salesforce.internal.processor.SalesforceProcessor;
 import org.fusesource.camel.component.salesforce.internal.processor.XmlRestProcessor;
-
-import java.util.concurrent.RejectedExecutionException;
 
 /**
  * The Salesforce producer.
@@ -34,10 +34,10 @@ public class SalesforceProducer extends DefaultAsyncProducer {
 
     private SalesforceProcessor processor;
 
-    public SalesforceProducer(SalesforceEndpoint endpoint) {
+    public SalesforceProducer(SalesforceEndpoint endpoint) throws SalesforceException {
         super(endpoint);
 
-        final SalesforceEndpointConfig endpointConfig = endpoint.getEndpointConfiguration();
+        final SalesforceEndpointConfig endpointConfig = endpoint.getConfiguration();
         final PayloadFormat payloadFormat = endpointConfig.getPayloadFormat();
 
         // check if its a Bulk Operation
@@ -80,14 +80,6 @@ public class SalesforceProducer extends DefaultAsyncProducer {
 
     @Override
     public boolean process(Exchange exchange, AsyncCallback callback) {
-        if (!isRunAllowed()) {
-            if (exchange.getException() == null) {
-                exchange.setException(new RejectedExecutionException());
-            }
-            callback.done(true);
-            return true;
-        }
-
         log.debug("Processing {}",
             ((SalesforceEndpoint) getEndpoint()).getOperationName());
         return processor.process(exchange, callback);

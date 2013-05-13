@@ -16,6 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce;
 
+import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.RuntimeCamelException;
@@ -59,22 +60,20 @@ public class SalesforceConsumer extends DefaultConsumer {
         this.subscriptionHelper = helper;
 
         // get sObjectClass to convert to
-        final String sObjectName = endpoint.getEndpointConfiguration().getSObjectName();
+        final String sObjectName = endpoint.getConfiguration().getSObjectName();
         if (sObjectName != null) {
             sObjectClass = endpoint.getComponent().getClassMap().get(sObjectName);
             if (sObjectClass == null) {
                 String msg = String.format("SObject Class not found for %s", sObjectName);
-                log.error(msg);
-                throw new RuntimeCamelException(msg);
+                throw new IllegalArgumentException(msg);
             }
         } else {
-            final String className = endpoint.getEndpointConfiguration().getSObjectClass();
+            final String className = endpoint.getConfiguration().getSObjectClass();
             if (className != null) {
                 sObjectClass = endpoint.getComponent().getCamelContext().getClassResolver().resolveClass(className);
                 if (sObjectClass == null) {
                     String msg = String.format("SObject Class not found %s", className);
-                    log.error(msg);
-                    throw new RuntimeCamelException(msg);
+                    throw new IllegalArgumentException(msg);
                 }
             } else {
                 log.warn("Property sObjectName or sObjectClass NOT set, messages will be of type java.lang.Map");
@@ -88,7 +87,7 @@ public class SalesforceConsumer extends DefaultConsumer {
     protected void doStart() throws Exception {
         super.doStart();
 
-        final SalesforceEndpointConfig config = endpoint.getEndpointConfiguration();
+        final SalesforceEndpointConfig config = endpoint.getConfiguration();
 
         // is a query configured in the endpoint?
         if (config.getSObjectQuery() != null) {
@@ -97,7 +96,7 @@ public class SalesforceConsumer extends DefaultConsumer {
             SalesforceComponent component = endpoint.getComponent();
             RestClient restClient = new DefaultRestClient(
                 component.getHttpClient(),
-                endpoint.getEndpointConfiguration().getApiVersion(),
+                endpoint.getConfiguration().getApiVersion(),
                 "json",
                 component.getSession());
             PushTopicHelper helper = new PushTopicHelper(config, topicName, restClient);
@@ -128,11 +127,13 @@ public class SalesforceConsumer extends DefaultConsumer {
         // TODO do we need to add NPE checks for message/data.get***???
         Map<String, Object> data = message.getDataAsMap();
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") final
         Map<String, Object> event = (Map<String, Object>) data.get(EVENT_PROPERTY);
-        Object eventType = event.get(TYPE_PROPERTY);
+        final Object eventType = event.get(TYPE_PROPERTY);
         Object createdDate = event.get(CREATED_DATE_PROPERTY);
-        log.debug(String.format("Received event %s created on %s", eventType, createdDate));
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("Received event %s created on %s", eventType, createdDate));
+        }
 
         in.setHeader("CamelSalesforceEventType", eventType);
         in.setHeader("CamelSalesforceCreatedDate", createdDate);
@@ -158,21 +159,26 @@ public class SalesforceConsumer extends DefaultConsumer {
         } catch (IOException e) {
             final String msg = String.format("Error parsing message [%s] from Topic %s: %s",
                 message, topicName, e.getMessage());
-            log.error(msg, e);
             handleException(msg, new RuntimeCamelException(msg, e));
         }
 
         try {
-            getProcessor().process(exchange);
+            getAsyncProcessor().process(exchange, new AsyncCallback() {
+                public void done(boolean doneSync) {
+                    // noop
+                    if (log.isTraceEnabled()) {
+                        log.trace("Done processing event: {} {}", eventType.toString(),
+                            doneSync ? "synchronously" : "asynchronously");
+                    }
+                }
+            });
         } catch (Exception e) {
             String msg = String.format("Error processing %s: %s", exchange, e.getMessage());
-            log.error(msg, e);
             handleException(msg, e);
         } finally {
             Exception ex = exchange.getException();
             if (ex != null) {
                 String msg = String.format("Unhandled exception: %s", ex.getMessage());
-                log.error(msg, ex);
                 handleException(msg, ex);
             }
         }

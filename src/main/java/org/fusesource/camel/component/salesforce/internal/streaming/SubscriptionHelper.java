@@ -17,7 +17,6 @@
 package org.fusesource.camel.component.salesforce.internal.streaming;
 
 import org.apache.camel.CamelException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.cometd.bayeux.Channel;
 import org.cometd.bayeux.Message;
 import org.cometd.bayeux.client.ClientSessionChannel;
@@ -41,12 +40,9 @@ public class SubscriptionHelper {
     private static final String SUMMER_11 = "22.0";
 
     private static final int DEFAULT_CONNECTION_TIMEOUT = 20 * 1000;
-    private static final long DEFAULT_READ_TIMEOUT = 120 * 1000;
     private static final int COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
     private static final int HANDSHAKE_TIMEOUT = 10 * 1000;
     private static final String EXCEPTION_FIELD = "exception";
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final SalesforceComponent component;
     private final BayeuxClient client;
@@ -69,7 +65,7 @@ public class SubscriptionHelper {
         this.subscribeError = new HashMap<String, String>();
         this.unsubscribeError = new HashMap<String, String>();
 
-        this.isSummer11 = component.getApiVersion().equals(SUMMER_11);
+        this.isSummer11 = component.getConfig().getApiVersion().equals(SUMMER_11);
 
         // create CometD client
         this.client = createClient();
@@ -81,11 +77,9 @@ public class SubscriptionHelper {
         if (!client.waitFor(HANDSHAKE_TIMEOUT, BayeuxClient.State.CONNECTED)) {
             if (handshakeException != null) {
                 String msg = String.format("Exception during HANDSHAKE: %s", handshakeException.getMessage());
-                LOG.error(msg, handshakeException);
                 throw new CamelException(msg, handshakeException);
             } else {
                 String msg = String.format("Error during HANDSHAKE: %s", handshakeError);
-                LOG.error(msg);
                 throw new CamelException(msg);
             }
         }
@@ -181,12 +175,8 @@ public class SubscriptionHelper {
     }
 
     private BayeuxClient createClient() throws Exception {
-        // TODO change SalesforceComponent to use Jetty client instead of Apache HttpClient
-//        HttpClient httpClient = component.getHttpClient();
-        final HttpClient httpClient = new HttpClient();
-        httpClient.setConnectTimeout(DEFAULT_CONNECTION_TIMEOUT);
-        httpClient.setTimeout(DEFAULT_READ_TIMEOUT);
-        httpClient.start();
+        // use Jetty client from SalesforceComponent
+        final HttpClient httpClient = component.getHttpClient();
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put(ClientTransport.TIMEOUT_OPTION, httpClient.getTimeout());
@@ -203,7 +193,7 @@ public class SubscriptionHelper {
         BayeuxClient client = new BayeuxClient(getEndpointUrl(), transport);
         if (isSummer11) {
             client.setCookie("com.salesforce.LocaleInfo", "us", COOKIE_MAX_AGE);
-            client.setCookie("login", component.getSession().getUserName(), COOKIE_MAX_AGE);
+            client.setCookie("login", component.getLoginConfig().getUserName(), COOKIE_MAX_AGE);
             client.setCookie("sid", component.getSession().getAccessToken(), COOKIE_MAX_AGE);
             client.setCookie("language", "en_US", COOKIE_MAX_AGE);
         }
@@ -291,7 +281,7 @@ public class SubscriptionHelper {
 
     public String getEndpointUrl() {
         return component.getSession().getInstanceUrl() +
-            (isSummer11 ? "/cometd" : "/cometd/" + component.getApiVersion());
+            (isSummer11 ? "/cometd" : "/cometd/" + component.getConfig().getApiVersion());
     }
 
     public void shutdown() {

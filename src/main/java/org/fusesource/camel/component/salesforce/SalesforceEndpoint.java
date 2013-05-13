@@ -16,7 +16,6 @@
  */
 package org.fusesource.camel.component.salesforce;
 
-import org.apache.camel.CamelException;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -32,24 +31,25 @@ import org.slf4j.LoggerFactory;
 public class SalesforceEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceEndpoint.class);
+
+    private final SalesforceEndpointConfig config;
     private final OperationName operationName;
     private final String topicName;
 
     public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent,
-                              OperationName operationName, String topicName) {
+                              SalesforceEndpointConfig config, OperationName operationName, String topicName) {
         super(uri, salesforceComponent);
 
+        this.config = config;
         this.operationName = operationName;
         this.topicName = topicName;
     }
 
     public Producer createProducer() throws Exception {
         // producer requires an operation, topicName must be the invalid operation name
-        final SalesforceEndpointConfig config = getEndpointConfiguration();
         if (operationName == null) {
             String msg = String.format("Invalid Operation %s", topicName);
-            LOG.error(msg);
-            throw new CamelException(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         SalesforceProducer producer = new SalesforceProducer(this);
@@ -62,12 +62,10 @@ public class SalesforceEndpoint extends DefaultEndpoint {
 
     public Consumer createConsumer(Processor processor) throws Exception {
         // consumer requires a topicName, operation name must be the invalid topic name
-        final SalesforceEndpointConfig config = getEndpointConfiguration();
         if (topicName == null) {
             String msg = String.format("Invalid topic name %s, matches a producer operation name",
                 operationName.value());
-            LOG.error(msg);
-            throw new CamelException(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         return new SalesforceConsumer(this, processor,
@@ -80,12 +78,13 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     }
 
     public boolean isSingleton() {
-        return false;
+        // re-use endpoint instance across multiple threads
+        // the description of this method is a little confusing
+        return true;
     }
 
-    @Override
-    public SalesforceEndpointConfig getEndpointConfiguration() {
-        return (SalesforceEndpointConfig) super.getEndpointConfiguration();
+    public SalesforceEndpointConfig getConfiguration() {
+        return config;
     }
 
     public OperationName getOperationName() {

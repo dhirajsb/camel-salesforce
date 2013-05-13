@@ -18,7 +18,7 @@ package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
-import org.apache.http.client.HttpClient;
+import org.eclipse.jetty.client.HttpClient;
 import org.fusesource.camel.component.salesforce.SalesforceComponent;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public abstract class AbstractSalesforceProcessor implements SalesforceProcessor {
 
@@ -40,26 +38,18 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     protected final SalesforceEndpoint endpoint;
-    protected final Map<String, String> endpointConfig;
+    protected final Map<String, String> endpointConfigMap;
 
     protected final OperationName operationName;
-    protected final Executor executor;
     protected final SalesforceSession session;
     protected final HttpClient httpClient;
 
     public AbstractSalesforceProcessor(SalesforceEndpoint endpoint) {
         this.endpoint = endpoint;
         this.operationName = endpoint.getOperationName();
-        this.endpointConfig = endpoint.getEndpointConfiguration().toValueMap();
+        this.endpointConfigMap = endpoint.getConfiguration().toValueMap();
 
         final SalesforceComponent component = endpoint.getComponent();
-        if (null == component.getExecutor()) {
-            // every processor creates its own by default
-            this.executor = Executors.newCachedThreadPool();
-        } else {
-            this.executor = component.getExecutor();
-        }
-
         this.session = component.getSession();
         this.httpClient = component.getHttpClient();
     }
@@ -79,13 +69,12 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
      */
     protected final String getParameter(String propName, Exchange exchange, boolean convertInBody, boolean optional) throws SalesforceException {
         String propValue = exchange.getIn().getHeader(propName, String.class);
-        propValue = propValue == null ? endpointConfig.get(propName) : propValue;
+        propValue = propValue == null ? endpointConfigMap.get(propName) : propValue;
         propValue = (propValue == null && convertInBody) ? exchange.getIn().getBody(String.class) : propValue;
 
         // error if property was not set
         if (propValue == null && !optional) {
             String msg = "Missing property " + propName;
-            LOG.error(msg);
             throw new SalesforceException(msg, null);
         }
 

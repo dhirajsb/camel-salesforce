@@ -27,34 +27,66 @@ import java.util.List;
  */
 public interface BulkApiClient {
 
+    public static interface JobInfoResponseCallback {
+        void onResponse(JobInfo jobInfo, SalesforceException ex);
+    }
+
+    public static interface BatchInfoResponseCallback {
+        void onResponse(BatchInfo batchInfo, SalesforceException ex);
+    }
+
+    public static interface BatchInfoListResponseCallback {
+        void onResponse(List<BatchInfo> batchInfoList, SalesforceException ex);
+    }
+
+    public static interface StreamResponseCallback {
+        void onResponse(InputStream inputStream, SalesforceException ex);
+    }
+
+    public static interface QueryResultIdsCallback {
+        void onResponse(List<String> ids, SalesforceException ex);
+    }
+
     /**
      * Creates a Bulk Job
      * @param jobInfo A {@link JobInfo} with required fields
      * @return a complete job description {@link JobInfo}
      * @throws org.fusesource.camel.component.salesforce.api.SalesforceException on error
      */
-    JobInfo createJob(JobInfo jobInfo) throws SalesforceException;
+    void createJob(JobInfo jobInfo,
+                   JobInfoResponseCallback callback);
 
-    JobInfo getJob(String jobId) throws SalesforceException;
+    void getJob(String jobId,
+                JobInfoResponseCallback callback);
 
-    JobInfo closeJob(String jobId) throws SalesforceException;
+    void closeJob(String jobId,
+                  JobInfoResponseCallback callback);
 
-    JobInfo abortJob(String jobId) throws SalesforceException;
+    void abortJob(String jobId,
+                  JobInfoResponseCallback callback);
 
-    BatchInfo createBatch(InputStream batchStream, String jobId, ContentType contentTypeEnum) throws SalesforceException;
+    void createBatch(InputStream batchStream, String jobId, ContentType contentTypeEnum,
+                     BatchInfoResponseCallback callback);
 
-    BatchInfo getBatch(String jobId, String batchId) throws SalesforceException;
+    void getBatch(String jobId, String batchId,
+                  BatchInfoResponseCallback callback);
 
-    List<BatchInfo> getAllBatches(String jobId) throws SalesforceException;
+    void getAllBatches(String jobId,
+                       BatchInfoListResponseCallback callback);
 
-    InputStream getRequest(String jobId, String batchId) throws SalesforceException;
+    void getRequest(String jobId, String batchId,
+                    StreamResponseCallback callback);
 
-    InputStream getResults(String jobId, String batchId) throws SalesforceException;
+    void getResults(String jobId, String batchId,
+                    StreamResponseCallback callback);
 
-    BatchInfo createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType) throws SalesforceException;
+    void createBatchQuery(String jobId, String soqlQuery, ContentType jobContentType,
+                          BatchInfoResponseCallback callback);
 
-    List<String> getQueryResultIds(String jobId, String batchId) throws SalesforceException;
+    void getQueryResultIds(String jobId, String batchId,
+                           QueryResultIdsCallback callback);
 
-    InputStream getQueryResult(String jobId, String batchId, String resultId) throws SalesforceException;
+    void getQueryResult(String jobId, String batchId, String resultId,
+                        StreamResponseCallback callback);
 
 }

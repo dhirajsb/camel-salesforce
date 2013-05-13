@@ -17,17 +17,14 @@
 package org.fusesource.camel.component.salesforce.internal.client;
 
 import com.thoughtworks.xstream.XStream;
-import org.apache.http.Consts;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.*;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.eclipse.jetty.client.ContentExchange;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.http.HttpHeaders;
+import org.eclipse.jetty.http.HttpMethods;
+import org.eclipse.jetty.util.StringUtil;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.RestError;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
@@ -49,7 +46,8 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     private XStream xStream;
     protected String format;
 
-    public DefaultRestClient(HttpClient httpClient, String version, String format, SalesforceSession session) {
+    public DefaultRestClient(HttpClient httpClient,
+                             String version, String format, SalesforceSession session) throws SalesforceException {
         super(version, session, httpClient);
 
         this.format = format;
@@ -61,29 +59,29 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
-    protected InputStream doHttpRequest(HttpUriRequest request) throws SalesforceException {
+    protected void doHttpRequest(ContentExchange request, ClientResponseCallback callback) {
         // set standard headers for all requests
-        final String contentType = ("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8).toString();
-        request.setHeader("Accept", contentType);
-        request.setHeader("Accept-Charset", Consts.UTF_8.toString());
+        final String contentType = "json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8;
+        request.setRequestHeader(HttpHeaders.ACCEPT, contentType);
+        request.setRequestHeader(HttpHeaders.ACCEPT_CHARSET, StringUtil.__UTF8);
         // request content type and charset is set by the request entity
 
-        return super.doHttpRequest(request);    //To change body of overridden methods use File | Settings | File Templates.
+        super.doHttpRequest(request, callback);
     }
 
     @Override
-    protected SalesforceException createRestException(HttpUriRequest request, HttpResponse response) {
-        StatusLine statusLine = response.getStatusLine();
-
+    protected SalesforceException createRestException(ContentExchange httpExchange) {
         // try parsing response according to format
         try {
             if ("json".equals(format)) {
-                List<RestError> restErrors = objectMapper.readValue(response.getEntity().getContent(), new TypeReference<List<RestError>>(){});
-                return new SalesforceException(restErrors, statusLine.getStatusCode());
+                List<RestError> restErrors = objectMapper.readValue(
+                    httpExchange.getResponseContent(), new TypeReference<List<RestError>>() {
+                });
+                return new SalesforceException(restErrors, httpExchange.getResponseStatus());
             } else {
                 RestErrors errors = new RestErrors();
-                xStream.fromXML(response.getEntity().getContent(), errors);
-                return new SalesforceException(errors.getErrors(), statusLine.getStatusCode());
+                xStream.fromXML(httpExchange.getResponseContent(), errors);
+                return new SalesforceException(errors.getErrors(), httpExchange.getResponseStatus());
             }
         } catch (IOException e) {
             // log and ignore
@@ -93,60 +91,61 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
             // log and ignore
             String msg = "Unexpected Error parsing " + format + " error response: " + e.getMessage();
             LOG.warn(msg, e);
-        } finally {
-            EntityUtils.consumeQuietly(response.getEntity());
         }
 
         // just report HTTP status info
-        return new SalesforceException(statusLine.getReasonPhrase(), statusLine.getStatusCode());
+        return new SalesforceException("Unexpected error", httpExchange.getResponseStatus());
     }
 
     @Override
-    public InputStream getVersions() throws SalesforceException {
-        HttpGet get = new HttpGet(servicesDataUrl());
+    public void getVersions(final ResponseCallback callback) {
+        ContentExchange get = getContentExchange(HttpMethods.GET, servicesDataUrl());
         // does not require authorization token
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream getResources() throws SalesforceException {
-        HttpGet get = new HttpGet(versionUrl());
+    public void getResources(ResponseCallback callback) {
+        ContentExchange get = getContentExchange(HttpMethods.GET, versionUrl());
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream getGlobalObjects() throws SalesforceException {
-        HttpGet get = new HttpGet(sobjectsUrl(""));
+    public void getGlobalObjects(ResponseCallback callback) {
+        ContentExchange get = getContentExchange(HttpMethods.GET, sobjectsUrl(""));
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream getBasicInfo(String sObjectName) throws SalesforceException {
-        HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/"));
+    public void getBasicInfo(String sObjectName,
+                             ResponseCallback callback) {
+        ContentExchange get = getContentExchange(HttpMethods.GET, sobjectsUrl(sObjectName + "/"));
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream getDescription(String sObjectName) throws SalesforceException {
-        HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/describe/"));
+    public void getDescription(String sObjectName,
+                               ResponseCallback callback) {
+        ContentExchange get = getContentExchange(HttpMethods.GET, sobjectsUrl(sObjectName + "/describe/"));
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream getSObject(String sObjectName, String id, String[] fields) throws SalesforceException {
+    public void getSObject(String sObjectName, String id, String[] fields,
+                           ResponseCallback callback) {
 
         // parse fields if set
         String params = "";
@@ -160,134 +159,142 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
             }
             params = fieldsValue.toString();
         }
-        HttpGet get = new HttpGet(sobjectsUrl(sObjectName + "/" + id + params));
+        ContentExchange get = getContentExchange(HttpMethods.GET, sobjectsUrl(sObjectName + "/" + id + params));
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream createSObject(String sObjectName, InputStream sObject) throws SalesforceException {
+    public void createSObject(String sObjectName, InputStream sObject,
+                              ResponseCallback callback) {
         // post the sObject
-        final HttpPost post = new HttpPost(sobjectsUrl(sObjectName));
+        final ContentExchange post = getContentExchange(HttpMethods.POST, sobjectsUrl(sObjectName));
 
         // authorization
         setAccessToken(post);
 
         // input stream as entity content
-        post.setEntity(new InputStreamEntity(sObject, -1,
-            "json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8));
+        post.setRequestContentSource(sObject);
+        post.setRequestContentType("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8);
 
-        return doHttpRequest(post);
+        doHttpRequest(post, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public void updateSObject(String sObjectName, String id, InputStream sObject) throws SalesforceException {
-        final HttpPatch patch = new HttpPatch(sobjectsUrl(sObjectName + "/" + id));
+    public void updateSObject(String sObjectName, String id, InputStream sObject,
+                              ResponseCallback callback) {
+        final ContentExchange patch = getContentExchange("PATCH", sobjectsUrl(sObjectName + "/" + id));
         // requires authorization token
         setAccessToken(patch);
 
         // input stream as entity content
-        patch.setEntity(new InputStreamEntity(sObject, -1,
-            "json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8));
+        patch.setRequestContentSource(sObject);
+        patch.setRequestContentType("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8);
 
-        doHttpRequest(patch);
+        doHttpRequest(patch, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public void deleteSObject(String sObjectName, String id) throws SalesforceException {
-        final HttpDelete delete = new HttpDelete(sobjectsUrl(sObjectName + "/" + id));
+    public void deleteSObject(String sObjectName, String id,
+                              ResponseCallback callback) {
+        final ContentExchange delete = getContentExchange(HttpMethods.DELETE, sobjectsUrl(sObjectName + "/" + id));
 
         // requires authorization token
         setAccessToken(delete);
 
-        doHttpRequest(delete);
+        doHttpRequest(delete, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream getSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws SalesforceException {
-        final HttpGet get = new HttpGet(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
+    public void getSObjectWithId(String sObjectName, String fieldName, String fieldValue,
+                                 ResponseCallback callback) {
+        final ContentExchange get = getContentExchange(HttpMethods.GET,
+            sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream upsertSObject(String sObjectName, String fieldName, String fieldValue, InputStream sObject) throws SalesforceException {
-        final HttpPatch patch = new HttpPatch(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
+    public void upsertSObject(String sObjectName, String fieldName, String fieldValue, InputStream sObject,
+                              ResponseCallback callback) {
+        final ContentExchange patch = getContentExchange("PATCH",
+            sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
         setAccessToken(patch);
 
         // input stream as entity content
-        patch.setEntity(new InputStreamEntity(sObject, -1,
-            "json".equals(format) ? ContentType.APPLICATION_JSON : ContentType.APPLICATION_XML));
+        patch.setRequestContentSource(sObject);
+        // TODO will the encoding always be UTF-8??
+        patch.setRequestContentType("json".equals(format) ? APPLICATION_JSON_UTF8 : APPLICATION_XML_UTF8);
 
-        return doHttpRequest(patch);
+        doHttpRequest(patch, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public void deleteSObjectWithId(String sObjectName, String fieldName, String fieldValue) throws SalesforceException {
-        final HttpDelete delete = new HttpDelete(sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
+    public void deleteSObjectWithId(String sObjectName, String fieldName, String fieldValue,
+                                    ResponseCallback callback) {
+        final ContentExchange delete = getContentExchange(HttpMethods.DELETE,
+            sobjectsExternalIdUrl(sObjectName, fieldName, fieldValue));
 
         // requires authorization token
         setAccessToken(delete);
 
-        doHttpRequest(delete);
+        doHttpRequest(delete, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream query(String soqlQuery) throws SalesforceException {
+    public void query(String soqlQuery, ResponseCallback callback) {
         try {
 
-            String encodedQuery = URLEncoder.encode(soqlQuery, Consts.UTF_8.toString());
+            String encodedQuery = URLEncoder.encode(soqlQuery, StringUtil.__UTF8_CHARSET.toString());
             // URLEncoder likes to use '+' for spaces
             encodedQuery = encodedQuery.replace("+", "%20");
-            final HttpGet get = new HttpGet(versionUrl() + "query/?q=" + encodedQuery);
+            final ContentExchange get = getContentExchange(HttpMethods.GET, versionUrl() + "query/?q=" + encodedQuery);
 
             // requires authorization token
             setAccessToken(get);
 
-            return doHttpRequest(get);
+            doHttpRequest(get, new DelegatingClientCallback(callback));
 
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new SalesforceException(msg, e);
+            callback.onResponse(null, new SalesforceException(msg, e));
         }
     }
 
     @Override
-    public InputStream queryMore(String nextRecordsUrl) throws SalesforceException {
-        final HttpGet get = new HttpGet(instanceUrl + nextRecordsUrl);
+    public void queryMore(String nextRecordsUrl, ResponseCallback callback) {
+        final ContentExchange get = getContentExchange(HttpMethods.GET, instanceUrl + nextRecordsUrl);
 
         // requires authorization token
         setAccessToken(get);
 
-        return doHttpRequest(get);
+        doHttpRequest(get, new DelegatingClientCallback(callback));
     }
 
     @Override
-    public InputStream search(String soslQuery) throws SalesforceException {
+    public void search(String soslQuery, ResponseCallback callback) {
         try {
 
-            String encodedQuery = URLEncoder.encode(soslQuery, Consts.UTF_8.toString());
+            String encodedQuery = URLEncoder.encode(soslQuery, StringUtil.__UTF8_CHARSET.toString());
             // URLEncoder likes to use '+' for spaces
             encodedQuery = encodedQuery.replace("+", "%20");
-            final HttpGet get = new HttpGet(versionUrl() + "search/?q=" + encodedQuery);
+            final ContentExchange get = getContentExchange(HttpMethods.GET, versionUrl() + "search/?q=" + encodedQuery);
 
             // requires authorization token
             setAccessToken(get);
 
-            return doHttpRequest(get);
+            doHttpRequest(get, new DelegatingClientCallback(callback));
 
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new SalesforceException(msg, e);
+            callback.onResponse(null, new SalesforceException(msg, e));
         }
     }
 
@@ -295,38 +302,50 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
         return instanceUrl + SERVICES_DATA;
     }
 
-    private String versionUrl() throws SalesforceException {
+    private String versionUrl() {
         if (version == null) {
-            throw new SalesforceException("NULL API version", new NullPointerException("version"));
+            throw new IllegalArgumentException("NULL API version", new NullPointerException("version"));
         }
         return servicesDataUrl() + "v" + version + "/";
     }
 
-    private String sobjectsUrl(String sObjectName) throws SalesforceException {
+    private String sobjectsUrl(String sObjectName) {
         if (sObjectName == null) {
-            throw new SalesforceException("Null SObject name", new NullPointerException("sObjectName"));
+            throw new IllegalArgumentException("Null SObject name", new NullPointerException("sObjectName"));
         }
         return versionUrl() + "sobjects/" + sObjectName;
     }
 
-    private String sobjectsExternalIdUrl(String sObjectName, String fieldName, String fieldValue) throws SalesforceException {
+    private String sobjectsExternalIdUrl(String sObjectName, String fieldName, String fieldValue) {
         if (fieldName == null || fieldValue == null) {
-            throw new SalesforceException("External field name and value cannot be NULL",
-                new NullPointerException("fieldName,fieldValue"));
+            throw new IllegalArgumentException("External field name and value cannot be NULL");
         }
         try {
-            String encodedValue = URLEncoder.encode(fieldValue, Consts.UTF_8.toString());
+            String encodedValue = URLEncoder.encode(fieldValue, StringUtil.__UTF8_CHARSET.toString());
             // URLEncoder likes to use '+' for spaces
             encodedValue = encodedValue.replace("+", "%20");
             return sobjectsUrl(sObjectName + "/" + fieldName + "/" + encodedValue);
         } catch (UnsupportedEncodingException e) {
             String msg = "Unexpected error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new SalesforceException(msg, e);
+            throw new IllegalArgumentException(msg, e);
         }
     }
 
-    protected void setAccessToken(HttpRequest httpRequest) {
-        httpRequest.setHeader(TOKEN_HEADER, TOKEN_PREFIX + accessToken);
+    protected void setAccessToken(HttpExchange httpExchange) {
+        httpExchange.setRequestHeader(TOKEN_HEADER, TOKEN_PREFIX + accessToken);
     }
+
+    private static class DelegatingClientCallback implements ClientResponseCallback {
+        private final ResponseCallback callback;
+
+        public DelegatingClientCallback(ResponseCallback callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void onResponse(InputStream response, SalesforceException ex) {
+            callback.onResponse(response, ex);
+        }
+    }
+
 }

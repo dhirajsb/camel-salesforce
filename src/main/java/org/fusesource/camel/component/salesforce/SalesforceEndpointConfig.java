@@ -1,19 +1,18 @@
 package org.fusesource.camel.component.salesforce;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.impl.DefaultEndpointConfiguration;
+import org.apache.camel.RuntimeCamelException;
 import org.eclipse.jetty.client.HttpClient;
-import org.fusesource.camel.component.salesforce.internal.dto.NotifyForFieldsEnum;
-import org.fusesource.camel.component.salesforce.internal.dto.NotifyForOperationsEnum;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.ContentType;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.OperationEnum;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
+import org.fusesource.camel.component.salesforce.internal.dto.NotifyForFieldsEnum;
+import org.fusesource.camel.component.salesforce.internal.dto.NotifyForOperationsEnum;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
+public class SalesforceEndpointConfig implements Cloneable {
 
     // general parameter
     public static final String API_VERSION = "apiVersion";
@@ -64,11 +63,18 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
     private boolean updateTopic;
     private NotifyForFieldsEnum notifyForFields;
     private NotifyForOperationsEnum notifyForOperations;
+
     // Jetty HttpClient, set using reference
     private HttpClient httpClient;
 
-    public SalesforceEndpointConfig(CamelContext camelContext) {
-        super(camelContext);
+    public SalesforceEndpointConfig copy() {
+        try {
+            final SalesforceEndpointConfig copy = (SalesforceEndpointConfig) super.clone();
+            // nothing to deep copy
+            return copy;
+        } catch (CloneNotSupportedException ex) {
+            throw new RuntimeCamelException(ex);
+        }
     }
 
     public PayloadFormat getPayloadFormat() {
@@ -221,12 +227,6 @@ public class SalesforceEndpointConfig extends DefaultEndpointConfiguration {
 
     public HttpClient getHttpClient() {
         return httpClient;
-    }
-
-    @Override
-    public String toUriString(UriFormat format) {
-        // ignore format, what is this used for anyway???
-        return getURI().toString();
     }
 
     public Map<String, String> toValueMap() {

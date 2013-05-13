@@ -41,18 +41,15 @@ public class PicklistEnumConverter implements Converter {
         } catch (NoSuchMethodException e) {
             String msg = String.format("Exception writing pick list value %s of type %s: %s",
                 o, o.getClass().getName(), e.getMessage());
-            LOG.error (msg, e);
-            throw new RuntimeException(msg, e);
+            throw new IllegalArgumentException(msg, e);
         } catch (InvocationTargetException e) {
             String msg = String.format("Exception writing pick list value %s of type %s: %s",
                 o, o.getClass().getName(), e.getMessage());
-            LOG.error (msg, e);
-            throw new RuntimeException(msg, e);
+            throw new IllegalArgumentException(msg, e);
         } catch (IllegalAccessException e) {
             String msg = String.format("Exception writing pick list value %s of type %s: %s",
                 o, o.getClass().getName(), e.getMessage());
-            LOG.error (msg, e);
-            throw new RuntimeException(msg, e);
+            throw new IllegalArgumentException(msg, e);
         }
     }
 
@@ -68,8 +65,7 @@ public class PicklistEnumConverter implements Converter {
             String msg = String.format(
                 "Exception reading pick list value %s of type %s: %s",
                 value, context.getRequiredType().getName(), e.getMessage());
-            LOG.error (msg, e);
-            throw new RuntimeException(msg, e);
+            throw new IllegalArgumentException(msg, e);
         }
     }
 

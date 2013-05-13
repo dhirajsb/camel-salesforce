@@ -16,12 +16,13 @@
  */
 package org.fusesource.camel.component.salesforce.internal.processor;
 
+import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.http.Consts;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.type.TypeReference;
+import org.eclipse.jetty.util.StringUtil;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.*;
@@ -38,7 +39,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     private final ObjectMapper objectMapper;
     private static final String RESPONSE_TYPE = JsonRestProcessor.class.getName() + ".responseType";
 
-    public JsonRestProcessor(SalesforceEndpoint endpoint) {
+    public JsonRestProcessor(SalesforceEndpoint endpoint) throws SalesforceException {
         super(endpoint);
 
         this.objectMapper = new ObjectMapper();
@@ -114,7 +115,7 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                             (in.getBody() == null ? null : in.getBody().getClass());
                         throw new SalesforceException(msg, null);
                     } else {
-                        request = new ByteArrayInputStream(body.getBytes(Consts.UTF_8));
+                        request = new ByteArrayInputStream(body.getBytes(StringUtil.__UTF8_CHARSET));
                     }
                 }
             }
@@ -128,7 +129,8 @@ public class JsonRestProcessor extends AbstractRestProcessor {
     }
 
     @Override
-    protected void processResponse(Exchange exchange, InputStream responseEntity) throws SalesforceException {
+    protected void processResponse(Exchange exchange, InputStream responseEntity, SalesforceException ex, AsyncCallback callback) {
+
         // process JSON response for TypeReference
         try {
             // do we need to un-marshal a response
@@ -142,14 +144,32 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                     response = objectMapper.readValue(responseEntity, responseType);
                 }
                 exchange.getOut().setBody(response);
+            } else {
+                exchange.setException(ex);
             }
             // copy headers and attachments
             exchange.getOut().getHeaders().putAll(exchange.getIn().getHeaders());
             exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (IOException e) {
             String msg = "Error parsing JSON response: " + e.getMessage();
-            throw new SalesforceException(msg, e);
+            exchange.setException(new SalesforceException(msg, e));
+        } finally {
+            // cleanup temporary exchange headers
+            exchange.removeProperty(RESPONSE_CLASS);
+            exchange.removeProperty(RESPONSE_TYPE);
+
+            // consume response entity
+            try {
+                if (responseEntity != null) {
+                    responseEntity.close();
+                }
+            } catch (IOException ignored) {
+            }
+
+            // notify callback that exchange is done
+            callback.done(false);
         }
+
     }
 
 }

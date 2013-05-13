@@ -16,17 +16,19 @@
  */
 package org.fusesource.camel.component.salesforce.internal.client;
 
-import org.apache.http.*;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
+import org.eclipse.jetty.client.ContentExchange;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpEventListenerWrapper;
+import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.io.Buffer;
+import org.eclipse.jetty.util.StringUtil;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -34,85 +36,127 @@ public abstract class AbstractClientBase {
 
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private static final int SESSION_EXPIRED = 401;
-    protected static final ContentType APPLICATION_JSON_UTF8 = ContentType.create("application/json", Consts.UTF_8);
-    protected static final ContentType APPLICATION_XML_UTF8 = ContentType.create("application/xml", Consts.UTF_8);
-    protected HttpClient httpClient;
-    protected String version;
-    protected SalesforceSession session;
+    protected static final String APPLICATION_JSON_UTF8 = "application/json;charset=utf-8";
+    protected static final String APPLICATION_XML_UTF8 = "application/xml;charset=utf-8";
+
+    protected final HttpClient httpClient;
+    protected final SalesforceSession session;
+    protected final String version;
+
     protected String accessToken;
     protected String instanceUrl;
 
-    public AbstractClientBase(String version, SalesforceSession session, HttpClient httpClient) {
+    public AbstractClientBase(String version,
+                              SalesforceSession session, HttpClient httpClient) throws SalesforceException {
+
         this.version = version;
         this.session = session;
         this.httpClient = httpClient;
 
         // local cache
+        // TODO could probably be replaced with a TokenListener to auto-update all clients on token refresh
         this.accessToken = session.getAccessToken();
+        if (accessToken == null) {
+            // lazy login here!
+            this.accessToken = session.login(this.accessToken);
+        }
         this.instanceUrl = session.getInstanceUrl();
     }
 
-    protected InputStream doHttpRequest(HttpUriRequest request) throws SalesforceException {
-        HttpResponse httpResponse = null;
-        try {
-            // execute the request
-            httpResponse = httpClient.execute(request);
+    protected SalesforceExchange getContentExchange(String method, String url) {
+        SalesforceExchange get = new SalesforceExchange();
+        get.setMethod(method);
+        get.setURL(url);
+        get.setClient(this);
+        get.setSession(session);
+        get.setAccessToken(accessToken);
+        return get;
+    }
 
-            // check response for session timeout
-            final StatusLine statusLine = httpResponse.getStatusLine();
-            if (statusLine.getStatusCode() == SESSION_EXPIRED) {
-                // use the session to get a new accessToken and try the request again
-                LOG.warn("Retrying {} on session expiry: {}", request.getMethod(), statusLine.getReasonPhrase());
-                accessToken = session.login(accessToken);
-                instanceUrl = session.getInstanceUrl();
+    protected interface ClientResponseCallback {
+        void onResponse(InputStream response, SalesforceException ex);
+    }
 
-                setAccessToken(request);
+    protected void doHttpRequest(final ContentExchange request, final ClientResponseCallback callback) {
 
-                // reset input entity for retry
-                if (request instanceof HttpEntityEnclosingRequestBase) {
-                    // TODO this may not always work, need a better way to handle this
-                    HttpEntityEnclosingRequestBase requestBase = (HttpEntityEnclosingRequestBase) request;
-                    HttpEntity entity = requestBase.getEntity();
-                    entity.getContent().reset();
+        // use HttpEventListener for lifecycle events
+        request.setEventListener(new HttpEventListenerWrapper(request.getEventListener(), true) {
+
+            public String reason;
+            public int retries = 0;
+
+            @Override
+            public void onConnectionFailed(Throwable ex) {
+                super.onConnectionFailed(ex);
+                callback.onResponse(null,
+                    new SalesforceException("Connection error: " + ex.getMessage(), ex));
+            }
+
+            @Override
+            public void onException(Throwable ex) {
+                super.onException(ex);
+                callback.onResponse(null,
+                    new SalesforceException("Unexpected exception: " + ex.getMessage(), ex));
+            }
+
+            @Override
+            public void onExpire() {
+                super.onExpire();
+                callback.onResponse(null,
+                    new SalesforceException("Request expired", null));
+            }
+
+            @Override
+            public void onResponseComplete() throws IOException {
+                super.onResponseComplete();
+
+                final int responseStatus = request.getResponseStatus();
+                if (responseStatus < HttpStatus.OK_200 || responseStatus >= HttpStatus.MULTIPLE_CHOICES_300) {
+                    final String msg = String.format("Error {%s:%s} executing {%s:%s}",
+                        responseStatus, reason,
+                        request.getMethod(), request.getRequestURI());
+                    final SalesforceException exception = new SalesforceException(msg,
+                        createRestException(request));
+                    exception.setStatusCode(responseStatus);
+                    callback.onResponse(null, exception);
+                } else {
+                    // TODO not memory efficient for large response messages,
+                    // doesn't seem to be possible in Jetty 7 to directly stream to response parsers
+                    final byte[] bytes = request.getResponseContentBytes();
+                    callback.onResponse(bytes != null ? new ByteArrayInputStream(bytes) : null, null);
                 }
-                httpResponse = httpClient.execute(request);
+
             }
 
-            final int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if (statusCode < 200 || statusCode >= 300) {
-                LOG.error(String.format("Error {%s:%s} executing {%s:%s}",
-                    statusCode, statusLine.getReasonPhrase(),
-                    request.getMethod(),request.getURI()));
-                throw createRestException(request, httpResponse);
-            } else {
-                return (httpResponse.getEntity() == null) ?
-                    null : httpResponse.getEntity().getContent();
+            @Override
+            public void onResponseStatus(Buffer version, int status, Buffer reason) throws IOException {
+                super.onResponseStatus(version, status, reason);
+                // remember status reason
+                this.reason = reason.toString(StringUtil.__ISO_8859_1);
             }
+        });
+
+        // execute the request
+        try {
+            httpClient.send(request);
         } catch (IOException e) {
-            request.abort();
-            if (httpResponse != null) {
-                EntityUtils.consumeQuietly(httpResponse.getEntity());
-            }
             String msg = "Unexpected Error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new SalesforceException(msg, e);
-        } catch (RuntimeException e) {
-            request.abort();
-            if (httpResponse != null) {
-                EntityUtils.consumeQuietly(httpResponse.getEntity());
-            }
-            String msg = "Unexpected Error: " + e.getMessage();
-            LOG.error(msg, e);
-            throw new SalesforceException(msg, e);
+            // send error through callback
+            callback.onResponse(null, new SalesforceException(msg, e));
         }
+
     }
 
-    protected abstract void setAccessToken(HttpRequest httpRequest);
-
-    protected abstract SalesforceException createRestException(HttpUriRequest request, HttpResponse response);
-
-    public void setVersion(String version) {
-        this.version = version;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
+
+    public void setInstanceUrl(String instanceUrl) {
+        this.instanceUrl = instanceUrl;
+    }
+
+    protected abstract void setAccessToken(HttpExchange httpExchange);
+
+    protected abstract SalesforceException createRestException(ContentExchange httpExchange);
+
 }

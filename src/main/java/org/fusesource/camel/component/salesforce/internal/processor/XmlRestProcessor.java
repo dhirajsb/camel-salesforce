@@ -22,9 +22,12 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.naming.NoNameCoder;
 import com.thoughtworks.xstream.io.xml.CompactWriter;
 import com.thoughtworks.xstream.io.xml.XppDriver;
+import com.thoughtworks.xstream.mapper.CachingMapper;
+import com.thoughtworks.xstream.mapper.CannotResolveClassException;
+import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.http.Consts;
+import org.eclipse.jetty.util.StringUtil;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.JodaTimeConverter;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
@@ -60,7 +63,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
 
     private static final String RESPONSE_ALIAS = XmlRestProcessor.class.getName() + ".responseAlias";
 
-    public XmlRestProcessor(SalesforceEndpoint endpoint) {
+    public XmlRestProcessor(SalesforceEndpoint endpoint) throws SalesforceException {
         super(endpoint);
 
     }
@@ -139,6 +142,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     }
 
     protected InputStream getRequestStream(Exchange exchange) throws SalesforceException {
+        final XStream localXStream = xStream.get();
         try {
             // get request stream from In message
             Message in = exchange.getIn();
@@ -148,10 +152,10 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                 if (sObject != null) {
                     // marshall the SObject
                     // first process annotations on the class, for things like alias, etc.
-                    xStream.get().processAnnotations(sObject.getClass());
+                    localXStream.processAnnotations(sObject.getClass());
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     // make sure we write the XML with the right encoding
-                    xStream.get().toXML(sObject, new OutputStreamWriter(out, Consts.UTF_8));
+                    localXStream.toXML(sObject, new OutputStreamWriter(out, StringUtil.__UTF8_CHARSET));
                     request = new ByteArrayInputStream(out.toByteArray());
                 } else {
                     // if all else fails, get body as String
@@ -161,7 +165,7 @@ public class XmlRestProcessor extends AbstractRestProcessor {
                             (in.getBody() == null ? null : in.getBody().getClass());
                         throw new SalesforceException(msg, null);
                     } else {
-                        request = new ByteArrayInputStream(body.getBytes(Consts.UTF_8));
+                        request = new ByteArrayInputStream(body.getBytes(StringUtil.__UTF8_CHARSET));
                     }
                 }
             }
@@ -173,30 +177,57 @@ public class XmlRestProcessor extends AbstractRestProcessor {
     }
 
     @Override
-    protected void processResponse(Exchange exchange, InputStream responseEntity) throws SalesforceException {
+    protected void processResponse(Exchange exchange, InputStream responseEntity,
+                                   SalesforceException exception, AsyncCallback callback) {
+        final XStream localXStream = xStream.get();
         try {
             // do we need to un-marshal a response
             if (responseEntity != null) {
                 final Class<?> responseClass = exchange.getProperty(RESPONSE_CLASS, Class.class);
                 // its ok to call this multiple times, as xstream ignores duplicate calls
-                xStream.get().processAnnotations(responseClass);
+                localXStream.processAnnotations(responseClass);
                 final String responseAlias = exchange.getProperty(RESPONSE_ALIAS, String.class);
                 if (responseAlias != null) {
-                    xStream.get().alias(responseAlias, responseClass);
+                    // extremely dirty, need to flush entire cache if its holding on to an old alias!!!
+                    final CachingMapper mapper = (CachingMapper) localXStream.getMapper();
+                    try {
+                        if (mapper.realClass(responseAlias) != responseClass) {
+                            mapper.flushCache();
+                        }
+                    } catch (CannotResolveClassException ignore) {
+                    }
+                    localXStream.alias(responseAlias, responseClass);
                 }
                 Object response = responseClass.newInstance();
-                xStream.get().fromXML(responseEntity, response);
+                localXStream.fromXML(responseEntity, response);
                 exchange.getOut().setBody(response);
+            } else {
+                exchange.setException(exception);
             }
             // copy headers and attachments
             exchange.getOut().getHeaders().putAll(exchange.getIn().getHeaders());
             exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
         } catch (XStreamException e) {
             String msg = "Error parsing XML response: " + e.getMessage();
-            throw new SalesforceException(msg, e);
+            exchange.setException(new SalesforceException(msg, e));
         } catch (Exception e) {
             String msg = "Error creating XML response: " + e.getMessage();
-            throw new SalesforceException(msg, e);
+            exchange.setException(new SalesforceException(msg, e));
+        } finally {
+            // cleanup temporary exchange headers
+            exchange.removeProperty(RESPONSE_CLASS);
+            exchange.removeProperty(RESPONSE_ALIAS);
+
+            // consume response entity
+            if (responseEntity != null) {
+                try {
+                    responseEntity.close();
+                } catch (IOException ignored) {
+                }
+            }
+
+            // notify callback that exchange is done
+            callback.done(false);
         }
     }
 
