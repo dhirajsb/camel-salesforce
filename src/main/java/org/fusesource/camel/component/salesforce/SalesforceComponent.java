@@ -45,7 +45,6 @@ public class SalesforceComponent extends DefaultComponent {
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponent.class);
 
     private static final String DEFAULT_VERSION = "27.0";
-
     private static final int MAX_CONNECTIONS_PER_ADDRESS = 20;
     private static final int CONNECTION_TIMEOUT = 15000;
     private static final int RESPONSE_TIMEOUT = 15000;
@@ -135,8 +134,8 @@ public class SalesforceComponent extends DefaultComponent {
         if (null == this.session) {
             this.session = new SalesforceSession(httpClient, loginConfig);
         }
+
         // login at startup if lazyLogin is disabled
-        // TODO login has to be done later, when the first call is made
         if (!loginConfig.isLazyLogin()) {
             try {
                 // get a new token
