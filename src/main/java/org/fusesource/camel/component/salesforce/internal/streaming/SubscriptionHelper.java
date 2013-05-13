@@ -180,21 +180,30 @@ public class SubscriptionHelper {
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put(ClientTransport.TIMEOUT_OPTION, httpClient.getTimeout());
+
+        // check login access token
+        String currentToken = component.getSession().getAccessToken();
+        if (currentToken == null) {
+            // lazy login here!
+            currentToken = component.getSession().login(null);
+        }
+        final String accessToken = currentToken;
+
         LongPollingTransport transport = new LongPollingTransport(options, httpClient) {
             @Override
             protected void customize(ContentExchange exchange) {
                 super.customize(exchange);
-                // TODO handle refreshing token on expiry
+                // TODO refresh token on expiry
                 // add current security token
                 exchange.addRequestHeader("Authorization",
-                    "OAuth " + component.getSession().getAccessToken());
+                    "OAuth " + accessToken);
             }
         };
         BayeuxClient client = new BayeuxClient(getEndpointUrl(), transport);
         if (isSummer11) {
             client.setCookie("com.salesforce.LocaleInfo", "us", COOKIE_MAX_AGE);
             client.setCookie("login", component.getLoginConfig().getUserName(), COOKIE_MAX_AGE);
-            client.setCookie("sid", component.getSession().getAccessToken(), COOKIE_MAX_AGE);
+            client.setCookie("sid", accessToken, COOKIE_MAX_AGE);
             client.setCookie("language", "en_US", COOKIE_MAX_AGE);
         }
         return client;

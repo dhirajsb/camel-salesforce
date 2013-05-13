@@ -23,6 +23,7 @@ import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
  * Wraps a Salesforce Http Exchange
  */
 public class SalesforceExchange extends ContentExchange {
+
     private AbstractClientBase client;
     private SalesforceSession session;
     private String accessToken;
