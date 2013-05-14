@@ -49,9 +49,9 @@ public interface BulkApiClient {
 
     /**
      * Creates a Bulk Job
-     * @param jobInfo A {@link JobInfo} with required fields
-     * @return a complete job description {@link JobInfo}
-     * @throws org.fusesource.camel.component.salesforce.api.SalesforceException on error
+     *
+     * @param jobInfo {@link JobInfo} with required fields
+     * @param callback {@link JobInfoResponseCallback} to be invoked on response or error
      */
     void createJob(JobInfo jobInfo,
                    JobInfoResponseCallback callback);

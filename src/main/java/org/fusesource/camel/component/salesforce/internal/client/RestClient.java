@@ -104,9 +104,9 @@ public interface RestClient {
     /**
      * Retrieves a record for the specified external ID.
      *
-     * @param sObjectName
-     * @param fieldName
-     * @param fieldValue
+     * @param sObjectName specified object name
+     * @param fieldName external field name
+     * @param fieldValue external field value
      * @param callback {@link ResponseCallback} to handle response or exception
     */
     void getSObjectWithId(String sObjectName, String fieldName, String fieldValue, ResponseCallback callback);
@@ -114,10 +114,10 @@ public interface RestClient {
     /**
      * Creates or updates a record based on the value of a specified external ID field.
      *
-     * @param sObjectName
-     * @param fieldName
-     * @param fieldValue
-     * @param sObject
+     * @param sObjectName specified object name
+     * @param fieldName external field name
+     * @param fieldValue external field value
+     * @param sObject input object to insert or update
      * @param callback {@link ResponseCallback} to handle response or exception
     */
     void upsertSObject(String sObjectName,
@@ -126,9 +126,9 @@ public interface RestClient {
     /**
      * Deletes a record based on the value of a specified external ID field.
      *
-     * @param sObjectName
-     * @param fieldName
-     * @param fieldValue
+     * @param sObjectName specified object name
+     * @param fieldName external field name
+     * @param fieldValue external field value
      * @param callback {@link ResponseCallback} to handle response or exception
     */
     void deleteSObjectWithId(String sObjectName,
@@ -148,7 +148,7 @@ public interface RestClient {
     /**
      * Executes the specified SOQL query.
      *
-     * @param soqlQuery
+     * @param soqlQuery SOQL query
      * @param callback {@link ResponseCallback} to handle response or exception
     */
     void query(String soqlQuery, ResponseCallback callback);
@@ -156,7 +156,7 @@ public interface RestClient {
     /**
      * Get SOQL query results using nextRecordsUrl.
      *
-     * @param nextRecordsUrl
+     * @param nextRecordsUrl URL for next records to fetch, returned by query()
      * @param callback {@link ResponseCallback} to handle response or exception
     */
     void queryMore(String nextRecordsUrl, ResponseCallback callback);
@@ -164,7 +164,7 @@ public interface RestClient {
     /**
      * Executes the specified SOSL search.
      *
-     * @param soslQuery
+     * @param soslQuery SOSL query
      * @param callback {@link ResponseCallback} to handle response or exception
     */
     void search(String soslQuery, ResponseCallback callback);
