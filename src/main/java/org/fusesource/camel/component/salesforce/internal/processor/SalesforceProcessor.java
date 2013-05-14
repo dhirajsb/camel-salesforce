@@ -18,7 +18,10 @@ package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.Service;
 
-public interface SalesforceProcessor {
+public interface SalesforceProcessor extends Service {
+
     boolean process(Exchange exchange, AsyncCallback callback);
+
 }

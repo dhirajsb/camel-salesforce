@@ -18,6 +18,7 @@ package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.*;
 import org.apache.camel.converter.stream.StreamCacheConverter;
+import org.apache.camel.util.ServiceHelper;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.SalesforceEndpointConfig;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
@@ -360,4 +361,14 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
         callback.done(false);
     }
 
+    @Override
+    public void start() throws Exception {
+        ServiceHelper.startService(bulkClient);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        // stop the client
+        ServiceHelper.stopService(bulkClient);
+    }
 }

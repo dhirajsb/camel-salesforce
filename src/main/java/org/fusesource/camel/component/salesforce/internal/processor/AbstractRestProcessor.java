@@ -18,6 +18,7 @@ package org.fusesource.camel.component.salesforce.internal.processor;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.util.ServiceHelper;
 import org.fusesource.camel.component.salesforce.SalesforceEndpoint;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
@@ -48,6 +49,16 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
             payloadFormat.toString().toLowerCase() , session);
 
         this.classMap = endpoint.getComponent().getClassMap();
+    }
+
+    @Override
+    public void start() throws Exception {
+        ServiceHelper.startService(restClient);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        ServiceHelper.stopService(restClient);
     }
 
     @Override
@@ -121,7 +132,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
 
                 case GET_SOBJECT:
                 {
-                    String sObjectIdValue = null;
+                    String sObjectIdValue;
                     // determine parameters from input AbstractSObject
                     final AbstractSObjectBase sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
                     if (sObjectBase != null) {
@@ -179,7 +190,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                 {
                     // determine parameters from input AbstractSObject
                     final AbstractSObjectBase sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
-                    String sObjectId = null;
+                    String sObjectId;
                     if (sObjectBase != null) {
                         sObjectName = sObjectBase.getClass().getSimpleName();
                         // remember the sObject Id
@@ -231,7 +242,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                 case GET_SOBJECT_WITH_ID:
                 {
                     Object oldValue = null;
-                    String sObjectExtIdValue = null;
+                    String sObjectExtIdValue;
                     final String sObjectExtIdName = getParameter(SOBJECT_EXT_ID_NAME,
                         exchange, IGNORE_BODY, NOT_OPTIONAL);
 
@@ -370,7 +381,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
         } catch (SalesforceException e) {
             String msg = String.format("Error processing %s: [%s] \"%s\"",
                 operationName, e.getStatusCode(), e.getMessage());
-            exchange.setException(e);
+            exchange.setException(new SalesforceException(msg, e));
             callback.done(true);
             return true;
         } catch (RuntimeException e) {
@@ -408,8 +419,8 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
     private void setPropertyValue(AbstractSObjectBase sObjectBase, String name, Object value) throws SalesforceException {
         try {
             // set the value with the set method
-            Method setMethod = sObjectBase.getClass().getMethod("set" + name, new Class<?>[] {value.getClass()});
-            setMethod.invoke(sObjectBase, new Object[] { value });
+            Method setMethod = sObjectBase.getClass().getMethod("set" + name, value.getClass());
+            setMethod.invoke(sObjectBase, value);
         } catch (NoSuchMethodException e) {
             String msg = String.format("SObject %s does not have a field %s",
                 sObjectBase.getClass().getName(), name);
@@ -428,11 +439,11 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
     private Object getAndClearPropertyValue(AbstractSObjectBase sObjectBase, String propertyName) throws SalesforceException {
         try {
             // obtain the value using the get method
-            Method getMethod = sObjectBase.getClass().getMethod("get" + propertyName, new Class<?>[] {});
-            Object value = getMethod.invoke(sObjectBase, new Object[] {});
+            Method getMethod = sObjectBase.getClass().getMethod("get" + propertyName);
+            Object value = getMethod.invoke(sObjectBase);
 
             // clear the value with the set method
-            Method setMethod = sObjectBase.getClass().getMethod("set" + propertyName, new Class<?>[] {getMethod.getReturnType()});
+            Method setMethod = sObjectBase.getClass().getMethod("set" + propertyName, getMethod.getReturnType());
             setMethod.invoke(sObjectBase, new Object[] { null });
 
             return value;
@@ -458,7 +469,7 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
     protected abstract InputStream getRequestStream(Exchange exchange) throws SalesforceException;
 
     private void setResponseClass(Exchange exchange, String sObjectName) throws SalesforceException {
-        Class<?> sObjectClass = null;
+        Class<?> sObjectClass;
 
         if (sObjectName != null) {
             // lookup class from class map

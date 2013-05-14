@@ -16,10 +16,10 @@
  */
 package org.fusesource.camel.component.salesforce;
 
-import org.apache.camel.CamelException;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.ServiceHelper;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.RedirectListener;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
@@ -137,12 +137,7 @@ public class SalesforceComponent extends DefaultComponent {
 
         // login at startup if lazyLogin is disabled
         if (!loginConfig.isLazyLogin()) {
-            try {
-                // get a new token
-                session.login(session.getAccessToken());
-            } catch (SalesforceException e) {
-                throw new CamelException(e.getMessage(), e);
-            }
+            ServiceHelper.startService(session);
         }
 
         if (packages != null && packages.length > 0) {
@@ -152,6 +147,10 @@ public class SalesforceComponent extends DefaultComponent {
             // use an empty map to avoid NPEs later
             LOG.warn("Missing property packages, getSObject* operations will NOT work");
             classMap = Collections.unmodifiableMap(new HashMap<String, Class<?>>());
+        }
+
+        if (subscriptionHelper != null) {
+            ServiceHelper.startService(subscriptionHelper);
         }
     }
 
@@ -175,12 +174,13 @@ public class SalesforceComponent extends DefaultComponent {
         try {
             if (subscriptionHelper != null) {
                 // shutdown all streaming connections
-                subscriptionHelper.shutdown();
+                // note that this is done in the component, and not in consumer
+                ServiceHelper.stopService(subscriptionHelper);
             }
             if (session != null && session.getAccessToken() != null) {
                 try {
                     // logout of Salesforce
-                    session.logout();
+                    ServiceHelper.stopService(session);
                 } catch (SalesforceException ignored) {
                 }
             }
@@ -196,6 +196,9 @@ public class SalesforceComponent extends DefaultComponent {
         if (subscriptionHelper == null) {
             // lazily create subscription helper
             subscriptionHelper = new SubscriptionHelper(this);
+
+            // also start the helper to connect to Salesforce
+            ServiceHelper.startService(subscriptionHelper);
         }
         return subscriptionHelper;
     }

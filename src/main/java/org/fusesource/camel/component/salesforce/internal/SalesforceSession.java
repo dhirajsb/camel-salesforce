@@ -16,6 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.internal;
 
+import org.apache.camel.Service;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
@@ -35,10 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 
-public class SalesforceSession {
+public class SalesforceSession implements Service {
 
     private static final String OAUTH2_REVOKE_PATH = "/services/oauth2/revoke?token=";
     private static final String OAUTH2_TOKEN_PATH = "/services/oauth2/token";
@@ -51,6 +52,7 @@ public class SalesforceSession {
     private final SalesforceLoginConfig config;
 
     private final ObjectMapper objectMapper;
+    private final Set<SalesforceSessionListener> listeners;
 
     private String accessToken;
     private String instanceUrl;
@@ -73,6 +75,7 @@ public class SalesforceSession {
         config.setLoginUrl(loginUrl.endsWith("/") ? loginUrl.substring(0, loginUrl.length() - 1) : loginUrl);
 
         this.objectMapper = new ObjectMapper();
+        this.listeners = new CopyOnWriteArraySet<SalesforceSessionListener>();
     }
 
     private void assertNotNull(String s, Object o) {
@@ -140,6 +143,14 @@ public class SalesforceSession {
                                 accessToken = token.getAccessToken();
                                 instanceUrl = token.getInstanceUrl();
 
+                                // notify all listeners
+                                for (SalesforceSessionListener listener : listeners) {
+                                    try {
+                                        listener.onLogin(accessToken, instanceUrl);
+                                    } catch (Throwable ignore) {
+                                    }
+                                }
+
                                 break;
 
                             case HttpStatus.BAD_REQUEST_400:
@@ -201,7 +212,6 @@ public class SalesforceSession {
 
                 case HttpExchange.STATUS_COMPLETED:
                     final int statusCode = logoutGet.getResponseStatus();
-                    final String response = logoutGet.getResponseContent();
                     final String reason = logoutGet.getReason();
 
                     if (statusCode == HttpStatus.OK_200) {
@@ -234,6 +244,13 @@ public class SalesforceSession {
             // reset session
             accessToken = null;
             instanceUrl = null;
+            // notify all session listeners of the new access token and instance url
+            for (SalesforceSessionListener listener : listeners) {
+                try {
+                    listener.onLogout();
+                } catch (Throwable ignore) {
+                }
+            }
         }
     }
 
@@ -243,6 +260,26 @@ public class SalesforceSession {
 
     public String getInstanceUrl() {
         return instanceUrl;
+    }
+
+    public boolean addListener(SalesforceSessionListener listener) {
+        return listeners.add(listener);
+    }
+
+    public boolean removeListener(SalesforceSessionListener listener) {
+        return listeners.remove(listener);
+    }
+
+    @Override
+    public void start() throws Exception {
+        // auto-login at start if needed
+        login(accessToken);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        // logout
+        logout();
     }
 
     /**
@@ -287,4 +324,10 @@ public class SalesforceSession {
         }
 
     }
+
+    public static interface SalesforceSessionListener {
+        void onLogin(String accessToken, String instanceUrl);
+        void onLogout();
+    }
+
 }

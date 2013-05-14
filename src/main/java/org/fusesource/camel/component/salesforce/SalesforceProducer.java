@@ -19,6 +19,7 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultAsyncProducer;
+import org.apache.camel.util.ServiceHelper;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
@@ -82,6 +83,20 @@ public class SalesforceProducer extends DefaultAsyncProducer {
         return processor.process(exchange, callback);
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
 
+        // start Salesforce processor
+        ServiceHelper.startService(processor);
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // stop Salesforce processor
+        ServiceHelper.stopService(processor);
+
+        super.doStop();
+    }
 
 }

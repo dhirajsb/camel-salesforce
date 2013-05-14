@@ -16,6 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce.internal.client;
 
+import org.apache.camel.Service;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpEventListenerWrapper;
@@ -32,7 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public abstract class AbstractClientBase {
+public abstract class AbstractClientBase implements SalesforceSession.SalesforceSessionListener, Service {
 
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -52,15 +53,39 @@ public abstract class AbstractClientBase {
         this.version = version;
         this.session = session;
         this.httpClient = httpClient;
+    }
 
+    public void start() throws Exception {
         // local cache
-        // TODO could probably be replaced with a TokenListener to auto-update all clients on token refresh
-        this.accessToken = session.getAccessToken();
+        accessToken = session.getAccessToken();
         if (accessToken == null) {
             // lazy login here!
-            this.accessToken = session.login(this.accessToken);
+            accessToken = session.login(accessToken);
         }
-        this.instanceUrl = session.getInstanceUrl();
+        instanceUrl = session.getInstanceUrl();
+
+        // also register this client as a session listener
+        session.addListener(this);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        // deregister listener
+        session.removeListener(this);
+    }
+
+    @Override
+    public void onLogin(String accessToken, String instanceUrl) {
+        if (!accessToken.equals(this.accessToken)) {
+            this.accessToken = accessToken;
+            this.instanceUrl = instanceUrl;
+        }
+    }
+
+    @Override
+    public void onLogout() {
+        // ignore, if this client makes another request with stale token,
+        // SalesforceSecurityListener will auto login!
     }
 
     protected SalesforceExchange getContentExchange(String method, String url) {
@@ -83,7 +108,6 @@ public abstract class AbstractClientBase {
         request.setEventListener(new HttpEventListenerWrapper(request.getEventListener(), true) {
 
             public String reason;
-            public int retries = 0;
 
             @Override
             public void onConnectionFailed(Throwable ex) {

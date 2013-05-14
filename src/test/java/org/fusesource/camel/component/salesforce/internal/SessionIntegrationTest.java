@@ -3,6 +3,7 @@ package org.fusesource.camel.component.salesforce.internal;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.RedirectListener;
 import org.fusesource.camel.component.salesforce.LoginConfigHelper;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +11,11 @@ import org.slf4j.LoggerFactory;
 /**
  * @author dbokde
  */
-public class SessionIntegrationTest {
+public class SessionIntegrationTest extends Assert implements SalesforceSession.SalesforceSessionListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(SessionIntegrationTest.class);
+    private boolean onLoginTriggered;
+    private boolean onLogoutTriggered;
 
     @Test
     public void testLogin() throws Exception {
@@ -23,18 +26,35 @@ public class SessionIntegrationTest {
 
         final SalesforceSession session = new SalesforceSession(
             httpClient, LoginConfigHelper.getLoginConfig());
+        session.addListener(this);
 
         try {
             String loginToken = session.login(session.getAccessToken());
             LOG.info("First token " + loginToken);
 
+            assertTrue("SalesforceSessionListener onLogin NOT called", onLoginTriggered);
+            onLoginTriggered = false;
+
             // refresh token, also causes logout
             loginToken = session.login(loginToken);
             LOG.info("Refreshed token " + loginToken);
+
+            assertTrue("SalesforceSessionListener onLogout NOT called", onLogoutTriggered);
+            assertTrue("SalesforceSessionListener onLogin NOT called", onLoginTriggered);
+
         } finally {
             // logout finally
             session.logout();
         }
     }
 
+    @Override
+    public void onLogin(String accessToken, String instanceUrl) {
+        onLoginTriggered = true;
+    }
+
+    @Override
+    public void onLogout() {
+        onLogoutTriggered = true;
+    }
 }

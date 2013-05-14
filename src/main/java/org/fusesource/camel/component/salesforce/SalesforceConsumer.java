@@ -21,6 +21,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.impl.DefaultConsumer;
+import org.apache.camel.util.ServiceHelper;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.cometd.bayeux.Message;
 import org.cometd.bayeux.client.ClientSessionChannel;
@@ -94,13 +95,18 @@ public class SalesforceConsumer extends DefaultConsumer {
             // Note that we don't lookup topic if the query is not specified
             // create REST client for PushTopic operations
             SalesforceComponent component = endpoint.getComponent();
-            RestClient restClient = new DefaultRestClient(
-                component.getHttpClient(),
-                endpoint.getConfiguration().getApiVersion(),
-                "json",
-                component.getSession());
-            PushTopicHelper helper = new PushTopicHelper(config, topicName, restClient);
-            helper.createOrUpdateTopic();
+            RestClient restClient = new DefaultRestClient(component.getHttpClient(),
+                endpoint.getConfiguration().getApiVersion(), "json", component.getSession());
+            // don't forget to start the client
+            ServiceHelper.startService(restClient);
+
+            try {
+                PushTopicHelper helper = new PushTopicHelper(config, topicName, restClient);
+                helper.createOrUpdateTopic();
+            } finally {
+                // don't forget to stop the client
+                ServiceHelper.stopService(restClient);
+            }
         }
 
         // subscribe to topic
@@ -113,6 +119,7 @@ public class SalesforceConsumer extends DefaultConsumer {
         super.doStop();
 
         if (subscribed) {
+            subscribed = false;
             // unsubscribe from topic
             subscriptionHelper.unsubscribe(topicName, this);
         }
@@ -132,7 +139,8 @@ public class SalesforceConsumer extends DefaultConsumer {
         final Object eventType = event.get(TYPE_PROPERTY);
         Object createdDate = event.get(CREATED_DATE_PROPERTY);
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Received event %s created on %s", eventType, createdDate));
+            log.debug(String.format("Received event %s on channel %s created on %s",
+                eventType, channel.getChannelId(), createdDate));
         }
 
         in.setHeader("CamelSalesforceEventType", eventType);
