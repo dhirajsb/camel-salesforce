@@ -47,7 +47,7 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
             mock.assertIsSatisfied();
             merchandise = mock.getExchanges().get(0).getIn().getMandatoryBody(Merchandise__c.class);
             assertNotNull("Missing event body", merchandise);
-            log.info(merchandise.toString());
+            log.info(String.format("Merchandise notification: %s", merchandise.toString()));
             assertNotNull("Missing field Id", merchandise.getId());
             assertNotNull("Missing field Name", merchandise.getName());
 
