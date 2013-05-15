@@ -18,12 +18,11 @@ package org.fusesource.camel.component.salesforce;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.junit4.CamelTestSupport;
+import org.fusesource.camel.component.salesforce.dto.Merchandise__c;
 
 import java.io.IOException;
 
 public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
-    private static final String API_VERSION = "27.0";
-    private static final String DEFAULT_FORMAT = "json";
 
     @Override
     public boolean isCreateCamelContextPerClass() {

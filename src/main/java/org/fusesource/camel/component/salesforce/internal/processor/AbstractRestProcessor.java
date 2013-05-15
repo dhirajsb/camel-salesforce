@@ -336,6 +336,35 @@ public abstract class AbstractRestProcessor extends AbstractSalesforceProcessor 
                     break;
                 }
 
+                case GET_BLOB_FIELD:
+                {
+                    // get blob field name
+                    final String sObjectBlobFieldName = getParameter(SOBJECT_BLOB_FIELD_NAME,
+                        exchange, IGNORE_BODY, NOT_OPTIONAL);
+
+                    // determine parameters from input AbstractSObject
+                    final AbstractSObjectBase sObjectBase = exchange.getIn().getBody(AbstractSObjectBase.class);
+                    String sObjectIdValue;
+                    if (sObjectBase != null) {
+                        sObjectName = sObjectBase.getClass().getSimpleName();
+                        sObjectIdValue = sObjectBase.getId();
+                    } else {
+                        sObjectName = getParameter(SOBJECT_NAME, exchange, IGNORE_BODY, NOT_OPTIONAL);
+                        sObjectIdValue = getParameter(SOBJECT_ID, exchange, USE_BODY, NOT_OPTIONAL);
+                    }
+                    final String sObjectId = sObjectIdValue;
+
+                    restClient.getBlobField(sObjectName, sObjectId, sObjectBlobFieldName,
+                        new RestClient.ResponseCallback() {
+                            @Override
+                            public void onResponse(InputStream response, SalesforceException exception) {
+                                processResponse(exchange, response, exception, callback);
+                                restoreFields(exchange, sObjectBase, sObjectId, null, null);
+                            }
+                        });
+                    break;
+                }
+
                 case QUERY:
                     final String sObjectQuery = getParameter(SOBJECT_QUERY, exchange, USE_BODY, NOT_OPTIONAL);
 

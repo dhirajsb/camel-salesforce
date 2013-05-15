@@ -17,6 +17,7 @@
 package org.fusesource.camel.component.salesforce;
 
 import org.fusesource.camel.component.salesforce.api.dto.bulk.*;
+import org.fusesource.camel.component.salesforce.dto.Merchandise__c;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theory;
 

@@ -249,6 +249,19 @@ public class DefaultRestClient extends AbstractClientBase implements RestClient 
     }
 
     @Override
+    public void getBlobField(String sObjectName, String id, String blobFieldName, ResponseCallback callback) {
+        final ContentExchange get = getContentExchange(HttpMethods.GET,
+            sobjectsUrl(sObjectName + "/" + id +"/" + blobFieldName));
+        // TODO this doesn't seem to be required, the response is always the content binary stream
+        //get.setRequestHeader(HttpHeaders.ACCEPT_ENCODING, "base64");
+
+        // requires authorization token
+        setAccessToken(get);
+
+        doHttpRequest(get, new DelegatingClientCallback(callback));
+    }
+
+    @Override
     public void query(String soqlQuery, ResponseCallback callback) {
         try {
 

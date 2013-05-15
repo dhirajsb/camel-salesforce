@@ -17,12 +17,21 @@
 package org.fusesource.camel.component.salesforce;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fusesource.camel.component.salesforce.api.dto.*;
+import org.fusesource.camel.component.salesforce.dto.Document;
+import org.fusesource.camel.component.salesforce.dto.Line_Item__c;
+import org.fusesource.camel.component.salesforce.dto.Merchandise__c;
+import org.fusesource.camel.component.salesforce.dto.QueryRecordsLine_Item__c;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.util.HashMap;
 import java.util.List;
 
 public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
@@ -30,8 +39,8 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
     private static final Logger LOG = LoggerFactory.getLogger(RestApiIntegrationTest.class);
     private static final String TEST_LINE_ITEM_ID = "1";
     private static final String NEW_LINE_ITEM_ID = "100";
+    private static final String TEST_DOCUMENT_ID = "Test Document";
 
-    private ObjectMapper objectMapper;
     private static String testId;
 
     @Test
@@ -218,6 +227,34 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
     }
 
     @Test
+    public void testGetBlobField() throws Exception {
+        doTestGetBlobField("");
+        doTestGetBlobField("Xml");
+    }
+
+    public void doTestGetBlobField(String suffix) throws Exception {
+        // get document with Name "Test Document"
+        final HashMap<String, Object> headers = new HashMap<String, Object>();
+        headers.put(SalesforceEndpointConfig.SOBJECT_NAME, "Document");
+        headers.put(SalesforceEndpointConfig.SOBJECT_EXT_ID_NAME, "Name");
+        Document document = template().requestBodyAndHeaders("direct:getSObjectWithId" + suffix, TEST_DOCUMENT_ID,
+            headers, Document.class);
+        assertNotNull(document);
+        LOG.debug("GetWithId: {}", document);
+
+        // get Body field for this document
+        InputStream body = template().requestBody("direct:getBlobField" + suffix, document, InputStream.class);
+        assertNotNull(body);
+        LOG.debug("GetBlobField: {}", body);
+        // write body to test file
+        final FileChannel fileChannel = new FileOutputStream("target/getBlobField" + suffix + ".txt").getChannel();
+        final ReadableByteChannel src = Channels.newChannel(body);
+        fileChannel.transferFrom(src, 0, document.getBodyLength());
+        fileChannel.close();
+        src.close();
+    }
+
+    @Test
     public void testQuery() throws Exception {
         doTestQuery("");
         doTestQuery("Xml");
@@ -254,9 +291,6 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
 
     @Override
     protected RouteBuilder doCreateRouteBuilder() throws Exception {
-
-        // create a json mapper
-        objectMapper = new ObjectMapper();
 
         // create test route
         return new RouteBuilder() {
@@ -347,12 +381,19 @@ public class RestApiIntegrationTest extends AbstractSalesforceTestBase {
                 from("direct:deleteSObjectWithIdXml")
                     .to("salesforce:deleteSObjectWithId?format=xml&sObjectName=Line_Item__c&sObjectIdName=Name");
 
+                // testGetBlobField
+                from("direct:getBlobField")
+                    .to("salesforce:getBlobField?sObjectName=Document&sObjectBlobFieldName=Body");
+
+                from("direct:getBlobFieldXml")
+                    .to("salesforce:getBlobField?format=xml&sObjectName=Document&sObjectBlobFieldName=Body");
+
                 // testQuery
                 from("direct:query")
-                    .to("salesforce:query?sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.QueryRecordsLine_Item__c");
+                    .to("salesforce:query?sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.dto.QueryRecordsLine_Item__c");
 
                 from("direct:queryXml")
-                    .to("salesforce:query?format=xml&sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.QueryRecordsLine_Item__c");
+                    .to("salesforce:query?format=xml&sObjectQuery=SELECT name from Line_Item__c&sObjectClass=org.fusesource.camel.component.salesforce.dto.QueryRecordsLine_Item__c");
 
                 // testSearch
                 from("direct:search")

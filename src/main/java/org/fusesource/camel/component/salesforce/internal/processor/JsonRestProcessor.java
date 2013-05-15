@@ -141,7 +141,12 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                     response = objectMapper.readValue(responseEntity, responseClass);
                 } else {
                     TypeReference<?> responseType = exchange.getProperty(RESPONSE_TYPE, TypeReference.class);
-                    response = objectMapper.readValue(responseEntity, responseType);
+                    if (responseType != null) {
+                        response = objectMapper.readValue(responseEntity, responseType);
+                    } else {
+                        // return the response as a stream, for getBlobField
+                        response = responseEntity;
+                    }
                 }
                 exchange.getOut().setBody(response);
             } else {

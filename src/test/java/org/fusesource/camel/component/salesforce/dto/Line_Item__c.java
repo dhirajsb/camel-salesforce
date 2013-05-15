@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.camel.component.salesforce;
+package org.fusesource.camel.component.salesforce.dto;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.codehaus.jackson.annotate.JsonProperty;

@@ -31,6 +31,7 @@ public enum OperationName {
     GET_SOBJECT_WITH_ID("getSObjectWithId"),
     UPSERT_SOBJECT("upsertSObject"),
     DELETE_SOBJECT_WITH_ID("deleteSObjectWithId"),
+    GET_BLOB_FIELD("getBlobField"),
     QUERY("query"),
     QUERY_MORE("queryMore"),
     SEARCH("search"),

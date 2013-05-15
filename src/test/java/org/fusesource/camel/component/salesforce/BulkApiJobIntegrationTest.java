@@ -20,6 +20,7 @@ import org.fusesource.camel.component.salesforce.api.dto.bulk.ContentType;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.JobInfo;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.JobStateEnum;
 import org.fusesource.camel.component.salesforce.api.dto.bulk.OperationEnum;
+import org.fusesource.camel.component.salesforce.dto.Merchandise__c;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theory;
 

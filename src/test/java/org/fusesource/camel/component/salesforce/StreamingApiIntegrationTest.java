@@ -19,6 +19,7 @@ package org.fusesource.camel.component.salesforce;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.fusesource.camel.component.salesforce.api.dto.CreateSObjectResult;
+import org.fusesource.camel.component.salesforce.dto.Merchandise__c;
 import org.fusesource.camel.component.salesforce.internal.dto.QueryRecordsPushTopic;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -74,7 +75,7 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
 
                 // test topic subscription
                 from("salesforce:CamelTestTopic?notifyForFields=ALL&notifyForOperations=ALL&" +
-//                    "sObjectClass=org.fusesource.camel.component.salesforce.Merchandise__c&" +
+//                    "sObjectClass=org.fusesource.camel.component.salesforce.dto.Merchandise__c&" +
                     "sObjectName=Merchandise__c&" +
                     "updateTopic=true&sObjectQuery=SELECT Id, Name FROM Merchandise__c").
                     to("mock:CamelTestTopic");

@@ -184,22 +184,28 @@ public class XmlRestProcessor extends AbstractRestProcessor {
             // do we need to un-marshal a response
             if (responseEntity != null) {
                 final Class<?> responseClass = exchange.getProperty(RESPONSE_CLASS, Class.class);
-                // its ok to call this multiple times, as xstream ignores duplicate calls
-                localXStream.processAnnotations(responseClass);
-                final String responseAlias = exchange.getProperty(RESPONSE_ALIAS, String.class);
-                if (responseAlias != null) {
-                    // extremely dirty, need to flush entire cache if its holding on to an old alias!!!
-                    final CachingMapper mapper = (CachingMapper) localXStream.getMapper();
-                    try {
-                        if (mapper.realClass(responseAlias) != responseClass) {
-                            mapper.flushCache();
+                Object response;
+                if (responseClass != null) {
+                    // its ok to call this multiple times, as xstream ignores duplicate calls
+                    localXStream.processAnnotations(responseClass);
+                    final String responseAlias = exchange.getProperty(RESPONSE_ALIAS, String.class);
+                    if (responseAlias != null) {
+                        // extremely dirty, need to flush entire cache if its holding on to an old alias!!!
+                        final CachingMapper mapper = (CachingMapper) localXStream.getMapper();
+                        try {
+                            if (mapper.realClass(responseAlias) != responseClass) {
+                                mapper.flushCache();
+                            }
+                        } catch (CannotResolveClassException ignore) {
                         }
-                    } catch (CannotResolveClassException ignore) {
+                        localXStream.alias(responseAlias, responseClass);
                     }
-                    localXStream.alias(responseAlias, responseClass);
+                    response = responseClass.newInstance();
+                    localXStream.fromXML(responseEntity, response);
+                } else {
+                    // return the response as a stream, for getBlobField
+                    response = responseEntity;
                 }
-                Object response = responseClass.newInstance();
-                localXStream.fromXML(responseEntity, response);
                 exchange.getOut().setBody(response);
             } else {
                 exchange.setException(exception);

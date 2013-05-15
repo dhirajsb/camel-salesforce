@@ -134,10 +134,15 @@ public interface RestClient {
     void deleteSObjectWithId(String sObjectName,
                              String fieldName, String fieldValue, ResponseCallback callback);
 
+
+    /**
+     * Retrieves the specified blob field from an individual record.
+     *
+     */
+    void getBlobField(String sObjectName, String id, String blobFieldName, ResponseCallback callback);
+
 /*
     TODO
-    SObject Blob Retrieve	/vXX.X/sobjects/SObject/id/blobField	Retrieves the specified blob field from an individual record.
-
     SObject User Password
     /vXX.X/sobjects/User/user id/password
     /vXX.X/sobjects/SelfServiceUser/self service user id/password
