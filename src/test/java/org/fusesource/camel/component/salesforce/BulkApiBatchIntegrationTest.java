@@ -50,7 +50,7 @@ public class BulkApiBatchIntegrationTest extends AbstractBulkApiTestBase {
 
     @Theory
     public void testBatchLifecycle(BatchTest request) throws Exception {
-        log.info(String.format("Testing Batch lifecycle with %s content", request.contentType));
+        log.info("Testing Batch lifecycle with {} content", request.contentType);
 
         // create an UPSERT test Job for this batch request
         JobInfo jobInfo = new JobInfo();

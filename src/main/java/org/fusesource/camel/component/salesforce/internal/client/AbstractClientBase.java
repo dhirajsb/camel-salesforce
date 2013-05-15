@@ -137,10 +137,8 @@ public abstract class AbstractClientBase implements SalesforceSession.Salesforce
                 final int responseStatus = request.getResponseStatus();
                 if (responseStatus < HttpStatus.OK_200 || responseStatus >= HttpStatus.MULTIPLE_CHOICES_300) {
                     final String msg = String.format("Error {%s:%s} executing {%s:%s}",
-                        responseStatus, reason,
-                        request.getMethod(), request.getRequestURI());
-                    final SalesforceException exception = new SalesforceException(msg,
-                        createRestException(request));
+                        responseStatus, reason, request.getMethod(), request.getRequestURI());
+                    final SalesforceException exception = new SalesforceException(msg, createRestException(request));
                     exception.setStatusCode(responseStatus);
                     callback.onResponse(null, exception);
                 } else {

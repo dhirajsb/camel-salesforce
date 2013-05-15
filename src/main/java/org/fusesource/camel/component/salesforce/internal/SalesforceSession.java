@@ -155,26 +155,27 @@ public class SalesforceSession implements Service {
 
                             case HttpStatus.BAD_REQUEST_400:
                                 // parse the response to get error
-                                LoginError error = objectMapper.readValue(responseContent,
+                                final LoginError error = objectMapper.readValue(responseContent,
                                     LoginError.class);
-                                String msg = String.format("Login error code:[%s] description:[%s]", error.getError(),
-                                    error.getErrorDescription());
-                                List<RestError> errors = new ArrayList<RestError>();
+                                final String msg = String.format("Login error code:[%s] description:[%s]",
+                                    error.getError(), error.getErrorDescription());
+                                final List<RestError> errors = new ArrayList<RestError>();
                                 errors.add(new RestError(msg, error.getErrorDescription()));
                                 throw new SalesforceException(errors, HttpStatus.BAD_REQUEST_400);
 
                             default:
-                                String msg2 = String.format("Login error status:[%s] reason:[%s]", responseStatus,
-                                    loginPost.getReason());
-                                throw new SalesforceException(msg2, responseStatus);
+                                throw new SalesforceException(
+                                    String.format("Login error status:[%s] reason:[%s]",
+                                        responseStatus, loginPost.getReason()),
+                                    responseStatus);
                         }
                         break;
 
                     case HttpExchange.STATUS_EXCEPTED:
                         final Throwable ex = loginPost.getException();
-                        String msg = String.format("Unexpected login exception: %s",
-                            ex.getMessage());
-                        throw new SalesforceException(msg, ex);
+                        throw new SalesforceException(
+                            String.format("Unexpected login exception: %s", ex.getMessage()),
+                            ex);
 
                     case HttpExchange.STATUS_CANCELLED:
                         throw new SalesforceException("Login request CANCELLED!", null);
@@ -217,9 +218,10 @@ public class SalesforceSession implements Service {
                     if (statusCode == HttpStatus.OK_200) {
                         LOG.info("Logout successful");
                     } else {
-                        String msg = String.format("Logout error, code: [%s] reason: [%s]",
-                            statusCode, reason);
-                        throw new SalesforceException(msg, statusCode);
+                        throw new SalesforceException(
+                            String.format("Logout error, code: [%s] reason: [%s]",
+                                statusCode, reason),
+                            statusCode);
                     }
                     break;
 

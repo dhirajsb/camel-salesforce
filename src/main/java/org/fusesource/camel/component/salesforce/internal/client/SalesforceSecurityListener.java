@@ -53,7 +53,7 @@ public class SalesforceSecurityListener extends HttpEventListenerWrapper {
             status == HttpStatus.UNAUTHORIZED_401 &&
             retries < destination.getHttpClient().maxRetries()) {
 
-            LOG.warn(String.format("Retrying on Salesforce authentication error [%s]: [%s]", status, reason));
+            LOG.warn("Retrying on Salesforce authentication error [{}]: [{}]", status, reason);
             setDelegatingRequests(false);
             setDelegatingResponses(false);
 
@@ -80,9 +80,7 @@ public class SalesforceSecurityListener extends HttpEventListenerWrapper {
 
     private boolean checkExchangeComplete() throws IOException {
         if (retrying && requestComplete && responseComplete) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Authentication Error, retrying: " + exchange);
-            }
+            LOG.debug("Authentication Error, retrying: {}", exchange);
 
             requestComplete = false;
             responseComplete = false;

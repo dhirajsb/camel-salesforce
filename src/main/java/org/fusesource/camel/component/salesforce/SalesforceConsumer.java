@@ -65,16 +65,14 @@ public class SalesforceConsumer extends DefaultConsumer {
         if (sObjectName != null) {
             sObjectClass = endpoint.getComponent().getClassMap().get(sObjectName);
             if (sObjectClass == null) {
-                String msg = String.format("SObject Class not found for %s", sObjectName);
-                throw new IllegalArgumentException(msg);
+                throw new IllegalArgumentException(String.format("SObject Class not found for %s", sObjectName));
             }
         } else {
             final String className = endpoint.getConfiguration().getSObjectClass();
             if (className != null) {
                 sObjectClass = endpoint.getComponent().getCamelContext().getClassResolver().resolveClass(className);
                 if (sObjectClass == null) {
-                    String msg = String.format("SObject Class not found %s", className);
-                    throw new IllegalArgumentException(msg);
+                    throw new IllegalArgumentException(String.format("SObject Class not found %s", className));
                 }
             } else {
                 log.warn("Property sObjectName or sObjectClass NOT set, messages will be of type java.lang.Map");
@@ -152,9 +150,7 @@ public class SalesforceConsumer extends DefaultConsumer {
         try {
 
             final String sObjectString = objectMapper.writeValueAsString(sObject);
-            if (log.isDebugEnabled()) {
-                log.debug(String.format("Received SObject: %s", sObjectString));
-            }
+            log.debug("Received SObject: {}", sObjectString);
 
             if (sObjectClass == null) {
                 // return sobject map as exchange body
@@ -181,13 +177,11 @@ public class SalesforceConsumer extends DefaultConsumer {
                 }
             });
         } catch (Exception e) {
-            String msg = String.format("Error processing %s: %s", exchange, e.getMessage());
-            handleException(msg, e);
+            handleException(String.format("Error processing %s: %s", exchange, e.getMessage()), e);
         } finally {
             Exception ex = exchange.getException();
             if (ex != null) {
-                String msg = String.format("Unhandled exception: %s", ex.getMessage());
-                handleException(msg, ex);
+                handleException(String.format("Unhandled exception: %s", ex.getMessage()), ex);
             }
         }
     }

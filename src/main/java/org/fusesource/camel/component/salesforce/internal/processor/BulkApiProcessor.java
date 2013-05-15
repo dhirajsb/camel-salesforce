@@ -322,21 +322,24 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
             }
 
         } catch (SalesforceException e) {
-            String msg = String.format("Error processing %s: [%s] \"%s\"",
-                operationName, e.getStatusCode(), e.getMessage());
-            exchange.setException(new SalesforceException(msg, e));
+            exchange.setException(new SalesforceException(
+                String.format("Error processing %s: [%s] \"%s\"",
+                    operationName, e.getStatusCode(), e.getMessage()),
+                e));
             callback.done(true);
             done = true;
         } catch (InvalidPayloadException e) {
-            String msg = String.format("Unexpected Error processing %s: \"%s\"",
-                operationName, e.getMessage());
-            exchange.setException(new SalesforceException(msg, e));
+            exchange.setException(new SalesforceException(
+                String.format("Unexpected Error processing %s: \"%s\"",
+                    operationName, e.getMessage()),
+                e));
             callback.done(true);
             done = true;
         } catch (RuntimeException e) {
-            String msg = String.format("Unexpected Error processing %s: \"%s\"",
-                operationName, e.getMessage());
-            exchange.setException(new SalesforceException(msg, e));
+            exchange.setException(new SalesforceException(
+                String.format("Unexpected Error processing %s: \"%s\"",
+                    operationName, e.getMessage()),
+                e));
             callback.done(true);
             done = true;
         }

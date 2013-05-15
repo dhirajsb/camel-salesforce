@@ -421,13 +421,15 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
             JAXBElement<T> result = unmarshaller.unmarshal(new StreamSource(response), resultClass);
             return result.getValue();
         } catch (JAXBException e) {
-            String msg = String.format("Error unmarshaling response {%s:%s} : %s",
-                request.getMethod(), request.getRequestURI(), e.getMessage());
-            throw new SalesforceException(msg, e);
+            throw new SalesforceException(
+                String.format("Error unmarshaling response {%s:%s} : %s",
+                    request.getMethod(), request.getRequestURI(), e.getMessage()),
+                e);
         } catch (IllegalArgumentException e) {
-            String msg = String.format("Error unmarshaling response for {%s:%s} : %s",
-                request.getMethod(), request.getRequestURI(), e.getMessage());
-            throw new SalesforceException(msg, e);
+            throw new SalesforceException(
+                String.format("Error unmarshaling response for {%s:%s} : %s",
+                    request.getMethod(), request.getRequestURI(), e.getMessage()),
+                e);
         }
     }
 
@@ -440,13 +442,15 @@ public class DefaultBulkApiClient extends AbstractClientBase implements BulkApiC
             request.setRequestContent(new ByteArrayBuffer(byteStream.toByteArray()));
             request.setRequestContentType(contentType);
         } catch (JAXBException e) {
-            String msg = String.format("Error marshaling request for {%s:%s} : %s",
-                request.getMethod(), request.getRequestURI(), e.getMessage());
-            throw new SalesforceException(msg, e);
+            throw new SalesforceException(
+                String.format("Error marshaling request for {%s:%s} : %s",
+                    request.getMethod(), request.getRequestURI(), e.getMessage()),
+                e);
         } catch (IllegalArgumentException e) {
-            String msg = String.format("Error marshaling request for {%s:%s} : %s",
-                request.getMethod(), request.getRequestURI(), e.getMessage());
-            throw new SalesforceException(msg, e);
+            throw new SalesforceException(
+                String.format("Error marshaling request for {%s:%s} : %s",
+                    request.getMethod(), request.getRequestURI(), e.getMessage()),
+                e);
         }
     }
 

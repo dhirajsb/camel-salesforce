@@ -49,9 +49,10 @@ public class JodaTimeConverter implements Converter {
             // normalize date time to UTC
             return constructor.newInstance(dateTimeStr, DateTimeZone.UTC);
         } catch (Exception e) {
-            String msg = String.format(
-                "Error reading Joda DateTime from value %s: %s", dateTimeStr, e.getMessage());
-            throw new IllegalArgumentException(msg, e);
+            throw new IllegalArgumentException(
+                String.format("Error reading Joda DateTime from value %s: %s",
+                    dateTimeStr, e.getMessage()),
+                e);
         }
     }
 

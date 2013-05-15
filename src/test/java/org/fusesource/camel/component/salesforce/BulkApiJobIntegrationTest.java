@@ -90,7 +90,7 @@ public class BulkApiJobIntegrationTest extends AbstractBulkApiTestBase {
 
     @Theory
     public void testJobLifecycle(JobInfo jobInfo) throws Exception {
-        log.info(String.format("Testing Job lifecycle for %s of type %s", jobInfo.getOperation(), jobInfo.getContentType()));
+        log.info("Testing Job lifecycle for {} of type {}", jobInfo.getOperation(), jobInfo.getContentType());
 
         // test create
         jobInfo = createJob(jobInfo);

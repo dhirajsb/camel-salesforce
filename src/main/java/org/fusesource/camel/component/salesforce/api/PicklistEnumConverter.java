@@ -24,7 +24,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class PicklistEnumConverter implements Converter {
@@ -38,18 +37,11 @@ public class PicklistEnumConverter implements Converter {
         try {
             Method getterMethod = aClass.getMethod("value");
             writer.setValue((String) getterMethod.invoke(o));
-        } catch (NoSuchMethodException e) {
-            String msg = String.format("Exception writing pick list value %s of type %s: %s",
-                o, o.getClass().getName(), e.getMessage());
-            throw new IllegalArgumentException(msg, e);
-        } catch (InvocationTargetException e) {
-            String msg = String.format("Exception writing pick list value %s of type %s: %s",
-                o, o.getClass().getName(), e.getMessage());
-            throw new IllegalArgumentException(msg, e);
-        } catch (IllegalAccessException e) {
-            String msg = String.format("Exception writing pick list value %s of type %s: %s",
-                o, o.getClass().getName(), e.getMessage());
-            throw new IllegalArgumentException(msg, e);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalArgumentException(
+                String.format("Exception writing pick list value %s of type %s: %s",
+                    o, o.getClass().getName(), e.getMessage()),
+                e);
         }
     }
 
@@ -61,11 +53,16 @@ public class PicklistEnumConverter implements Converter {
             Method factoryMethod = requiredType.getMethod(FACTORY_METHOD, String.class);
             // use factory method to create object
             return factoryMethod.invoke(null, value);
-        } catch (Exception e) {
-            String msg = String.format(
-                "Exception reading pick list value %s of type %s: %s",
-                value, context.getRequiredType().getName(), e.getMessage());
-            throw new IllegalArgumentException(msg, e);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalArgumentException(
+                String.format("Exception reading pick list value %s of type %s: %s",
+                    value, context.getRequiredType().getName(), e.getMessage()),
+                e);
+        } catch (SecurityException e) {
+            throw new IllegalArgumentException(
+                String.format("Security Exception reading pick list value %s of type %s: %s",
+                    value, context.getRequiredType().getName(), e.getMessage()),
+                e);
         }
     }
 

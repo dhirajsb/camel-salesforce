@@ -48,8 +48,7 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     public Producer createProducer() throws Exception {
         // producer requires an operation, topicName must be the invalid operation name
         if (operationName == null) {
-            String msg = String.format("Invalid Operation %s", topicName);
-            throw new IllegalArgumentException(msg);
+            throw new IllegalArgumentException(String.format("Invalid Operation %s", topicName));
         }
 
         SalesforceProducer producer = new SalesforceProducer(this);
@@ -63,9 +62,8 @@ public class SalesforceEndpoint extends DefaultEndpoint {
     public Consumer createConsumer(Processor processor) throws Exception {
         // consumer requires a topicName, operation name must be the invalid topic name
         if (topicName == null) {
-            String msg = String.format("Invalid topic name %s, matches a producer operation name",
-                operationName.value());
-            throw new IllegalArgumentException(msg);
+            throw new IllegalArgumentException(String.format("Invalid topic name %s, matches a producer operation name",
+                operationName.value()));
         }
 
         return new SalesforceConsumer(this, processor,

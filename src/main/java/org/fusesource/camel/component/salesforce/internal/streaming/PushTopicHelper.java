@@ -55,7 +55,7 @@ public class PushTopicHelper {
             if (records.getTotalSize() == 1) {
 
                 PushTopic topic = records.getRecords().get(0);
-                LOG.info(String.format("Found existing topic %s: %s", topicName, topic));
+                LOG.info("Found existing topic {}: {}", topicName, topic);
 
                 // check if we need to update topic query, notifyForFields or notifyForOperations
                 if (!query.equals(topic.getQuery()) ||
@@ -79,15 +79,18 @@ public class PushTopicHelper {
             }
 
         } catch (SalesforceException e) {
-            String msg = String.format("Error retrieving Topic %s: %s", topicName, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Error retrieving Topic %s: %s", topicName, e.getMessage()),
+                e);
         } catch (IOException e) {
-            String msg = String.format("Un-marshaling error retrieving Topic %s: %s", topicName, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Un-marshaling error retrieving Topic %s: %s", topicName, e.getMessage()),
+                e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            String msg = String.format("Un-marshaling error retrieving Topic %s: %s", topicName, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Un-marshaling error retrieving Topic %s: %s", topicName, e.getMessage()),
+                e);
         } finally {
             // close stream to close HttpConnection
             if (callback.getResponse() != null) {
@@ -109,7 +112,7 @@ public class PushTopicHelper {
         topic.setNotifyForFields(config.getNotifyForFields());
         topic.setNotifyForOperations(config.getNotifyForOperations());
 
-        LOG.info(String.format("Creating Topic %s: %s", topicName, topic));
+        LOG.info("Creating Topic {}: {}", topicName, topic);
         final SyncResponseCallback callback = new SyncResponseCallback();
         try {
             restClient.createSObject(PUSH_TOPIC_OBJECT_NAME,
@@ -124,20 +127,24 @@ public class PushTopicHelper {
 
             CreateSObjectResult result = objectMapper.readValue(callback.getResponse(), CreateSObjectResult.class);
             if (!result.getSuccess()) {
-                String msg = String.format("Error creating Topic %s: %s", topicName, result.getErrors());
-                final SalesforceException salesforceException = new SalesforceException(result.getErrors(),
-                    HttpStatus.BAD_REQUEST_400);
-                throw new CamelException(msg, salesforceException);
+                final SalesforceException salesforceException = new SalesforceException(
+                    result.getErrors(), HttpStatus.BAD_REQUEST_400);
+                throw new CamelException(
+                    String.format("Error creating Topic %s: %s", topicName, result.getErrors()),
+                    salesforceException);
             }
         } catch (SalesforceException e) {
-            String msg = String.format("Error creating Topic %s: %s", topicName, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Error creating Topic %s: %s", topicName, e.getMessage()),
+                e);
         } catch (IOException e) {
-            String msg = String.format("Un-marshaling error creating Topic %s: %s", topicName, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Un-marshaling error creating Topic %s: %s", topicName, e.getMessage()),
+                e);
         } catch (InterruptedException e) {
-            String msg = String.format("Un-marshaling error creating Topic %s: %s", topicName, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Un-marshaling error creating Topic %s: %s", topicName, e.getMessage()),
+                e);
         } finally {
             if (callback.getResponse() != null) {
                 try {
@@ -151,7 +158,7 @@ public class PushTopicHelper {
 
     private void updateTopic(String topicId) throws CamelException {
         final String query = config.getSObjectQuery();
-        LOG.info(String.format("Updating Topic %s with Query [%s]", topicName, query));
+        LOG.info("Updating Topic {} with Query [{}]", topicName, query);
 
         final SyncResponseCallback callback = new SyncResponseCallback();
         try {
@@ -173,19 +180,19 @@ public class PushTopicHelper {
             }
 
         } catch (SalesforceException e) {
-            String msg = String.format("Error updating topic %s with query [%s] : %s",
-                topicName, query, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Error updating topic %s with query [%s] : %s", topicName, query, e.getMessage()),
+                e);
         } catch (InterruptedException e) {
             // reset interrupt status
             Thread.currentThread().interrupt();
-            String msg = String.format("Error updating topic %s with query [%s] : %s",
-                topicName, query, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Error updating topic %s with query [%s] : %s", topicName, query, e.getMessage()),
+                e);
         } catch (IOException e) {
-            String msg = String.format("Error updating topic %s with query [%s] : %s",
-                topicName, query, e.getMessage());
-            throw new CamelException(msg, e);
+            throw new CamelException(
+                String.format("Error updating topic %s with query [%s] : %s", topicName, query, e.getMessage()),
+                e);
         } finally {
             if (callback.getResponse() != null) {
                 try {

@@ -86,9 +86,7 @@ public class SubscriptionHelper implements Service {
         final Exception[] handshakeException = {null};
         final ClientSessionChannel.MessageListener handshakeListener = new ClientSessionChannel.MessageListener() {
             public void onMessage(ClientSessionChannel channel, Message message) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("[CHANNEL:META_HANDSHAKE]: %s", message));
-                }
+                LOG.debug("[CHANNEL:META_HANDSHAKE]: {}", message);
 
                 boolean success = message.isSuccessful();
                 if (!success) {
@@ -109,15 +107,12 @@ public class SubscriptionHelper implements Service {
         final String[] connectError = {null};
         final ClientSessionChannel.MessageListener connectListener = new ClientSessionChannel.MessageListener() {
             public void onMessage(ClientSessionChannel channel, Message message) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[CHANNEL:META_CONNECT]: " + message);
-                }
+                LOG.debug("[CHANNEL:META_CONNECT]: {}", message);
 
                 boolean success = message.isSuccessful();
                 if (!success) {
                     String error = (String) message.get(ERROR_FIELD);
                     if (error != null) {
-                        LOG.error(String.format("Error during CONNECT: %s", error));
                         connectError[0] = error;
                     }
                 }
@@ -134,17 +129,16 @@ public class SubscriptionHelper implements Service {
             final long waitMs = MILLISECONDS.convert(CONNECT_TIMEOUT, SECONDS);
             if (!client.waitFor(waitMs, BayeuxClient.State.CONNECTED)) {
                 if (handshakeException[0] != null) {
-                    String msg = String.format("Exception during HANDSHAKE: %s", handshakeException[0].getMessage());
-                    throw new CamelException(msg, handshakeException[0]);
+                    throw new CamelException(
+                        String.format("Exception during HANDSHAKE: %s", handshakeException[0].getMessage()),
+                        handshakeException[0]);
                 } else if (handshakeError[0] != null) {
-                    String msg = String.format("Error during HANDSHAKE: %s", handshakeError[0]);
-                    throw new CamelException(msg);
+                    throw new CamelException(String.format("Error during HANDSHAKE: %s", handshakeError[0]));
                 } else if (connectError[0] != null) {
-                    String msg = String.format("Error during CONNECT: %s", connectError[0]);
-                    throw new CamelException(msg);
+                    throw new CamelException(String.format("Error during CONNECT: %s", connectError[0]));
                 } else {
-                    String msg = String.format("Handshake request timeout after %s seconds", CONNECT_TIMEOUT);
-                    throw new CamelException(msg);
+                    throw new CamelException(
+                        String.format("Handshake request timeout after %s seconds", CONNECT_TIMEOUT));
                 }
             }
         } finally {
@@ -206,14 +200,12 @@ public class SubscriptionHelper implements Service {
         final String channelName = getChannelName(topicName);
 
         // channel message listener
-        LOG.info(String.format("Subscribing to channel %s...", channelName));
+        LOG.info("Subscribing to channel {}...", channelName);
         final ClientSessionChannel.MessageListener listener = new ClientSessionChannel.MessageListener() {
 
             @Override
             public void onMessage(ClientSessionChannel channel, Message message) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Received Message: %s", message));
-                }
+                LOG.debug("Received Message: {}", message);
                 // convert CometD message to Camel Message
                 consumer.processMessage(channel, message);
             }
@@ -227,9 +219,7 @@ public class SubscriptionHelper implements Service {
         final String[] subscribeError = {null};
         final ClientSessionChannel.MessageListener subscriptionListener = new ClientSessionChannel.MessageListener() {
             public void onMessage(ClientSessionChannel channel, Message message) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[CHANNEL:META_SUBSCRIBE]: " + message);
-                }
+                LOG.debug("[CHANNEL:META_SUBSCRIBE]: {}", message);
                 final String subscribedChannelName = message.get(SUBSCRIPTION_FIELD).toString();
                 if (channelName.equals(subscribedChannelName)) {
 
@@ -298,9 +288,7 @@ public class SubscriptionHelper implements Service {
         final String[] unsubscribeError = {null};
         final ClientSessionChannel.MessageListener unsubscribeListener = new ClientSessionChannel.MessageListener() {
             public void onMessage(ClientSessionChannel channel, Message message) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[CHANNEL:META_UNSUBSCRIBE]: " + message);
-                }
+                LOG.debug("[CHANNEL:META_UNSUBSCRIBE]: {}", message);
                 String channelName = message.get(SUBSCRIPTION_FIELD).toString();
 
                 boolean success = message.isSuccessful();
@@ -325,7 +313,7 @@ public class SubscriptionHelper implements Service {
             if (listener != null) {
 
                 final String channelName = getChannelName(topicName);
-                LOG.info(String.format("Unsubscribing from channel %s...", channelName));
+                LOG.info("Unsubscribing from channel {}...", channelName);
 
                 final ClientSessionChannel clientChannel = client.getChannel(channelName);
                 clientChannel.unsubscribe(listener);
