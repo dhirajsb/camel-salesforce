@@ -87,7 +87,6 @@ public class SalesforceSession implements Service {
     @SuppressWarnings("unchecked")
     public synchronized String login(String oldToken) throws SalesforceException {
 
-        // TODO create a TokenListener to automatically update clients with new access token and instance URL
         // check if we need a new session
         // this way there's always a single valid session
         if ((accessToken == null) || accessToken.equals(oldToken)) {
@@ -147,7 +146,8 @@ public class SalesforceSession implements Service {
                                 for (SalesforceSessionListener listener : listeners) {
                                     try {
                                         listener.onLogin(accessToken, instanceUrl);
-                                    } catch (Throwable ignore) {
+                                    } catch (Throwable t) {
+                                        LOG.warn("Unexpected error from listener {}: {}", listener, t.getMessage());
                                     }
                                 }
 
@@ -248,7 +248,8 @@ public class SalesforceSession implements Service {
             for (SalesforceSessionListener listener : listeners) {
                 try {
                     listener.onLogout();
-                } catch (Throwable ignore) {
+                } catch (Throwable t) {
+                    LOG.warn("Unexpected error from listener {}: {}", listener, t.getMessage());
                 }
             }
         }
