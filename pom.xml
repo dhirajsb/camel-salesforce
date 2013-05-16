@@ -26,6 +26,8 @@
     <excluded.tests>**/*IntegrationTest.class</excluded.tests>
     <cometd-java-client.version>2.4.3</cometd-java-client.version>
     <jetty-client.version>7.6.7.v20120910</jetty-client.version>
+    <slf4j-api.version>1.6.1</slf4j-api.version>
+    <log4j.version>1.2.16</log4j.version>
   </properties>
 
   <repositories>
@@ -155,18 +157,18 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j-api.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
+      <version>${log4j.version}</version>
       <scope>test</scope>
     </dependency>
 
