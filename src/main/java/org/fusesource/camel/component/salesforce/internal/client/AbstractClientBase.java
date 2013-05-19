@@ -21,6 +21,7 @@ import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpEventListenerWrapper;
 import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.http.HttpSchemes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.util.StringUtil;
@@ -103,6 +104,18 @@ public abstract class AbstractClientBase implements SalesforceSession.Salesforce
     }
 
     protected void doHttpRequest(final ContentExchange request, final ClientResponseCallback callback) {
+
+        // use SalesforceSecurityListener for security login retries
+        try {
+            final boolean isHttps = HttpSchemes.HTTPS.equals(String.valueOf(request.getScheme()));
+            request.setEventListener(new SalesforceSecurityListener(
+                httpClient.getDestination(request.getAddress(), isHttps), request));
+        } catch (IOException e) {
+            // propagate exception
+            callback.onResponse(null, new SalesforceException(
+                String.format("Error registering security listener: %s", e.getMessage()),
+                e));
+        }
 
         // use HttpEventListener for lifecycle events
         request.setEventListener(new HttpEventListenerWrapper(request.getEventListener(), true) {

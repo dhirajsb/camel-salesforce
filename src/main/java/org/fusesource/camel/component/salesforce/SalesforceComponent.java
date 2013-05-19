@@ -27,7 +27,6 @@ import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
 import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
-import org.fusesource.camel.component.salesforce.internal.client.SalesforceSecurityListener;
 import org.fusesource.camel.component.salesforce.internal.streaming.SubscriptionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +45,8 @@ public class SalesforceComponent extends DefaultComponent {
 
     private static final String DEFAULT_VERSION = "27.0";
     private static final int MAX_CONNECTIONS_PER_ADDRESS = 20;
-    private static final int CONNECTION_TIMEOUT = 15000;
-    private static final int RESPONSE_TIMEOUT = 15000;
+    private static final int CONNECTION_TIMEOUT = 60000;
+    private static final int RESPONSE_TIMEOUT = 60000;
 
     private SalesforceLoginConfig loginConfig;
     private SalesforceEndpointConfig config;
@@ -80,6 +79,8 @@ public class SalesforceComponent extends DefaultComponent {
             // inherit default values from component
             config.setFormat(PayloadFormat.JSON.toString());
             config.setApiVersion(DEFAULT_VERSION);
+            // set the component's httpClient as default
+            config.setHttpClient(httpClient);
         }
 
         // create a deep copy and map parameters
@@ -116,16 +117,14 @@ public class SalesforceComponent extends DefaultComponent {
         }
 
         // add redirect listener to handle Salesforce redirects
+        // this is ok to do since the RedirectListener is in the same classloader as Jetty client
         String listenerClass = RedirectListener.class.getName();
         if (httpClient.getRegisteredListeners() == null ||
             !httpClient.getRegisteredListeners().contains(listenerClass)) {
             httpClient.registerListener(listenerClass);
         }
-        listenerClass = SalesforceSecurityListener.class.getName();
-        if (httpClient.getRegisteredListeners() == null ||
-            !httpClient.getRegisteredListeners().contains(listenerClass)) {
-            httpClient.registerListener(listenerClass);
-        }
+        // SalesforceSecurityListener can't be registered the same way
+        // since Jetty HttpClient's Class.forName() can't see it
 
         // start the Jetty client to initialize thread pool, etc.
         httpClient.start();
@@ -225,10 +224,6 @@ public class SalesforceComponent extends DefaultComponent {
 
     public void setPackages(String[] packages) {
         this.packages = packages;
-    }
-
-    public HttpClient getHttpClient() {
-        return httpClient;
     }
 
     public SalesforceSession getSession() {

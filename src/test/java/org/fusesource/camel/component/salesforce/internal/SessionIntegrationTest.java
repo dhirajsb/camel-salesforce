@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 public class SessionIntegrationTest extends Assert implements SalesforceSession.SalesforceSessionListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(SessionIntegrationTest.class);
+    private static final int TIMEOUT = 60000;
     private boolean onLoginTriggered;
     private boolean onLogoutTriggered;
 
@@ -21,6 +22,8 @@ public class SessionIntegrationTest extends Assert implements SalesforceSession.
     public void testLogin() throws Exception {
 
         final HttpClient httpClient = new HttpClient();
+        httpClient.setConnectTimeout(TIMEOUT);
+        httpClient.setTimeout(TIMEOUT);
         httpClient.registerListener(RedirectListener.class.getName());
         httpClient.start();
 

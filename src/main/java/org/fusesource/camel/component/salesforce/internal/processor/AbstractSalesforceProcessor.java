@@ -51,7 +51,7 @@ public abstract class AbstractSalesforceProcessor implements SalesforceProcessor
 
         final SalesforceComponent component = endpoint.getComponent();
         this.session = component.getSession();
-        this.httpClient = component.getHttpClient();
+        this.httpClient = endpoint.getConfiguration().getHttpClient();
     }
 
     @Override

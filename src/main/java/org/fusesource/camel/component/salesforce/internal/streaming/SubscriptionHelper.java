@@ -161,8 +161,8 @@ public class SubscriptionHelper implements Service {
     }
 
     private BayeuxClient createClient() throws Exception {
-        // use Jetty client from SalesforceComponent
-        final HttpClient httpClient = component.getHttpClient();
+        // use default Jetty client from SalesforceComponent, its shared by all consumers
+        final HttpClient httpClient = component.getConfig().getHttpClient();
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put(ClientTransport.TIMEOUT_OPTION, httpClient.getTimeout());
