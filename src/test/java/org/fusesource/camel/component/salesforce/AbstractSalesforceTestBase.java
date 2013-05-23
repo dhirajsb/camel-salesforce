@@ -43,6 +43,9 @@ public abstract class AbstractSalesforceTestBase extends CamelTestSupport {
     protected void createComponent() throws IllegalAccessException, IOException {
         // create the component
         SalesforceComponent component = new SalesforceComponent();
+        final SalesforceEndpointConfig config = new SalesforceEndpointConfig();
+        config.setApiVersion(System.getProperty("apiVersion", SalesforceEndpointConfig.DEFAULT_VERSION));
+        component.setConfig(config);
         component.setLoginConfig(LoginConfigHelper.getLoginConfig());
 
         // set DTO package
