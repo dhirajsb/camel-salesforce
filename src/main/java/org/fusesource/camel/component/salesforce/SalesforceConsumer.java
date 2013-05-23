@@ -45,6 +45,7 @@ public class SalesforceConsumer extends DefaultConsumer {
     private static final String TYPE_PROPERTY = "type";
     private static final String CREATED_DATE_PROPERTY = "createdDate";
     private static final String SOBJECT_PROPERTY = "sobject";
+    private static final double MINIMUM_VERSION = 24.0;
 
     private final SalesforceEndpoint endpoint;
     public final SubscriptionHelper subscriptionHelper;
@@ -56,6 +57,11 @@ public class SalesforceConsumer extends DefaultConsumer {
     public SalesforceConsumer(SalesforceEndpoint endpoint, Processor processor, SubscriptionHelper helper) {
         super(endpoint, processor);
         this.endpoint = endpoint;
+
+        // check minimum supported API version
+        if (Double.valueOf(endpoint.getConfiguration().getApiVersion()) < MINIMUM_VERSION) {
+            throw new IllegalArgumentException("Minimum supported API version for consumer endpoints is " + 24.0);
+        }
 
         this.topicName = endpoint.getTopicName();
         this.subscriptionHelper = helper;
@@ -195,6 +201,15 @@ public class SalesforceConsumer extends DefaultConsumer {
         headers.put("CamelSalesforceClientId", message.getClientId());
 
         in.setHeaders(headers);
+    }
+
+    @Override
+    public void handleException(String message, Throwable t) {
+        super.handleException(message, t);
+    }
+
+    public String getTopicName() {
+        return topicName;
     }
 
 }
