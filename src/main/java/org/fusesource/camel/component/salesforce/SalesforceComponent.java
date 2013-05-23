@@ -25,7 +25,6 @@ import org.eclipse.jetty.client.RedirectListener;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
 import org.fusesource.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.fusesource.camel.component.salesforce.internal.OperationName;
-import org.fusesource.camel.component.salesforce.internal.PayloadFormat;
 import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 import org.fusesource.camel.component.salesforce.internal.streaming.SubscriptionHelper;
 import org.slf4j.Logger;
@@ -43,7 +42,6 @@ public class SalesforceComponent extends DefaultComponent {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceComponent.class);
 
-    private static final String DEFAULT_VERSION = "27.0";
     private static final int MAX_CONNECTIONS_PER_ADDRESS = 20;
     private static final int CONNECTION_TIMEOUT = 60000;
     private static final int RESPONSE_TIMEOUT = 60000;
@@ -75,10 +73,8 @@ public class SalesforceComponent extends DefaultComponent {
         // create endpoint config
         if (config == null) {
             config = new SalesforceEndpointConfig();
-
-            // inherit default values from component
-            config.setFormat(PayloadFormat.JSON.toString());
-            config.setApiVersion(DEFAULT_VERSION);
+        }
+        if (config.getHttpClient() == null) {
             // set the component's httpClient as default
             config.setHttpClient(httpClient);
         }

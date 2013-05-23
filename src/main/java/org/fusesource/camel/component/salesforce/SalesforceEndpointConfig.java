@@ -14,6 +14,9 @@ import java.util.Map;
 
 public class SalesforceEndpointConfig implements Cloneable {
 
+    // default API version
+    static final String DEFAULT_VERSION = "27.0";
+
     // general parameter
     public static final String API_VERSION = "apiVersion";
 
@@ -40,10 +43,10 @@ public class SalesforceEndpointConfig implements Cloneable {
     public static final String UPDATE_TOPIC = "updateTopic";
 
     // general properties
-    private String apiVersion;
+    private String apiVersion = DEFAULT_VERSION;
 
     // Rest API properties
-    private PayloadFormat format;
+    private PayloadFormat format = PayloadFormat.JSON;
     private String sObjectName;
     private String sObjectId;
     private String sObjectFields;
