@@ -19,6 +19,7 @@ package org.fusesource.camel.component.salesforce.internal.client;
 import org.eclipse.jetty.client.HttpDestination;
 import org.eclipse.jetty.client.HttpEventListenerWrapper;
 import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.http.HttpHeaders;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.io.Buffer;
 import org.fusesource.camel.component.salesforce.api.SalesforceException;
@@ -34,23 +35,26 @@ public class SalesforceSecurityListener extends HttpEventListenerWrapper {
 
     private final HttpDestination destination;
     private final HttpExchange exchange;
-    private final boolean shouldIntercept;
+    private final SalesforceSession session;
+
+    private String currentToken;
     private int retries;
     private boolean retrying;
     private boolean requestComplete;
     private boolean responseComplete;
 
-    public SalesforceSecurityListener(HttpDestination destination, HttpExchange exchange) {
+    public SalesforceSecurityListener(HttpDestination destination, HttpExchange exchange,
+                                      SalesforceSession session, String accessToken) {
         super(exchange.getEventListener(), true);
         this.destination = destination;
         this.exchange = exchange;
-        this.shouldIntercept = exchange instanceof SalesforceExchange;
+        this.session = session;
+        this.currentToken = accessToken;
     }
 
     @Override
     public void onResponseStatus(Buffer version, int status, Buffer reason) throws IOException {
-        if (shouldIntercept &&
-            status == HttpStatus.UNAUTHORIZED_401 &&
+        if (status == HttpStatus.UNAUTHORIZED_401 &&
             retries < destination.getHttpClient().maxRetries()) {
 
             LOG.warn("Retrying on Salesforce authentication error [{}]: [{}]", status, reason);
@@ -90,16 +94,20 @@ public class SalesforceSecurityListener extends HttpEventListenerWrapper {
 
             try {
                 // get a new token and retry
-                SalesforceExchange salesforceExchange = (SalesforceExchange) exchange;
-                final String oldToken = salesforceExchange.getAccessToken();
-                final SalesforceSession session = salesforceExchange.getSession();
-                final String accessToken = session.login(oldToken);
-                final AbstractClientBase client = salesforceExchange.getClient();
+                currentToken = session.login(currentToken);
 
-                // update client cache for this and future requests
-                client.setAccessToken(accessToken);
-                client.setInstanceUrl(session.getInstanceUrl());
-                client.setAccessToken(exchange);
+                if (exchange instanceof SalesforceExchange) {
+                    final SalesforceExchange salesforceExchange = (SalesforceExchange) exchange;
+                    final AbstractClientBase client = salesforceExchange.getClient();
+
+                    // update client cache for this and future requests
+                    client.setAccessToken(currentToken);
+                    client.setInstanceUrl(session.getInstanceUrl());
+                    client.setAccessToken(exchange);
+                } else {
+                    exchange.addRequestHeader(HttpHeaders.AUTHORIZATION,
+                        "OAuth " + currentToken);
+                }
 
                 // TODO handle a change in Salesforce instanceUrl, right now we retry with the same destination
                 destination.resend(exchange);

@@ -17,7 +17,6 @@
 package org.fusesource.camel.component.salesforce.internal.client;
 
 import org.eclipse.jetty.client.ContentExchange;
-import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 
 /**
  * Wraps a Salesforce Http Exchange
@@ -25,8 +24,6 @@ import org.fusesource.camel.component.salesforce.internal.SalesforceSession;
 public class SalesforceExchange extends ContentExchange {
 
     private AbstractClientBase client;
-    private SalesforceSession session;
-    private String accessToken;
 
     public AbstractClientBase getClient() {
         return client;
@@ -34,22 +31,6 @@ public class SalesforceExchange extends ContentExchange {
 
     public void setClient(AbstractClientBase client) {
         this.client = client;
-    }
-
-    public SalesforceSession getSession() {
-        return session;
-    }
-
-    public void setSession(SalesforceSession session) {
-        this.session = session;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
     }
 
 }

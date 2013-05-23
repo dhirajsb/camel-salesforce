@@ -94,8 +94,6 @@ public abstract class AbstractClientBase implements SalesforceSession.Salesforce
         get.setMethod(method);
         get.setURL(url);
         get.setClient(this);
-        get.setSession(session);
-        get.setAccessToken(accessToken);
         return get;
     }
 
@@ -109,7 +107,8 @@ public abstract class AbstractClientBase implements SalesforceSession.Salesforce
         try {
             final boolean isHttps = HttpSchemes.HTTPS.equals(String.valueOf(request.getScheme()));
             request.setEventListener(new SalesforceSecurityListener(
-                httpClient.getDestination(request.getAddress(), isHttps), request));
+                httpClient.getDestination(request.getAddress(), isHttps),
+                request, session, accessToken));
         } catch (IOException e) {
             // propagate exception
             callback.onResponse(null, new SalesforceException(
