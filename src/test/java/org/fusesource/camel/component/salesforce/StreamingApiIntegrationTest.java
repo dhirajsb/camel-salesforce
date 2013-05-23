@@ -16,6 +16,7 @@
  */
 package org.fusesource.camel.component.salesforce;
 
+import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.fusesource.camel.component.salesforce.api.dto.CreateSObjectResult;
@@ -30,7 +31,9 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
     public void testSubscribeAndReceive() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:CamelTestTopic");
         mock.expectedMessageCount(1);
-        // TODO add other assertions for header and body
+        // assert expected static headers
+        mock.expectedHeaderReceived("CamelSalesforceTopicName", "CamelTestTopic");
+        mock.expectedHeaderReceived("CamelSalesforceChannel", "/topic/CamelTestTopic");
 
         Merchandise__c merchandise = new Merchandise__c();
         merchandise.setName("TestNotification");
@@ -38,19 +41,22 @@ public class StreamingApiIntegrationTest extends AbstractSalesforceTestBase {
             new DateTime().toString());
         merchandise.setPrice__c(9.99);
         merchandise.setTotal_Inventory__c(1000.0);
-        CreateSObjectResult result = template().requestBody("direct:upsertSObject", merchandise, CreateSObjectResult.class);
+        CreateSObjectResult result = template().requestBody(
+            "direct:upsertSObject", merchandise, CreateSObjectResult.class);
         assertTrue("Merchandise test record not created",  result == null || result.getSuccess());
 
         try {
-            // TODO add assertions for message id and Name
-
             // wait for Salesforce notification
             mock.assertIsSatisfied();
-            merchandise = mock.getExchanges().get(0).getIn().getMandatoryBody(Merchandise__c.class);
+            final Message in = mock.getExchanges().get(0).getIn();
+            merchandise = in.getMandatoryBody(Merchandise__c.class);
             assertNotNull("Missing event body", merchandise);
             log.info("Merchandise notification: {}", merchandise.toString());
             assertNotNull("Missing field Id", merchandise.getId());
             assertNotNull("Missing field Name", merchandise.getName());
+
+            // validate dynamic message headers
+            assertNotNull("Missing header CamelSalesforceClientId", in.getHeader("CamelSalesforceClientId"));
 
         } finally {
             // remove the test record
